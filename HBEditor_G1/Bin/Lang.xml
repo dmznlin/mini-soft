@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<MultiLang>
+  <Config>
+    <default>en</default>
+  </Config>
+  <Langs>
+    <Lang Name="简体中文" ID="cn"/>
+    <Lang Name="繁体中文" ID="tw"/>
+    <Lang Name="English" ID="en"/>
+  </Langs>
+  <Sections>
+    <Section Name="fFormMain">
+ 
+    </Section>
+  </Sections>
+</MultiLang>
