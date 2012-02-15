@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<CardItems>
+  <Verify>
+    <User>dmzn</User>
+    <Password>111</Password>
+  </Verify>
+  <Items>
+    <Item>
+      <CardNo>111</CardNo>
+      <Action>0</Action>
+      <Time>2011-11-24 11:22:33</Time>
+    </Item>
+    <Item>
+      <CardNo>222</CardNo>
+      <Action>1</Action>
+      <Time>2011-11-24 11:22:33</Time>
+    </Item>
+  </Items>
+</CardItems>

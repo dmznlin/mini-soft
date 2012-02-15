@@ -1,0 +1,18 @@
+*.格式定义: XML定义
+<?xml version="1.0" encoding="gb2312"?>
+<Screens>
+  <Item type="0" ID="11">
+    <Content encode="y">Base64Encode</Content>
+  </Item>
+  <Item type="0" ID="11">
+    <Content encode="n">内容</Content>
+  </Item>
+</Screens>
+
+*.说明:
+1.根节点Screens包含一组内容,用Item节点表示.
+2.Item.type属性,用于定义屏幕类型,可选:0,小屏;1.中屏;2,大屏
+3.Item.ID属性,用于定义特定屏幕,可自定义.如:11表示编号为11的屏.
+4.Item.Content节点用于定义内容,若encode=y,则表示使用Base64编号.
+5.若Item.ID存在,则表示该内容指显示在ID匹配的屏上;若不存在,则表示该内容显示在Item.type匹配的屏上.所以type和ID必须指定一个.
+6.每个屏幕的内容只加载一个,优先原则为Item节点的先后顺序.如上: ID="11"定义两次,则内容为Base64Encode.

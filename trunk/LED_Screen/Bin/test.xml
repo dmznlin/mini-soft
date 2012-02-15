@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="gb2312"?>
+<Screens>
+  <Item type="0" ID="11">
+    <Content encode="y">Base64Encode</Content>
+  </Item>
+  <Item type="0" ID="CD2011">
+    <Content encode="n">内容</Content>
+  </Item>
+</Screens>
