@@ -1,0 +1,5 @@
+load BITMAP "load.bmp"
+run BITMAP "run.bmp"
+stop BITMAP "stop.bmp"
+lock BITMAP "lock.bmp"
+unlock BITMAP "unlock.bmp"

@@ -1,0 +1,11 @@
+;Verify:86b7ff788b2f5f4752815c62d3bb4aff
+[HBEdit]
+AppTitle=汉邦电子
+MainTitle=图文编辑器 V2.1
+CopyLeft=※.版权所有: 汉邦电子
+CopyRight=汉邦电子有限公司
+
+[Setup]
+AdminPwd0=c2E=
+AdminPwd1=c2E=
+AdminPwd2=c2E=

@@ -1,0 +1,116 @@
+
+procedure TfFormBorder.Button1Click(Sender: TObject);
+var nStr: string;
+    nSend: THead_Send_SetBorder;
+    nRespond: THead_Respond_SetBorder;
+begin
+  FillChar(nSend, SizeOf(nSend), #0);
+  nSend.FHead := Swap(cHead_DataSend);
+  nSend.FLen := Swap(cSize_Head_Send_SetBorder);
+  nSend.FCardType := 2;
+  nSend.FCommand := cCmd_SetBorder;
+
+  nSend.FDevice := sFlag_BroadCast;
+  nSend.FHasBorder := 1;
+  nSend.FEffect := StrToInt(Edit1.Text);
+  nSend.FSpeed := StrToInt(Edit2.Text);
+  nSend.FWidth := StrToInt(Edit3.Text);
+
+  with FDM do
+  begin
+    Comm1.StopComm;
+    Comm1.CommName := 'Com4';
+    Comm1.StartComm;
+
+    Sleep(500);
+    FWaitCommand := cCmd_SetBorder;
+    gSendInterval := cSendInterval_Long;
+    Comm1.WriteCommData(@nSend, cSize_Head_Send_SetBorder);
+
+    if FDM.WaitForTimeOut(nStr) then
+    begin
+      Move(FDM.FValidBuffer[0], nRespond, cSize_Head_Respond_SetBorder);
+      if nRespond.FFlag = sFlag_OK then
+           ShowMessage('done')
+      else ShowMessage('error');
+    end else ShowMessage(nStr);
+
+
+  end;
+end;
+
+procedure TfFormBorder.Button2Click(Sender: TObject);
+var nStr: string;
+    nSend: THead_Send_ELevel;
+    nRespond: THead_Respond_ELevel;
+begin
+  FillChar(nSend, SizeOf(nSend), #0);
+  nSend.FHead := Swap(cHead_DataSend);
+  nSend.FLen := Swap(cSize_Head_Send_ELevel);
+  nSend.FCardType := 2;
+  nSend.FCommand := cCmd_SetELevel;
+
+  nSend.FDevice := sFlag_BroadCast;
+  nSend.FKeepMode := StrToInt(Edit1.Text);
+
+  with FDM do
+  begin
+    Comm1.StopComm;
+    Comm1.CommName := 'Com4';
+    Comm1.StartComm;
+
+    Sleep(500);
+    FWaitCommand := cCmd_SetELevel;
+    gSendInterval := cSendInterval_Long;
+    Comm1.WriteCommData(@nSend, cSize_Head_Send_ELevel);
+
+
+    if FDM.WaitForTimeOut(nStr) then
+    begin
+      Move(FDM.FValidBuffer[0], nRespond, cSize_Head_Respond_ELevel);
+      if nRespond.FFlag = sFlag_OK then
+           ShowMessage('done')
+      else ShowMessage('error');
+    end else ShowMessage(nStr);
+
+
+  end;
+end;
+
+procedure TfFormBorder.Button3Click(Sender: TObject);
+var nStr: string;
+    nSend: THead_Send_ELevel;
+    nRespond: THead_Respond_ELevel;
+begin
+  FillChar(nSend, SizeOf(nSend), #0);
+  nSend.FHead := Swap(cHead_DataSend);
+  nSend.FLen := Swap(cSize_Head_Send_ScanMode);
+  nSend.FCardType := 2;
+  nSend.FCommand := cCmd_SetScanMode;
+
+  nSend.FDevice := sFlag_BroadCast;
+  nSend.FKeepMode := StrToInt(Edit1.Text);
+
+  with FDM do
+  begin
+    Comm1.StopComm;
+    Comm1.CommName := 'Com4';
+    Comm1.StartComm;
+
+    Sleep(500);
+    FWaitCommand := cCmd_SetScanMode;
+    gSendInterval := cSendInterval_Long;
+    Comm1.WriteCommData(@nSend, cSize_Head_Send_ScanMode);
+
+
+    if FDM.WaitForTimeOut(nStr) then
+    begin
+      Move(FDM.FValidBuffer[0], nRespond, cSize_Head_Respond_ScanMode);
+      if nRespond.FFlag = sFlag_OK then
+           ShowMessage('done')
+      else ShowMessage('error');
+    end else ShowMessage(nStr);
+
+
+  end;
+end;

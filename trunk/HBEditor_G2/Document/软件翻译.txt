@@ -1,0 +1,66 @@
+图文编辑器：photo editor
+文件：file
+设置:set
+发送：send
+帮助：help
+新建：new file 
+打开：open
+连接：connection
+复位：reset
+节目;programs
+屏幕：screen
+字幕：subtitle
+动画：animation
+表盘;dial
+时间：time
+删除:delet
+退出：exit
+显示屏列表：display list
+基本信息：basic information
+屏幕名称：screen name
+屏幕类型：screen type
+卡类型：card type
+屏幕点数：screen point
+通信端口：communication port
+设备列表：device list
+设备号：device number
+名称：name
+默认屏幕：default screen
+对象属性：object  attribute
+查看运行状态：view the operational state
+全部设备:all divice
+读取：read
+状态信息：state infortation
+关闭：close
+询问：ask
+确定要新建显示屏的播放文件吗：sure you want to file new display
+是：yes 否:no
+确定：ok
+取消：cancel
+确定要删除节目吗：sure you want to delete the program
+确定要关闭程序吗：sure you want to close the  program
+连接测试：connection test
+复控器：reset controller
+设定宽高：set width and height
+设定亮度：set bright
+自动设定亮度：automationcal set bright
+手动开关屏幕：manual switch  screen
+自动开关屏幕：automational switch  screen
+设定播放天数：set play days
+请输入管理密码：please enter the admin password
+管理密码无效：the password is invalid
+与控制器通信失败：communication to the controller is failure
+提示：宽度高度值为8的整倍数：tipS:the width and height value is the integer multiple of 8
+开始时间：start time
+结束时间： end time
+请输入有效地起始时间：please enter valid start time
+开关屏幕：switch screen
+开关设置：switch set
+启用自动开关机：enable automatic switch
+无限期播放：indefinite play
+天数值为1到999之间：days is between 1 and 999
+校准时间：calibration time
+运行状态：running state
+本产品符合最终用户许可协议：this product is compliance with the user final license agreement
+科技演绎，技术创新,真诚服务，共创未来：deductive science and technolog,technological innovation and sincere service create a better future
+版权所有:汉邦电子科技有限公司：copyright reserved:HANBANG electrotic technology Co. ,Ltd.

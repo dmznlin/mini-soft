@@ -1,0 +1,50 @@
+*.接口部分
+procedure CommPortInit(const nComm: PChar; const nBaudRate: DWORD); stdcall;
+//初始化端口
+function CommPortConn: Boolean; stdcall;
+function CommPortClose: Boolean; stdcall;
+//连接和关闭
+
+procedure TransInit(const nCardType,nAreaNum: Byte); stdcall;
+//传输初始化
+function TransBegin(const nMsg: PChar): Boolean; stdcall;
+//传输开始
+function TransData(const nRect: PAreaRect; const nMode: PAreaMode;
+ const nFont: PAreaFont; const nText: PChar): Boolean; stdcall;
+//传输数据
+function TransEnd(const nMsg: PChar): Boolean; stdcall;
+//传输结束
+
+*.描述部分
+//Date: 2010-7-20
+//Parm: 端口;波特率
+//Desc: 初始化串口配置
+procedure CommPortInit(const nComm: PChar; const nBaudRate: DWORD);
+
+//Date: 2010-7-20
+//Parm: 卡类型;区域个数
+//Desc: 初始化传输参数
+procedure TransInit(const nCardType,nAreaNum: Byte);
+
+//Date: 2010-7-20
+//Parm: [out]提示信息
+//Desc: 开启传输
+function TransBegin(const nMsg: PChar): Boolean;
+
+//Date: 2010-7-20
+//Parm: 区域;模式;字体;内容
+//Desc: 在nRect区域内,用nMode模式显示nText内容
+function TransData(const nRect: PAreaRect; const nMode: PAreaMode;
+ const nFont: PAreaFont; const nText: PChar): Boolean;
+
+//Date: 2010-7-20
+//Parm: [out]提示信息
+//Desc: 关闭传输
+function TransEnd(const nMsg: PChar): Boolean;
+
+*.使用例程
+1.调用CommPortInit初始化串口,可以调用CommPortConn测试参数是否正确.
+2.调用TransInit初始化必需参数.
+3.调用TransBegin开启传输.
+4.调用TransData传递文本,循环调用.注意区域不能重叠.
+5.调用TransEnd关闭传输.
