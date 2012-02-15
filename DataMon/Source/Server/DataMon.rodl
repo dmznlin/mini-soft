@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Library Name="DataMon" UID="{1902382C-CD5F-4F94-ACC0-103A4370A1FB}" Version="3.0">
+<Documentation><![CDATA[数据采集服务接口]]></Documentation>
+<Services>
+<Service Name="DataService" UID="{624B2F56-2725-493E-B2C4-13FE78051342}">
+<Documentation><![CDATA[数据服务]]></Documentation>
+<Interfaces>
+<Interface Name="Default" UID="{A8E2A5A5-F1A3-4C1A-B4F5-A448232736BB}">
+<Operations>
+<Operation Name="UpdateDataList" UID="{CB10C2E5-3C50-4F52-9C5C-691869100759}">
+<Parameters>
+<Parameter Name="Result" DataType="Boolean" Flag="Result">
+</Parameter>
+<Parameter Name="nDataList" DataType="DataList" Flag="In" >
+</Parameter>
+</Parameters>
+</Operation>
+<Operation Name="UpdateDataStrs" UID="{7139398E-7915-46A3-A207-FB7A9FA544E1}">
+<Parameters>
+<Parameter Name="Result" DataType="Boolean" Flag="Result">
+</Parameter>
+<Parameter Name="nStr" DataType="AnsiString" Flag="In" >
+</Parameter>
+</Parameters>
+</Operation>
+</Operations>
+</Interface>
+</Interfaces>
+</Service>
+</Services>
+<Structs>
+<Struct Name="DataItem" UID="{73FB879D-5C2A-4286-A5D4-77DB26C06DC6}" AutoCreateParams="1">
+<Documentation><![CDATA[数据项]]></Documentation>
+<Elements>
+<Element Name="FarmID" DataType="AnsiString">
+</Element>
+<Element Name="CageID" DataType="AnsiString">
+</Element>
+<Element Name="CageIdx" DataType="Integer">
+</Element>
+<Element Name="w1" DataType="Decimal">
+</Element>
+<Element Name="w2" DataType="Decimal">
+</Element>
+<Element Name="w3" DataType="Decimal">
+</Element>
+<Element Name="w4" DataType="Decimal">
+</Element>
+<Element Name="s1" DataType="Decimal">
+</Element>
+<Element Name="s2" DataType="Decimal">
+</Element>
+<Element Name="s3" DataType="Decimal">
+</Element>
+<Element Name="s4" DataType="Decimal">
+</Element>
+<Element Name="fj" DataType="Decimal">
+</Element>
+<Element Name="bj" DataType="Decimal">
+</Element>
+</Elements>
+</Struct>
+</Structs>
+<Enums>
+</Enums>
+<Arrays>
+<Array Name="DataList" UID="{AAEA1B70-68FE-4F23-A0AD-B16FEFFB9F2A}">
+<Documentation><![CDATA[有效数据组]]></Documentation>
+<ElementType DataType="DataItem" />
+</Array>
+</Arrays>
+</Library>
