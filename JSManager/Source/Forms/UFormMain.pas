@@ -9,9 +9,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  UMgrMenu, UTrayIcon, UDataModule, USysFun, ExtCtrls, Menus, UBitmapPanel,
-  cxPC, cxClasses, dxNavBarBase, dxNavBarCollns, dxNavBar, cxControls,
-  cxSplitter, ComCtrls, StdCtrls;
+  UMgrMenu, UTrayIcon, UDataModule, USysFun, UFrameBase, cxGraphics,
+  cxControls, cxLookAndFeelPainters, ExtCtrls, Menus,
+  UBitmapPanel, cxPC, cxClasses, dxNavBarBase, dxNavBarCollns, dxNavBar,
+  cxSplitter, ComCtrls, StdCtrls, cxLookAndFeels;
 
 type
   TfMainForm = class(TForm)
@@ -68,20 +69,13 @@ implementation
 {$R *.dfm}
 
 uses
-  ShellAPI, IniFiles, UcxChinese, ULibFun, UMgrControl, UMgrLog,
-  UMgrIni, USysDB, USysConst, USysObject, USysModule, USysMenu, USysPopedom,
-  UFormWait, UFormLogin, UFrameBase, UFrameNormal, UFormBase;
+  ShellAPI, IniFiles, UcxChinese, ULibFun, UMgrControl, UMgrIni,
+  USysLoger, USysDB, USysConst, USysModule, USysMenu, USysPopedom,
+  UFormWait, UFormLogin, UFormBase;
 
-//------------------------------------------------------------------------------
 procedure WriteLog(const nEvent: string);
-var nItem: PLogItem;
 begin
-  nItem := gLogManager.NewLogItem;
-  nItem.FWriter.FOjbect := TfMainForm;
-  nItem.FWriter.FDesc := '系统主模块';
-  nItem.FLogTag := [ltWriteFile];
-  nItem.FEvent := nEvent;
-  gLogManager.AddNewLog(nItem);
+  gSysLoger.AddLog(TfMainForm, '系统主模块', nEvent);
 end;
 
 //------------------------------------------------------------------------------
@@ -185,6 +179,9 @@ begin
 
     FTrayIcon := TTrayIcon.Create(Self);
     FTrayIcon.Visible := True;
+
+    RunSystemObject;
+    //run them
     WriteLog('系统启动');
   end else
   begin
@@ -526,9 +523,9 @@ begin
     nIdx := wTab.Tabs.AddObject(nName, nCtrl);
     wTab.TabIndex := nIdx;
 
-    if nCtrl is TfFrameNormal then
+    if nCtrl is TBaseFrame then
     begin
-      nStr := TfFrameNormal(nCtrl).PopedomItem;
+      nStr := TBaseFrame(nCtrl).PopedomItem;
       wTab.Tabs[nIdx].ImageIndex := FDM.IconIndex(nStr);
     end;
   end;

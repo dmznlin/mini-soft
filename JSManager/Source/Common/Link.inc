@@ -12,3 +12,6 @@
 
 {$DEFINE MultiJS}
 //多道计数器支持
+
+{$DEFINE NetMode}
+//网络模式支持

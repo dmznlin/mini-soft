@@ -10,7 +10,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, UFormNormal, dxLayoutControl, StdCtrls, cxControls, cxGraphics,
   cxMemo, cxButtonEdit, cxLabel, cxTextEdit, cxContainer, cxEdit,
-  cxMaskEdit, cxDropDownEdit, SPComm;
+  cxMaskEdit, cxDropDownEdit, SPComm, cxLookAndFeels, cxLookAndFeelPainters;
 
 type
   TDaiData = record
@@ -95,9 +95,6 @@ type
     class function FormID: integer; override;
   end;
 
-function PrintJSReport(const nID: string; const nAsk: Boolean): Boolean;
-//入口函数
-
 implementation
 
 {$R *.dfm}
@@ -129,40 +126,6 @@ begin
     InitFormData(FRecordID);
     Show;
   end;
-end;
-
-//Desc: 打印表示为nID的提货记录
-function PrintJSReport(const nID: string; const nAsk: Boolean): Boolean;
-var nStr: string;
-begin
-  Result := False;
-
-  if nAsk then
-  begin
-    nStr := '是否要打印提货记录?';
-    if not QueryDlg(nStr, sAsk) then Exit;
-  end;
-
-  nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_ID=%s';
-  nStr := Format(nStr, [sTable_StockType, sTable_JSLog, nID]);
-  
-  if FDM.QueryTemp(nStr).RecordCount < 1 then
-  begin
-    nStr := '编号为[ %s] 的提货记录已无效!!';
-    nStr := Format(nStr, [nID]);
-    ShowMsg(nStr, sHint); Exit;
-  end;
-
-  nStr := gPath + sReportDir + 'Lading.fr3';
-  if not FDR.LoadReportFile(nStr) then
-  begin
-    nStr := '无法正确加载报表文件';
-    ShowMsg(nStr, sHint); Exit;
-  end;
-
-  FDR.Dataset1.DataSet := FDM.SqlTemp;
-  FDR.ShowReport;
-  Result := FDR.PrintSuccess;
 end;
 
 //------------------------------------------------------------------------------

@@ -11,16 +11,45 @@ unit USysModule;
 interface
 
 uses
-  {$IFDEF MultiJS}
-  UFormZTParam_M, UFormJS_M,
+  {$IFDEF NetMode}
+  UFormJS_Net, UMultiJS_Net, UFormBackupSQL, UFormRestoreSQL,
   {$ELSE}
-  UFormZTParam, UFormJS,
+  UFormZTParam_M, UFormJS_M, UFormBackupAccess, UFormRestoreAccess,
   {$ENDIF}
   UFrameLog, UFrameSysLog, UFormIncInfo, UFormPassword,
   UFrameStockType, UFormStockType, UFrameTruckInfo, UFormTruckInfo,
-  UFrameJSLog, UFrameCustomer, UFormCustomer, UFormBackupAccess,
-  UFormRestoreAccess, UFrameJSItem, UFormJSItem;
+  UFrameJSLog, UFrameCustomer, UFormCustomer, UFrameJSItem, UFormJSItem;
+
+procedure InitSystemObject;
+procedure RunSystemObject;
+procedure FreeSystemObject;
 
 implementation
+
+uses
+  USysLoger, USysConst;
+
+//Desc: 初始化系统对象
+procedure InitSystemObject;
+begin
+  gSysLoger := TSysLoger.Create(gPath + sLogDir);
+  //system loger
+
+  {$IFDEF NetMode}
+  gMultiJSManager.LoadFile(gPath + 'JSQ.xml');
+  {$ENDIF}
+end;
+
+//Desc: 运行系统对象
+procedure RunSystemObject;
+begin
+
+end;
+
+//Desc: 释放系统对象
+procedure FreeSystemObject;
+begin
+
+end;
 
 end.

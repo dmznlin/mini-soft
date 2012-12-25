@@ -8,9 +8,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, UFormNormal, dxLayoutControl, StdCtrls, cxControls, cxGraphics,
-  cxMemo, cxButtonEdit, cxLabel, cxTextEdit, cxContainer, cxEdit,
-  cxMaskEdit, cxDropDownEdit, SPComm, cxLookAndFeels, cxLookAndFeelPainters;
+  Dialogs, UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
+  cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxMemo, cxTextEdit,
+  cxMaskEdit, cxDropDownEdit, dxLayoutControl, StdCtrls;
 
 type
   TfFormJSItem = class(TfFormNormal)
@@ -230,8 +230,16 @@ end;
 
 //Desc: 计算袋数
 procedure TfFormJSItem.EditWeightPropertiesChange(Sender: TObject);
-var nInt: integer;
+var nStr: string;
+    nInt: integer;
 begin
+  if not EditWeight.IsFocused then Exit;
+  //need focus first
+
+  nStr := EditWeight.Text;
+  nInt := Length(nStr);
+  if (nInt > 0) and (nStr[nInt] = '.') then Exit;
+
   if FPerWeight > 0 then
   if IsNumber(EditWeight.Text, True) then
   begin
@@ -246,8 +254,17 @@ end;
 
 //Desc: 计算吨数
 procedure TfFormJSItem.EditNumPropertiesChange(Sender: TObject);
-var nValue: Double;
+var nStr: string;
+    nInt: integer;
+    nValue: Double;
 begin
+  if not EditNum.IsFocused then Exit;
+  //need focus first
+
+  nStr := EditNum.Text;
+  nInt := Length(nStr);
+  if (nInt > 0) and (nStr[nInt] = '.') then Exit;
+
   if FPerWeight > 0 then
   if IsNumber(EditNum.Text, False) then
   begin

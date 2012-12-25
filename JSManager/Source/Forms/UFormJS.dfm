@@ -11,7 +11,6 @@ inherited fFormJS: TfFormJS
   inherited dxLayout1: TdxLayoutControl
     Width = 383
     Height = 353
-    AutoContentSizes = [acsWidth, acsHeight]
     inherited BtnOK: TButton
       Left = 237
       Top = 320
@@ -161,8 +160,6 @@ inherited fFormJS: TfFormJS
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
-        AutoAligns = [aaHorizontal]
-        AlignVert = avClient
         Caption = #25552#36135#20449#24687
         object dxLayout1Group7: TdxLayoutGroup
           ShowCaption = False
@@ -264,41 +261,6 @@ inherited fFormJS: TfFormJS
           ControlOptions.ShowBorder = False
         end
       end
-      inherited dxLayout1Group1: TdxLayoutGroup
-        AutoAligns = [aaHorizontal]
-        AlignVert = avBottom
-      end
     end
-  end
-  object CommJS: TComm
-    CommName = 'COM2'
-    BaudRate = 9600
-    ParityCheck = False
-    Outx_CtsFlow = False
-    Outx_DsrFlow = False
-    DtrControl = DtrEnable
-    DsrSensitivity = False
-    TxContinueOnXoff = True
-    Outx_XonXoffFlow = True
-    Inx_XonXoffFlow = True
-    ReplaceWhenParityError = False
-    IgnoreNullChar = False
-    RtsControl = RtsEnable
-    XonLimit = 500
-    XoffLimit = 500
-    ByteSize = _8
-    Parity = None
-    StopBits = _1
-    XonChar = #17
-    XoffChar = #19
-    ReplacedChar = #0
-    ReadIntervalTimeout = 3
-    ReadTotalTimeoutMultiplier = 0
-    ReadTotalTimeoutConstant = 0
-    WriteTotalTimeoutMultiplier = 0
-    WriteTotalTimeoutConstant = 0
-    OnReceiveData = CommJSReceiveData
-    Left = 88
-    Top = 164
   end
 end

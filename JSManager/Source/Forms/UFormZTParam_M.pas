@@ -62,7 +62,7 @@ type
 
 function LoadZTList(const nList: TStrings): Boolean;
 function LoadForbidZtock(const nList: TStrings): Boolean;
-function GetWeightPerPackage: Double;
+function GetWeightPerPackage: Word;
 //入口函数
 
 implementation
@@ -118,7 +118,7 @@ begin
 end;
 
 //Desc: 获取每袋重量
-function GetWeightPerPackage: Double;
+function GetWeightPerPackage: Word;
 var nIni: TIniFile;
 begin
   nIni := TIniFile.Create(gPath + sFormConfig);
