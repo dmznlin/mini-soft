@@ -45,7 +45,7 @@ type
     //通道配置
     FData: TMultiJSPanelData;
     //关联数据
-    FPerWeight: Double;
+    FPerWeight: Word;
     //带重参数
     FStatus: TcxLabel;
     //状态显示
@@ -103,7 +103,7 @@ type
     //装车进度
     property UIData: TMultiJSPanelData read FData;
     property Tunnel: TMultiJSPanelTunnel read FTunnel;
-    property PerWeight: Double read FPerWeight write FPerWeight;
+    property PerWeight: Word read FPerWeight write FPerWeight;
     property OnLoad: TMultiJSEvent read FOnLoad write FOnLoad;
     property OnStart: TMultiJSEvent read FOnStart write FOnStart;
     property OnStop: TMultiJSEvent read FOnStop write FOnStop;
@@ -417,6 +417,7 @@ end;
 
 //Desc: 设置数据
 procedure TMultiJSPanel.SetData(const nData: TMultiJSPanelData);
+var nVal: Double;
 begin
   if nData.FRecordID <> FData.FRecordID then
   begin
@@ -426,7 +427,9 @@ begin
 
     FStockName.Text := FData.FStockName;
     FStockNo.Text := FData.FStockNo;
-    FData.FHaveDai := Trunc(FData.FTHValue / FPerWeight * 1000);
+
+    nVal := FData.FTHValue * 1000;
+    FData.FHaveDai := Trunc(nVal / FPerWeight);
 
     FData.FHasDone := 0;
     JSProgress(0, True);
@@ -545,7 +548,7 @@ begin
     FData.FTHValue := StrToFloat(FStockValue.Text);
     FData.FHaveDai := StrToInt(FStockDS.Text);      
     FData.FHasDone := 0;
-    JSProgress(0, True);  
+    JSProgress(-1, True);
   end;
 end;
 
@@ -624,9 +627,20 @@ begin
       Properties.Min := 0;
       Properties.Max := FHaveDai;
 
-      FStockDS.Text := IntToStr(FHaveDai);
-      FStockValue.Text := Format('%.2f', [FTHValue]);
+      if nHasDone <> -1 then
+      begin
+        FStockDS.Text := IntToStr(FHaveDai);
+        FStockValue.Text := Format('%.2f', [FTHValue]);
+      end;
+
       FStockTotalDS.Text := IntToStr(FTotalDS + FTotalBC);
+      //count total
+    end;
+
+    if (UIData.FRecordID = '') and (nHasDone > 0) then
+    begin
+      FStatus.Caption := IntToStr(nHasDone);
+      Exit;
     end;
 
     if FStatus.Caption <> sStatus_Busy then Exit;

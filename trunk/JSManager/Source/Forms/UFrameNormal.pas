@@ -8,12 +8,12 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  USysFun, IniFiles, cxButtonEdit, cxStyles, cxCustomData, cxGraphics,
-  cxFilter, cxData, cxDataStorage, cxEdit, DB, cxDBData, ADODB,
-  cxContainer, cxLabel, UBitmapPanel, cxSplitter, dxLayoutControl,
-  cxGridLevel, cxClasses, cxControls, cxGridCustomView,
-  cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, UFrameBase;
+  USysFun, IniFiles, UFrameBase, cxButtonEdit, cxGraphics, cxControls,
+  cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
+  cxData, cxDataStorage, cxEdit, DB, cxDBData, cxContainer, ADODB, cxLabel,
+  UBitmapPanel, cxSplitter, dxLayoutControl, cxGridLevel, cxClasses,
+  cxGridCustomView, cxGridCustomTableView, cxGridTableView,
+  cxGridDBTableView, cxGrid, ComCtrls, ToolWin;
 
 type
   TfFrameNormal = class(TBaseFrame)
@@ -57,11 +57,13 @@ type
   protected
     FBarImage: TBitmap;
     {*工具条*}
+    FEnableBackDB: Boolean;
+    {*备用库*}
     FWhere: string;
     {*过滤条件*}
     FShowDetailInfo: Boolean;
     {*显示简明信息*}
-    procedure SetZOrder(TopMost: Boolean); override;
+    function FrameTitle: string; override;
     procedure OnCreateFrame; override;
     procedure OnDestroyFrame; override;
     procedure OnLoadPopedom; override;
@@ -88,9 +90,6 @@ type
     {*按键处理*}
   end;
 
-procedure SetFrameChangeEvent(const nCallBack: TControlChangeEvent);
-//设置变动事件
-
 implementation
 
 {$R *.dfm}
@@ -99,22 +98,12 @@ uses
   ULibFun, UAdjustForm, UFormWait, UFormCtrl, UDataModule, USysConst, USysGrid,
   USysDataDict, USysPopedom, USysDB;
 
-var
-  gFrameChange: TControlChangeEvent = nil;
-  //Frame变动
-
-procedure SetFrameChangeEvent(const nCallBack: TControlChangeEvent);
-begin
-  gFrameChange := nCallBack;
-end;
-
-//------------------------------------------------------------------------------
 procedure TfFrameNormal.OnCreateFrame;
 var nStr: string;
     nIni: TIniFile;
 begin
-  Name := MakeFrameName(FrameID);
   FWhere := '';
+  FEnableBackDB := False;
   FShowDetailInfo := True;
 
   nIni := TIniFile.Create(gPath + sFormConfig);
@@ -141,10 +130,6 @@ begin
     nIni.Free;
     FreeAndNil(FBarImage);
   end;
-
-  if Assigned(gFrameChange) then
-    gFrameChange(TitleBar.Caption, Self, fsNew);
-  //xxxxx
 end;
 
 procedure TfFrameNormal.OnDestroyFrame;
@@ -163,18 +148,6 @@ begin
   end;
 
   FreeAndNil(FBarImage);
-  if Assigned(gFrameChange) then
-    gFrameChange(TitleBar.Caption, Self, fsFree);
-  //xxxxx
-end;
-
-//Desc: 组件Z轴位置变动
-procedure TfFrameNormal.SetZOrder(TopMost: Boolean);
-begin
-  inherited;
-  if Assigned(gFrameChange) then
-    gFrameChange(TitleBar.Caption, Self, fsActive);
-  //xxxxx
 end;
 
 //Desc: 读取权限
@@ -214,6 +187,12 @@ begin
   end;
 end;
 
+//Desc: 标题
+function TfFrameNormal.FrameTitle: string;
+begin
+  Result := TitleBar.Caption;
+end;
+
 //------------------------------------------------------------------------------
 procedure TfFrameNormal.OnLoadGridConfig(const nIni: TIniFile);
 begin
@@ -242,7 +221,9 @@ begin
   if (cxView1.Controller.SelectedRowCount > 0) and (Sender is TComponent) and
      GetTableByHint(Sender as TComponent, nTable, nField)then
   begin
-    nRIdx := cxView1.Controller.SelectedRows[0].RecordIndex;
+    //nRIdx := cxView1.Controller.SelectedRows[0].RecordIndex;
+    nRIdx := cxView1.Controller.FocusedRecordIndex;
+    if nRIdx < 0 then Exit;
     nObj := cxView1.DataController.GetItemByFieldName(nField);
     
     if Assigned(nObj) then
@@ -287,8 +268,8 @@ begin
     if nStr = '' then Exit;
 
     if Assigned(nQuery) then
-         FDM.QueryData(nQuery, nStr)
-    else FDM.QueryData(SQLQuery, nStr);
+         FDM.QueryData(nQuery, nStr, FEnableBackDB)
+    else FDM.QueryData(SQLQuery, nStr, FEnableBackDB);
   finally
     ShowMsgOnLastPanelOfStatusBar('');
     BtnRefresh.Enabled := True;

@@ -155,9 +155,17 @@ begin
 
   ListYZ.Clear;
   nList := nil;
-  
-  nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_HasDone=''%s'' ' +
-          'And L_OKTime>=CDate(''%s'') Order By L_TruckNo ASC,L_ID DESC';
+
+  if gSysDBType = dtSQLServer then
+  begin
+    nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_HasDone=''%s'' ' +
+            'And L_OKTime>=''%s'' Order By L_TruckNo ASC,L_ID DESC';
+  end else
+  begin
+    nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_HasDone=''%s'' ' +
+            'And L_OKTime>=CDate(''%s'') Order By L_TruckNo ASC,L_ID DESC';
+  end;
+
   nStr := Format(nStr, [sTable_JSLog, sTable_StockType, sFlag_Yes,
           DateTime2Str(Now - 1)]);
   //一天以内

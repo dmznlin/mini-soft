@@ -71,8 +71,8 @@ implementation
 
 {$R *.dfm}
 uses
-  ULibFun, UMgrControl, USysConst, USysDB, UDataModule, UFormDateFilter,
-  UFormJS, UFormInputbox, UFormBase;
+  ULibFun, UMgrControl, UDataModule, UFormDateFilter, UFormInputbox, UFormBase,
+  USysFun, USysConst, USysDB;
 
 class function TfFrameJSLog.FrameID: integer;
 begin
@@ -127,8 +127,15 @@ function TfFrameJSLog.InitFormDataSQL(const nWhere: string): string;
 begin
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := 'Select * From %s,%s Where L_Stock=S_ID And ' +
-            '(L_Date>=#%s# And L_Date<#%s#)';
+  if gSysDBType = dtSQLServer then
+  begin
+    Result := 'Select * From %s,%s Where L_Stock=S_ID And ' +
+              '(L_Date>=''%s'' And L_Date<''%s'')';
+  end else
+  begin
+    Result := 'Select * From %s,%s Where L_Stock=S_ID And ' +
+              '(L_Date>=#%s# And L_Date<#%s#)';
+  end;
 
   Result := Format(Result, [sTable_JSLog, sTable_StockType,
             Date2Str(FStart), Date2Str(FEnd + 1)]);

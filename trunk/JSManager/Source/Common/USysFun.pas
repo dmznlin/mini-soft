@@ -8,7 +8,7 @@ interface
 
 uses
   Windows, Classes, ComCtrls, Controls, Messages, Forms, SysUtils, IniFiles,
-  ULibFun, USysConst, Registry, WinSpool;
+  Registry, WinSpool, ULibFun, USysConst, UDataReport, UDataModule, USysDB;
 
 const
   WM_FrameChange = WM_User + $0027;
@@ -43,6 +43,9 @@ procedure CombinListViewData(const nList: TStrings; nLv: TListView;
 
 function GetComPortNames(const nList: TStrings): Boolean;
 //Rs232端口
+
+function PrintJSReport(const nID: string; const nAsk: Boolean): Boolean;
+//入口函数
 
 implementation
 
@@ -257,6 +260,41 @@ begin
       FreeMem(nBuffer);
     end;
   end;
+end;
+
+//------------------------------------------------------------------------------
+//Desc: 打印表示为nID的提货记录
+function PrintJSReport(const nID: string; const nAsk: Boolean): Boolean;
+var nStr: string;
+begin
+  Result := False;
+
+  if nAsk then
+  begin
+    nStr := '是否要打印提货记录?';
+    if not QueryDlg(nStr, sAsk) then Exit;
+  end;
+
+  nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_ID=%s';
+  nStr := Format(nStr, [sTable_StockType, sTable_JSLog, nID]);
+  
+  if FDM.QueryTemp(nStr).RecordCount < 1 then
+  begin
+    nStr := '编号为[ %s] 的提货记录已无效!!';
+    nStr := Format(nStr, [nID]);
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := gPath + sReportDir + 'Lading.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nStr := '无法正确加载报表文件';
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  FDR.Dataset1.DataSet := FDM.SqlTemp;
+  FDR.ShowReport;
+  Result := FDR.PrintSuccess;
 end;
 
 end.
