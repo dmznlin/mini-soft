@@ -2,6 +2,7 @@ inherited fFrameConfig: TfFrameConfig
   Width = 729
   Height = 451
   Font.Color = clBlack
+  Font.Height = -16
   object DeviceList: TdxOrgChart
     Left = 0
     Top = 0

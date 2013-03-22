@@ -375,9 +375,11 @@ begin
       //loged
 
       FPanel.Indicators[nIdx].IndicatorType := sitRed;
+      ListDevice.Items[nIdx].ImageIndex := 0;
     end else
     begin
       FPanel.Indicators[nIdx].IndicatorType := sitGreen;
+      ListDevice.Items[nIdx].ImageIndex := 1;
     end;
   end;
 

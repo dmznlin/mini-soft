@@ -39,22 +39,22 @@ inherited fFrameRunLog: TfFrameRunLog
         Anchors = [akTop, akRight]
         Shape = bsLeftLine
       end
-      object Check1: TCheckBox
-        Left = 10
-        Top = 3
-        Width = 250
-        Height = 35
+      object Check1: TcxCheckBox
+        Left = 12
+        Top = 6
         Caption = #26174#31034#36816#34892#26102#25968#25454
-        Font.Charset = GB2312_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -29
-        Font.Name = #23435#20307
-        Font.Style = []
         ParentFont = False
+        Style.Font.Charset = GB2312_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -21
+        Style.Font.Name = #23435#20307
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
         TabOrder = 0
         OnClick = Check1Click
+        Width = 180
       end
-      object BtnClear: TButton
+      object BtnClear: TcxButton
         Left = 602
         Top = 3
         Width = 85
@@ -63,14 +63,14 @@ inherited fFrameRunLog: TfFrameRunLog
         Caption = #28165#31354
         Font.Charset = GB2312_CHARSET
         Font.Color = clWindowText
-        Font.Height = -29
+        Font.Height = -16
         Font.Name = #23435#20307
         Font.Style = []
         ParentFont = False
         TabOrder = 1
         OnClick = BtnClearClick
       end
-      object BtnCopy: TButton
+      object BtnCopy: TcxButton
         Left = 517
         Top = 3
         Width = 85
@@ -79,14 +79,14 @@ inherited fFrameRunLog: TfFrameRunLog
         Caption = #22797#21046
         Font.Charset = GB2312_CHARSET
         Font.Color = clWindowText
-        Font.Height = -29
+        Font.Height = -16
         Font.Name = #23435#20307
         Font.Style = []
         ParentFont = False
         TabOrder = 2
         OnClick = BtnCopyClick
       end
-      object BtnHistogram: TButton
+      object BtnHistogram: TcxButton
         Left = 420
         Top = 3
         Width = 85
@@ -95,7 +95,7 @@ inherited fFrameRunLog: TfFrameRunLog
         Caption = #26609#22270
         Font.Charset = GB2312_CHARSET
         Font.Color = clWindowText
-        Font.Height = -29
+        Font.Height = -16
         Font.Name = #23435#20307
         Font.Style = []
         ParentFont = False

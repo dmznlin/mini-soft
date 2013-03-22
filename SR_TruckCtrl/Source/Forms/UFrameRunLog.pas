@@ -8,7 +8,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, UFrameBase, ExtCtrls, StdCtrls;
+  Dialogs, UFrameBase, ExtCtrls, StdCtrls, cxGraphics, cxControls,
+  cxLookAndFeels, cxLookAndFeelPainters, cxContainer, cxEdit, Menus,
+  cxButtons, cxCheckBox;
 
 type
   TfFrameRunLog = class(TfFrameBase)
@@ -16,11 +18,11 @@ type
     Panel1: TPanel;
     Bevel1: TBevel;
     Bevel2: TBevel;
-    Check1: TCheckBox;
-    BtnClear: TButton;
-    BtnCopy: TButton;
-    BtnHistogram: TButton;
     MemoLog: TMemo;
+    Check1: TcxCheckBox;
+    BtnClear: TcxButton;
+    BtnCopy: TcxButton;
+    BtnHistogram: TcxButton;
     procedure BtnCopyClick(Sender: TObject);
     procedure BtnClearClick(Sender: TObject);
     procedure Check1Click(Sender: TObject);
