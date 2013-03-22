@@ -9,8 +9,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, ExtCtrls,
-  ImgList, dxStatusBar, cxPC, StdCtrls;
+  UcxChinese, cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
+  ExtCtrls, ImgList, dxStatusBar, cxPC, StdCtrls;
 
 type
   TfFormMain = class(TForm)

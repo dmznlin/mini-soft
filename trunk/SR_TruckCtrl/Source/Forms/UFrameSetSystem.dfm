@@ -10,7 +10,7 @@ inherited fFrameSystem: TfFrameSystem
     Caption = #33509#20351#29992#20854#23427#26041#24335#21551#21160','#35831#19981#35201#21246#36873#27492#39033'.'
     Color = clBlack
     Font.Charset = GB2312_CHARSET
-    Font.Color = clGray
+    Font.Color = clBlack
     Font.Height = -12
     Font.Name = #23435#20307
     Font.Style = []
@@ -27,7 +27,7 @@ inherited fFrameSystem: TfFrameSystem
     Color = clBlack
     Enabled = False
     Font.Charset = GB2312_CHARSET
-    Font.Color = clGray
+    Font.Color = clBlack
     Font.Height = -12
     Font.Name = #23435#20307
     Font.Style = []
@@ -41,6 +41,12 @@ inherited fFrameSystem: TfFrameSystem
     Width = 120
     Height = 35
     Caption = #37197#32622#25968#25454#24211
+    Font.Charset = GB2312_CHARSET
+    Font.Color = clGreen
+    Font.Height = -12
+    Font.Name = #23435#20307
+    Font.Style = []
+    ParentFont = False
     TabOrder = 0
     OnClick = BtnSetDBClick
   end
@@ -81,6 +87,12 @@ inherited fFrameSystem: TfFrameSystem
     Width = 120
     Height = 35
     Caption = #37197#32622#30028#38754
+    Font.Charset = GB2312_CHARSET
+    Font.Color = clGreen
+    Font.Height = -12
+    Font.Name = #23435#20307
+    Font.Style = []
+    ParentFont = False
     TabOrder = 3
     OnClick = BtnSetUIClick
   end
@@ -113,6 +125,12 @@ inherited fFrameSystem: TfFrameSystem
       Width = 85
       Height = 30
       Caption = #28155#21152#20018#21475
+      Font.Charset = GB2312_CHARSET
+      Font.Color = clGreen
+      Font.Height = -12
+      Font.Name = #23435#20307
+      Font.Style = []
+      ParentFont = False
       TabOrder = 0
       OnClick = BtnAddPortClick
     end
@@ -122,6 +140,12 @@ inherited fFrameSystem: TfFrameSystem
       Width = 85
       Height = 30
       Caption = #35013#32622#22320#22336
+      Font.Charset = GB2312_CHARSET
+      Font.Color = clGreen
+      Font.Height = -12
+      Font.Name = #23435#20307
+      Font.Style = []
+      ParentFont = False
       TabOrder = 1
       OnClick = BtnSetAddrClick
     end
@@ -131,6 +155,12 @@ inherited fFrameSystem: TfFrameSystem
       Width = 85
       Height = 30
       Caption = #26657#27491#26102#38388
+      Font.Charset = GB2312_CHARSET
+      Font.Color = clGreen
+      Font.Height = -12
+      Font.Name = #23435#20307
+      Font.Style = []
+      ParentFont = False
       TabOrder = 2
       OnClick = BtnTimeClick
     end
@@ -141,6 +171,12 @@ inherited fFrameSystem: TfFrameSystem
     Width = 122
     Height = 35
     Caption = #37197#32622#36816#34892#21442#25968
+    Font.Charset = GB2312_CHARSET
+    Font.Color = clGreen
+    Font.Height = -12
+    Font.Name = #23435#20307
+    Font.Style = []
+    ParentFont = False
     TabOrder = 6
     OnClick = BtnParamClick
   end

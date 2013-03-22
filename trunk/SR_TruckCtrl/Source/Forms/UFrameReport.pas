@@ -9,9 +9,9 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   UDataModule, USysProtocol, Series, UFrameBase, cxGraphics, cxControls,
-  cxLookAndFeels, cxLookAndFeelPainters, cxContainer, cxEdit, ExtCtrls,
-  cxCheckBox, TeeProcs, TeEngine, Chart, cxDropDownEdit, cxCheckComboBox,
-  DB, ADODB, Grids, DBGrids, cxPC, cxTextEdit, cxMaskEdit, cxCalendar,
+  cxLookAndFeels, cxLookAndFeelPainters, cxContainer, cxEdit, DB, ADODB,
+  ExtCtrls, cxCheckBox, TeeProcs, TeEngine, Chart, Grids, DBGrids, cxPC,
+  cxDropDownEdit, cxCheckComboBox, cxTextEdit, cxMaskEdit, cxCalendar,
   cxLabel, StdCtrls;
 
 type
@@ -41,23 +41,27 @@ type
     CheckBreakPipe: TcxCheckBox;
     CheckTotalPipe: TcxCheckBox;
     CheckBreakPot: TcxCheckBox;
-    Bevel1: TBevel;
     DBGrid2: TDBGrid;
     DBGrid3: TDBGrid;
+    Bevel1: TBevel;
+    EditCheck: TcxComboBox;
     procedure TimerUITimer(Sender: TObject);
     procedure CheckBreakPipeClick(Sender: TObject);
     procedure BtnPreClick(Sender: TObject);
     procedure BtnNextClick(Sender: TObject);
     procedure EditTimePropertiesEditValueChanged(Sender: TObject);
     procedure EditTimeKeyPress(Sender: TObject; var Key: Char);
+    procedure EditCheckPropertiesChange(Sender: TObject);
+    procedure EditDevicePropertiesCloseUp(Sender: TObject);
   protected
     { Protected declarations }
+    FLastDevice: string;
     FPageBegin,FPageEnd: TDateTime;
     procedure OnShowFrame; override;
     //inhere
     function BuildDeviceIDList: string;
     procedure LoadDeviceList;
-    procedure QueryData;
+    procedure QueryData(const nQuery: Boolean = True);
     //ui data
     procedure AddChartItem(const nType: TItemType; nInit: Boolean = False);
     //series
@@ -86,11 +90,13 @@ procedure TfFrameReport.TimerUITimer(Sender: TObject);
 begin
   TimerUI.Enabled := False;
   wPage.ActivePageIndex := 0;
+
+  FLastDevice := '';
   LoadDeviceList;
 
   FPageEnd := Now;
   FPageBegin := FPageEnd - (gSysParam.FReportPage / 24);;
-  QueryData;
+  QueryData(False);
 end;
 
 //Desc: 构建设备列表
@@ -116,7 +122,7 @@ begin
         begin
           Description := nDev.FCarriage.FName;
           Tag := Integer(nDev);
-          EditDevice.States[EditDevice.Properties.Items.Count-1] := cbsChecked;
+          EditDevice.States[EditDevice.Properties.Items.Count-1] := cbsUnchecked;
         end;
       end;
     end;
@@ -147,38 +153,44 @@ end;
 //Date: 2013-3-18
 //Parm: 时间
 //Desc: 查询nData前3小时数据
-procedure TfFrameReport.QueryData;
-var nStr,nSQL: string;
+procedure TfFrameReport.QueryData(const nQuery: Boolean);
+var nStr,nSQL,nDevs: string;
     nInit: Int64;
 begin
+  if FPageEnd > Now() then
+  begin
+    FPageEnd := Now();
+    FPageBegin := FPageEnd - (gSysParam.FReportPage / 24);
+  end;
+
+  EditTime.Date := FPageEnd;
+  if not nQuery then Exit;
+
+  nDevs := BuildDeviceIDList;
+  if nDevs = '' then Exit;
+  //not device
+  
   nInit := GetTickCount;
   try
-    if FPageEnd > Now() then
-    begin
-      FPageEnd := Now();
-      FPageBegin := FPageEnd - (gSysParam.FReportPage / 24);
-    end;
-
-    LockWindowUpdate(Handle);
-    EditTime.Date := FPageEnd;
     ShowWaitForm(ParentForm, '读取数据', True);
+    LockWindowUpdate(Handle);
 
     nStr := 'Select a.*,C_Name From %s a ' +
             ' Left Join %s On C_ID=P_Carriage ' +
             'Where C_ID In (%s) and (P_Date>=''%s'' and P_Date<=''%s'')';
     //xxxxx
   
-    nSQL := Format(nStr, [sTable_BreakPipe, sTable_Carriage, BuildDeviceIDList,
+    nSQL := Format(nStr, [sTable_BreakPipe, sTable_Carriage, nDevs,
             DateTime2Str(FPageBegin), DateTime2Str(FPageEnd)]);
     FDM.QueryData(QueryBreakPipe, nSQL);
     AddChartItem(itBreakPipe, True);
 
-    nSQL := Format(nStr, [sTable_BreakPot, sTable_Carriage, BuildDeviceIDList,
+    nSQL := Format(nStr, [sTable_BreakPot, sTable_Carriage, nDevs,
             DateTime2Str(FPageBegin), DateTime2Str(FPageEnd)]);
     FDM.QueryData(QueryBreakPot, nSQL);
     AddChartItem(itBreakPot);
 
-    nSQL := Format(nStr, [sTable_TotalPipe, sTable_Carriage, BuildDeviceIDList,
+    nSQL := Format(nStr, [sTable_TotalPipe, sTable_Carriage, nDevs,
             DateTime2Str(FPageBegin), DateTime2Str(FPageEnd)]);
     FDM.QueryData(QueryTotalPipe, nSQL);
     AddChartItem(itTotalPipe);
@@ -303,6 +315,38 @@ begin
     Key := #0;
     EditTimePropertiesEditValueChanged(nil);
   end;
+end;
+
+//Desc: 设备控制
+procedure TfFrameReport.EditCheckPropertiesChange(Sender: TObject);
+var nIdx: Integer;
+begin
+  for nIdx:=EditDevice.Properties.Items.Count - 1 downto 0 do
+  begin
+    case EditCheck.ItemIndex of
+     0: EditDevice.States[nIdx] := cbsChecked;
+     1: EditDevice.States[nIdx] := cbsUnchecked;
+     2:
+      if EditDevice.States[nIdx] = cbsChecked then
+           EditDevice.States[nIdx] := cbsUnchecked
+      else EditDevice.States[nIdx] := cbsChecked;
+    end;
+  end;
+
+  EditDevicePropertiesCloseUp(nil);
+  //do query
+end;
+
+//Desc: 应用查询条件
+procedure TfFrameReport.EditDevicePropertiesCloseUp(Sender: TObject);
+var nStr: string;
+begin
+  nStr := BuildDeviceIDList;
+  if nStr = FLastDevice then Exit;
+
+  FLastDevice := nStr;
+  EditCheck.ItemIndex := -1;
+  QueryData();
 end;
 
 initialization

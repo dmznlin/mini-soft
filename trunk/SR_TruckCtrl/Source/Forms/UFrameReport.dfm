@@ -29,10 +29,10 @@ inherited fFrameReport: TfFrameReport
         Shape = bsBottomLine
       end
       object BtnNext: TButton
-        Left = 430
-        Top = 9
-        Width = 55
-        Height = 25
+        Left = 608
+        Top = 10
+        Width = 62
+        Height = 27
         Caption = #19979#19968#39029'>>'
         Font.Charset = GB2312_CHARSET
         Font.Color = clWindowText
@@ -44,26 +44,38 @@ inherited fFrameReport: TfFrameReport
         OnClick = BtnNextClick
       end
       object cxLabel1: TcxLabel
-        Left = 186
-        Top = 15
+        Left = 280
+        Top = 14
         Caption = #26102#38388':'
         ParentFont = False
+        Style.Font.Charset = GB2312_CHARSET
+        Style.Font.Color = clGreen
+        Style.Font.Height = -16
+        Style.Font.Name = #23435#20307
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
       end
       object EditTime: TcxDateEdit
-        Left = 224
-        Top = 12
+        Left = 325
+        Top = 10
         ParentFont = False
         Properties.Kind = ckDateTime
         Properties.OnEditValueChanged = EditTimePropertiesEditValueChanged
+        Style.Font.Charset = GB2312_CHARSET
+        Style.Font.Color = clGreen
+        Style.Font.Height = -19
+        Style.Font.Name = #23435#20307
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
         TabOrder = 2
         OnKeyPress = EditTimeKeyPress
-        Width = 150
+        Width = 220
       end
       object BtnPre: TButton
-        Left = 375
-        Top = 9
-        Width = 55
-        Height = 25
+        Left = 545
+        Top = 10
+        Width = 62
+        Height = 27
         Caption = '<<'#19978#19968#39029
         Font.Charset = GB2312_CHARSET
         Font.Color = clWindowText
@@ -76,18 +88,53 @@ inherited fFrameReport: TfFrameReport
       end
       object cxLabel2: TcxLabel
         Left = 5
-        Top = 15
+        Top = 14
         Caption = #35774#22791':'
         ParentFont = False
+        Style.Font.Charset = GB2312_CHARSET
+        Style.Font.Color = clGreen
+        Style.Font.Height = -16
+        Style.Font.Name = #23435#20307
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
       end
       object EditDevice: TcxCheckComboBox
-        Left = 38
-        Top = 12
+        Left = 50
+        Top = 10
         ParentFont = False
+        Properties.EmptySelectionText = #35831#36873#25321
+        Properties.ShowEmptyText = False
         Properties.DropDownRows = 25
         Properties.Items = <>
+        Properties.OnCloseUp = EditDevicePropertiesCloseUp
+        Style.Font.Charset = GB2312_CHARSET
+        Style.Font.Color = clGreen
+        Style.Font.Height = -19
+        Style.Font.Name = #23435#20307
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
         TabOrder = 5
-        Width = 135
+        Width = 150
+      end
+      object EditCheck: TcxComboBox
+        Left = 195
+        Top = 13
+        ParentFont = False
+        Properties.DropDownListStyle = lsEditFixedList
+        Properties.ItemHeight = 25
+        Properties.Items.Strings = (
+          #20840#36873
+          #21462#28040
+          #21453#36873)
+        Properties.OnChange = EditCheckPropertiesChange
+        Style.Font.Charset = GB2312_CHARSET
+        Style.Font.Color = clGreen
+        Style.Font.Height = -16
+        Style.Font.Name = #23435#20307
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 6
+        Width = 72
       end
     end
     object wPage: TcxPageControl
@@ -97,13 +144,21 @@ inherited fFrameReport: TfFrameReport
       Height = 414
       ActivePage = SheetBreakPipe
       Align = alClient
+      Font.Charset = GB2312_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = #23435#20307
+      Font.Style = []
       LookAndFeel.Kind = lfStandard
       LookAndFeel.NativeStyle = True
+      ParentFont = False
+      TabHeight = 27
       TabOrder = 1
+      TabWidth = 80
       ClientRectBottom = 410
       ClientRectLeft = 2
       ClientRectRight = 766
-      ClientRectTop = 22
+      ClientRectTop = 31
       object SheetBreakPipe: TcxTabSheet
         Caption = #21046#21160#31649
         ImageIndex = 0
@@ -111,14 +166,14 @@ inherited fFrameReport: TfFrameReport
           Left = 0
           Top = 0
           Width = 764
-          Height = 388
+          Height = 379
           Align = alClient
           BorderStyle = bsNone
           DataSource = DataSource1
           TabOrder = 0
           TitleFont.Charset = GB2312_CHARSET
           TitleFont.Color = clWindowText
-          TitleFont.Height = -12
+          TitleFont.Height = -16
           TitleFont.Name = #23435#20307
           TitleFont.Style = []
           Columns = <
@@ -126,14 +181,14 @@ inherited fFrameReport: TfFrameReport
               Expanded = False
               FieldName = 'P_Date'
               Title.Caption = #37319#38598#26102#38388
-              Width = 125
+              Width = 165
               Visible = True
             end
             item
               Expanded = False
               FieldName = 'C_Name'
               Title.Caption = #36710#21410
-              Width = 100
+              Width = 120
               Visible = True
             end
             item
@@ -159,14 +214,14 @@ inherited fFrameReport: TfFrameReport
           Left = 0
           Top = 0
           Width = 764
-          Height = 388
+          Height = 379
           Align = alClient
           BorderStyle = bsNone
           DataSource = DataSource2
           TabOrder = 0
           TitleFont.Charset = GB2312_CHARSET
           TitleFont.Color = clWindowText
-          TitleFont.Height = -12
+          TitleFont.Height = -16
           TitleFont.Name = #23435#20307
           TitleFont.Style = []
           Columns = <
@@ -174,14 +229,14 @@ inherited fFrameReport: TfFrameReport
               Expanded = False
               FieldName = 'P_Date'
               Title.Caption = #37319#38598#26102#38388
-              Width = 125
+              Width = 165
               Visible = True
             end
             item
               Expanded = False
               FieldName = 'C_Name'
               Title.Caption = #36710#21410
-              Width = 100
+              Width = 120
               Visible = True
             end
             item
@@ -207,14 +262,14 @@ inherited fFrameReport: TfFrameReport
           Left = 0
           Top = 0
           Width = 764
-          Height = 388
+          Height = 379
           Align = alClient
           BorderStyle = bsNone
           DataSource = DataSource3
           TabOrder = 0
           TitleFont.Charset = GB2312_CHARSET
           TitleFont.Color = clWindowText
-          TitleFont.Height = -12
+          TitleFont.Height = -16
           TitleFont.Name = #23435#20307
           TitleFont.Style = []
           Columns = <
@@ -222,14 +277,14 @@ inherited fFrameReport: TfFrameReport
               Expanded = False
               FieldName = 'P_Date'
               Title.Caption = #37319#38598#26102#38388
-              Width = 125
+              Width = 165
               Visible = True
             end
             item
               Expanded = False
               FieldName = 'C_Name'
               Title.Caption = #36710#21410
-              Width = 100
+              Width = 120
               Visible = True
             end
             item
@@ -248,7 +303,7 @@ inherited fFrameReport: TfFrameReport
           Left = 0
           Top = 0
           Width = 764
-          Height = 388
+          Height = 379
           BackWall.Brush.Color = clWhite
           BackWall.Brush.Style = bsClear
           Gradient.Direction = gdFromCenter
@@ -258,13 +313,27 @@ inherited fFrameReport: TfFrameReport
           MarginLeft = 2
           MarginRight = 2
           MarginTop = 2
+          Title.Font.Charset = GB2312_CHARSET
+          Title.Font.Color = clGreen
+          Title.Font.Height = -12
+          Title.Font.Name = #23435#20307
+          Title.Font.Style = []
           Title.Text.Strings = (
             #31995#32479#36816#34892#30417#25511#26354#32447)
+          BottomAxis.Axis.Visible = False
           BottomAxis.LabelStyle = talText
+          LeftAxis.Axis.Visible = False
           LeftAxis.Title.Caption = #21387#21147#20540': '#21333#20301#21315#24085
+          LeftAxis.Title.Font.Charset = GB2312_CHARSET
+          LeftAxis.Title.Font.Color = clGreen
+          LeftAxis.Title.Font.Height = -12
+          LeftAxis.Title.Font.Name = #23435#20307
+          LeftAxis.Title.Font.Style = []
           Legend.LegendStyle = lsSeries
           Legend.ShadowSize = 0
           Legend.TextStyle = ltsPlain
+          RightAxis.Axis.Visible = False
+          TopAxis.Axis.Visible = False
           View3D = False
           Align = alClient
           BevelOuter = bvNone
@@ -273,38 +342,56 @@ inherited fFrameReport: TfFrameReport
           object CheckBreakPipe: TcxCheckBox
             Tag = 10
             Left = 2
-            Top = 2
+            Top = 1
             Caption = #21046#21160#31649
             ParentFont = False
             State = cbsChecked
+            Style.Font.Charset = GB2312_CHARSET
+            Style.Font.Color = clGreen
+            Style.Font.Height = -16
+            Style.Font.Name = #23435#20307
+            Style.Font.Style = []
+            Style.IsFontAssigned = True
             TabOrder = 0
             Transparent = True
             OnClick = CheckBreakPipeClick
-            Width = 65
+            Width = 75
           end
           object CheckTotalPipe: TcxCheckBox
             Tag = 30
-            Left = 125
-            Top = 2
+            Left = 150
+            Top = 1
             Caption = #24635#39118#31649
             ParentFont = False
             State = cbsChecked
+            Style.Font.Charset = GB2312_CHARSET
+            Style.Font.Color = clGreen
+            Style.Font.Height = -16
+            Style.Font.Name = #23435#20307
+            Style.Font.Style = []
+            Style.IsFontAssigned = True
             TabOrder = 1
             Transparent = True
             OnClick = CheckBreakPipeClick
-            Width = 65
+            Width = 75
           end
           object CheckBreakPot: TcxCheckBox
             Tag = 20
-            Left = 63
-            Top = 2
+            Left = 76
+            Top = 1
             Caption = #21046#21160#32568
             ParentFont = False
             State = cbsChecked
+            Style.Font.Charset = GB2312_CHARSET
+            Style.Font.Color = clGreen
+            Style.Font.Height = -16
+            Style.Font.Name = #23435#20307
+            Style.Font.Style = []
+            Style.IsFontAssigned = True
             TabOrder = 2
             Transparent = True
             OnClick = CheckBreakPipeClick
-            Width = 65
+            Width = 75
           end
         end
       end

@@ -8,9 +8,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  USysProtocol, UFrameBase, cxGraphics, cxControls, cxLookAndFeels,
-  cxLookAndFeelPainters, cxContainer, cxEdit, cxCheckBox, TeEngine, Series,
-  TeeProcs, Chart, ImgList, ExtCtrls, cxCheckListBox, cxLabel, cxSplitter;
+  USysProtocol, Series, UFrameBase, cxGraphics, cxControls, cxLookAndFeels,
+  cxLookAndFeelPainters, cxContainer, cxEdit, ImgList, ExtCtrls,
+  cxSplitter, cxCheckListBox, cxCheckBox, TeeProcs, TeEngine, Chart,
+  cxLabel;
 
 type
   TfFrameRunMon = class(TfFrameBase)
@@ -28,10 +29,9 @@ type
     CheckTotalPipe: TcxCheckBox;
     cxSplitter1: TcxSplitter;
     procedure TimerStartTimer(Sender: TObject);
-    procedure ListDeviceClickCheck(Sender: TObject; AIndex: Integer;
-      APrevState, ANewState: TcxCheckBoxState);
     procedure TimerUITimer(Sender: TObject);
     procedure CheckBreakPipeClick(Sender: TObject);
+    procedure ListDeviceClick(Sender: TObject);
   protected
     { Protected declarations }
     FDataList: TList;
@@ -64,6 +64,10 @@ type
     FSeries: TComponent;
     FDevice: PDeviceItem;
   end;
+
+const
+  cImage_Checked  = 0;
+  cImage_UnCheck  = 1;
 
 class function TfFrameRunMon.FrameID: integer;
 begin
@@ -118,7 +122,7 @@ begin
         with ListDevice.Items.Add do
         begin
           Text := nDev.FCarriage.FName;
-          ImageIndex := 0;
+          ImageIndex := cImage_UnCheck;
           Tag := Integer(nDev);
         end;
       end;
@@ -190,16 +194,25 @@ begin
   end; //adjust index
 end;
 
-//Desc: 按设备选择
-procedure TfFrameRunMon.ListDeviceClickCheck(Sender: TObject;
-  AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
-var nIdx: Integer;
+//Desc: 单击选择
+procedure TfFrameRunMon.ListDeviceClick(Sender: TObject);
+var nPos: TPoint;
+    nIdx: Integer;
     nData: PDataItem;
     nDev: PDeviceItem;
 begin
-  nDev := Pointer(ListDevice.Items[AIndex].Tag);
+  GetCursorPos(nPos);
+  nPos := ListDevice.ScreenToClient(nPos);
 
-  if ANewState = cbsChecked then
+  nIdx := ListDevice.ItemAtPos(nPos, True);
+  if nIdx < 0 then Exit;
+
+  if ListDevice.Items[nIdx].ImageIndex = cImage_Checked then
+       ListDevice.Items[nIdx].ImageIndex := cImage_UnCheck
+  else ListDevice.Items[nIdx].ImageIndex := cImage_Checked;
+
+  nDev := Pointer(ListDevice.Items[nIdx].Tag);
+  if ListDevice.Items[nIdx].ImageIndex = cImage_Checked then
   begin
     if CheckBreakPipe.Checked then
     begin
@@ -231,6 +244,7 @@ begin
   end;
 
   TimerUI.Enabled := Chart1.SeriesCount > 0;
+  //ui enable
 end;
 
 //Desc: 显示项选择
@@ -249,7 +263,7 @@ begin
   if (Sender as TcxCheckBox).Checked then
   begin
     for nIdx:=0 to ListDevice.Items.Count - 1 do
-    if ListDevice.Items[nIdx].State = cbsChecked then
+    if ListDevice.Items[nIdx].ImageIndex = cImage_Checked then
     begin
       nDev := Pointer(ListDevice.Items[nIdx].Tag);
       AddDataItem(nDev, nType);
