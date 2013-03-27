@@ -11,7 +11,7 @@ uses
   UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxMaskEdit, cxDropDownEdit,
   cxLabel, cxTextEdit, dxLayoutControl, StdCtrls, cxCheckBox, dxorgchr,
-  cxColorComboBox, cxSpinEdit, cxImageComboBox, ExtCtrls;
+  cxColorComboBox, cxSpinEdit, cxImageComboBox, ExtCtrls, ImgList;
 
 type
   TfFormChartStyle = class(TfFormNormal)
@@ -29,12 +29,9 @@ type
     EditShape: TcxComboBox;
     dxLayout1Item8: TdxLayoutItem;
     dxLayout1Group3: TdxLayoutGroup;
-    EditImage: TcxImageComboBox;
-    dxLayout1Item9: TdxLayoutItem;
     EditAlign: TcxComboBox;
     dxLayout1Item10: TdxLayoutItem;
     dxLayout1Group4: TdxLayoutGroup;
-    dxLayout1Group5: TdxLayoutGroup;
     dxLayout1Item11: TdxLayoutItem;
     EditIndentY: TcxSpinEdit;
     dxLayout1Item12: TdxLayoutItem;
@@ -46,6 +43,7 @@ type
     dxLayout1Item14: TdxLayoutItem;
     EditLineWidth: TcxSpinEdit;
     dxLayout1Group8: TdxLayoutGroup;
+    ImageList1: TImageList;
     procedure DeviceListCollapsing(Sender: TObject; Node: TdxOcNode;
       var Allow: Boolean);
     procedure EditIndentYPropertiesChange(Sender: TObject);
@@ -102,6 +100,7 @@ begin
      2: gChartStyleManager.LoadNodeStyle(sStyleDevList, Ord(ifDevice), nNode);
     end;
 
+    nNode.ImageIndex := 0;
     nNode := nNode.GetNext;
   end;
 
@@ -158,6 +157,10 @@ begin
       Height := EditHeight.Value;
       Color := EditColor.ColorValue;
       Shape := TdxOcShape(EditShape.ItemIndex);
+
+      if EditAlign.ItemIndex < 0 then
+           ImageAlign := iaNone
+      else ImageAlign := TdxOcImageAlign(EditAlign.ItemIndex);
     end;
 
     nNode := nNode.GetNext;
@@ -177,6 +180,7 @@ begin
     EditHeight.Value := Height;
     EditColor.ColorValue := Color;
     EditShape.ItemIndex := Ord(Shape);
+    EditAlign.ItemIndex := Ord(ImageAlign);
   end;
 end;
 

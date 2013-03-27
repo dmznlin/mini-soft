@@ -8,13 +8,14 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, UFrameBase, StdCtrls, dxorgchr, ExtCtrls;
+  Dialogs, UFrameBase, StdCtrls, dxorgchr, ExtCtrls, ImgList;
 
 type
   TfFrameConfig = class(TfFrameBase)
     DeviceList: TdxOrgChart;
     wPanel: TPanel;
     Bevel1: TBevel;
+    Image1: TImageList;
     procedure DeviceListDeletion(Sender: TObject; Node: TdxOcNode);
     procedure DeviceListChange(Sender: TObject; Node: TdxOcNode);
     procedure DeviceListDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -123,8 +124,6 @@ begin
     //init ui
 
     nNode := DeviceList.Add(nil, nil);
-    nNode.Text := '系统设备';
-
     New(nData);
     nNode.Data := nData;
     
@@ -132,6 +131,8 @@ begin
     nData.FCOM := Pointer($01);
     gChartStyleManager.LoadNodeStyle(sStyleDevList, Ord(ifRoot), nNode);
 
+    nNode.Text := '系统设备';
+    nNode.ImageIndex := 0;
     LoadCOMPorts(nNode);
     //load ports
 
@@ -170,8 +171,6 @@ begin
       if not nCOM.FParam.FCOMValid then Continue;
 
       nNode := DeviceList.AddChild(nRoot, nil);
-      nNode.Text := nCOM.FParam.FName;
-
       New(nData);
       nNode.Data := nData;
       
@@ -179,6 +178,8 @@ begin
       nData.FCOM := nCOM.FParam;
       gChartStyleManager.LoadNodeStyle(sStyleDevList, Ord(ifPort), nNode);
 
+      nNode.Text := nCOM.FParam.FName;
+      nNode.ImageIndex := 1;
       LoadDevices(nNode, nCOM.FDevices, True);
       //load sub
     end;
@@ -192,8 +193,6 @@ begin
       if nDev.FDeviceUsed or (not nDev.FDeviceValid) then Continue;
 
       nNode := DeviceList.AddChild(nRoot, nil);
-      nNode.Text := '无效设备';
-
       New(nData);
       nNode.Data := nData;
 
@@ -201,6 +200,8 @@ begin
       nData.FCOM := Pointer($02);
       gChartStyleManager.LoadNodeStyle(sStyleDevList, Ord(ifPort), nNode);
 
+      nNode.Text := '无效设备';
+      nNode.ImageIndex := 3;
       LoadDevices(nNode, nList, False);
       Break;
     end;
@@ -226,8 +227,6 @@ begin
       //invalid
 
       nNode := DeviceList.AddChild(nRoot, nil);
-      nNode.Text := nD.FCarriage.FName;
-
       New(nData);
       nNode.Data := nData;
 
@@ -236,20 +235,23 @@ begin
       nData.FDevice := nD;
       
       gChartStyleManager.LoadNodeStyle(sStyleDevList, Ord(ifDevice), nNode);
+      nNode.Text := nD.FCarriage.FName;
+      nNode.ImageIndex := 2;
     end else
     begin
       if nD.FDeviceUsed then Continue;
       //invalid
 
       nNode := DeviceList.AddChild(nRoot, nil);
-      nNode.Text := Format('%s-%d', [nD.FCOMPort, nD.FIndex]);
-
       New(nData);
       nNode.Data := nData;
       
       nData.FType := ifDeviceUnused;
       nData.FDevice := nD;
       gChartStyleManager.LoadNodeStyle(sStyleDevList, Ord(ifDevice), nNode);
+
+      nNode.Text := Format('%s-%d', [nD.FCOMPort, nD.FIndex]);
+      nNode.ImageIndex := 2;
     end;
   end;
 end;
