@@ -40,7 +40,7 @@ inherited fFrameRunLog: TfFrameRunLog
         Shape = bsLeftLine
       end
       object Check1: TcxCheckBox
-        Left = 12
+        Left = 5
         Top = 6
         Caption = #26174#31034#36816#34892#26102#25968#25454
         ParentFont = False

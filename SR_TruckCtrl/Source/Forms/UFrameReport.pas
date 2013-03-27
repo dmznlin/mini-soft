@@ -343,9 +343,10 @@ var nStr: string;
 begin
   nStr := BuildDeviceIDList;
   if nStr = FLastDevice then Exit;
-
   FLastDevice := nStr;
-  EditCheck.ItemIndex := -1;
+  
+  if not EditCheck.Focused then
+    EditCheck.ItemIndex := -1;
   QueryData();
 end;
 
