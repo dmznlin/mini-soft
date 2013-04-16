@@ -7,7 +7,7 @@ unit USysProtocol;
 interface
 
 uses
-  Windows, Classes, SysUtils, SyncObjs, CPortTypes;
+  Windows, Classes, Graphics, SysUtils, SyncObjs, CPortTypes;
   
 const
   cHeader_0           = $FE;
@@ -111,14 +111,27 @@ type
     FCarriageID: string;                      //车厢标识
     FCarriage: PCarriageItem;                 //所在车厢
 
+    FColorBreakPipe: TColor;
+    FColorBreakPot: TColor;
+    FColorTotalPipe: TColor;                  //曲线颜色
+
     FLastActive: Int64;                       //上次活动
     FLastFrameID: Byte;                       //上次帧号
     FDeviceUsed: Boolean;                     //已使用
     FDeviceValid: Boolean;                    //设备有效
 
+    //--------------------------------------------------------------------------
+    FTotalPipeTimeBase: TDateTime;            //时间基准
+    FTotalPipeTimeNow: TDateTime;             //当前时间
     FTotalPipe: Word;                         //总风管
-    FBreakPipeNum: Word;                      
+
+    FBreakPipeTimeBase: TDateTime;            //时间基准
+    FBreakPipeTimeNow: TDateTime;             //当前时间
+    FBreakPipeNum: Word;
     FBreakPipe: array[0..31] of TDeviceData;  //制动管
+
+    FBreakPotTimeBase: TDateTime;             //时间基准
+    FBreakPotTimeNow: TDateTime;              //当前时间
     FBreakPotNum: Word;
     FBreakPot: array[0..31] of TDeviceData;   //制动缸
   end;

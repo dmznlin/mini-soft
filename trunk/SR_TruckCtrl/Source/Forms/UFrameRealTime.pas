@@ -121,14 +121,19 @@ begin
   with gSysParam do
   begin
     FTrainID    := 'id';
-    FQInterval  := 1000;
     FPrintSend  := False;
     FPrintRecv  := False;
+
+    FQInterval  := 1000;
+    FCollectTM  := 20;
+    FResetTime  := 0;
     
     FUIInterval := 20;
     FUIMaxValue := 600;
-    FChartCount := 5000;
     FReportPage := 3;
+
+    FChartCount := 5000;
+    FChartTime := 10;
   end;
 
   nStr := 'Select * From %s';
@@ -150,6 +155,14 @@ begin
         FQInterval := FieldByName('D_Value').AsInteger;
       //xxxxx
 
+      if CompareText(sFlag_CollectTime, nStr) = 0 then
+        FCollectTM := FieldByName('D_Value').AsInteger;
+      //xxxxx
+
+      if CompareText(sFlag_ResetTime, nStr) = 0 then
+        FResetTime := FieldByName('D_Value').AsInteger;
+      //xxxxx
+
       if CompareText(sFlag_PrintSend, nStr) = 0 then
         FPrintSend := FieldByName('D_Value').AsString = sFlag_Yes;
       //xxxxx
@@ -168,6 +181,10 @@ begin
 
       if CompareText(sFlag_ChartCount, nStr) = 0 then
         FChartCount := FieldByName('D_Value').AsInteger;
+      //xxxxx
+
+      if CompareText(sFlag_ChartTime, nStr) = 0 then
+        FChartTime := FieldByName('D_Value').AsInteger;
       //xxxxx
 
       if CompareText(sFlag_ReportPage, nStr) = 0 then
@@ -230,6 +247,10 @@ begin
       FIndex := FieldByName('D_Index').AsInteger;
       FSerial := FieldByName('D_Serial').AsString;
       FCarriageID := FieldByName('D_Carriage').AsString;
+
+      FColorBreakPipe := FieldByName('D_clBreakPipe').AsInteger;
+      FColorBreakPot := FieldByName('D_clBreakPot').AsInteger;
+      FColorTotalPipe := FieldByName('D_clTotalPot').AsInteger;
 
       gDeviceManager.AddDevice(nDev);
       Next;
@@ -404,6 +425,7 @@ end;
 procedure TfFrameRealTimeMon.OnData(const nData: PDeviceItem);
 var nStr: string;
     nIdx: Integer;
+    nDate: TDateTime;
     nDBConn: PDBWorker;
 begin
   nDBConn := gDBConnManager.GetConnection(sProgID, nIdx);
@@ -418,16 +440,25 @@ begin
       nDBConn.FConn.Connected := True;
     //conn db
 
+    nDate := nData.FBreakPipeTimeBase;
+    //init time base
+
     for nIdx:=0 to nData.FBreakPipeNum - 1 do
     begin
       nStr := MakeSQLByStr([SF('P_Train', gSysParam.FTrainID),
               SF('P_Carriage', nData.FCarriageID),
               SF('P_Value', nData.FBreakPipe[nIdx].FData, sfVal),
               SF('P_Number', nData.FBreakPipe[nIdx].FNum, sfVal),
-              SF('P_Date', sField_SQLServer_Now, sfVal)
+              SF('P_Date', nDate)
               ], sTable_BreakPipe, '', True);
+      //xxxxx
+
       gDBConnManager.WorkerExec(nDBConn, nStr);
+      TPortReadManager.IncTime(nDate, nData.FBreakPipe[nIdx].FNum);
     end;
+
+    nDate := nData.FBreakPotTimeBase;
+    //init time base
 
     for nIdx:=0 to nData.FBreakPotNum - 1 do
     begin
@@ -435,15 +466,18 @@ begin
               SF('P_Carriage', nData.FCarriageID),
               SF('P_Value', nData.FBreakPot[nIdx].FData, sfVal),
               SF('P_Number', nData.FBreakPot[nIdx].FNum, sfVal),
-              SF('P_Date', sField_SQLServer_Now, sfVal)
+              SF('P_Date', nDate)
               ], sTable_BreakPot, '', True);
+      //xxxxx
+
       gDBConnManager.WorkerExec(nDBConn, nStr);
+      TPortReadManager.IncTime(nDate, nData.FBreakPot[nIdx].FNum);
     end;
 
     nStr := MakeSQLByStr([SF('P_Train', gSysParam.FTrainID),
             SF('P_Carriage', nData.FCarriageID),
             SF('P_Value', nData.FTotalPipe, sfVal),
-            SF('P_Date', sField_SQLServer_Now, sfVal)
+            SF('P_Date', nData.FTotalPipeTimeBase)
             ], sTable_TotalPipe, '', True);
     gDBConnManager.WorkerExec(nDBConn, nStr);
   finally

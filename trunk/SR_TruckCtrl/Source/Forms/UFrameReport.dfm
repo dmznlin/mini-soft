@@ -142,7 +142,7 @@ inherited fFrameReport: TfFrameReport
       Top = 45
       Width = 770
       Height = 414
-      ActivePage = SheetBreakPipe
+      ActivePage = SheetChart
       Align = alClient
       Font.Charset = GB2312_CHARSET
       Font.Color = clWindowText

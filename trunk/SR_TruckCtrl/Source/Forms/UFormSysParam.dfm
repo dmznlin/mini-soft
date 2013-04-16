@@ -2,24 +2,24 @@ inherited fFormSysParam: TfFormSysParam
   Left = 253
   Top = 248
   Caption = #31995#32479#21442#25968
-  ClientHeight = 351
-  ClientWidth = 327
+  ClientHeight = 378
+  ClientWidth = 343
   Position = poMainFormCenter
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 327
-    Height = 351
+    Width = 343
+    Height = 378
     inherited BtnOK: TButton
-      Left = 181
-      Top = 318
+      Left = 197
+      Top = 345
       Caption = #30830#23450
-      TabOrder = 10
+      TabOrder = 11
     end
     inherited BtnExit: TButton
-      Left = 251
-      Top = 318
-      TabOrder = 11
+      Left = 267
+      Top = 345
+      TabOrder = 12
     end
     object EditTrainID: TcxTextEdit [2]
       Left = 117
@@ -31,7 +31,7 @@ inherited fFormSysParam: TfFormSysParam
     end
     object EditUIInterval: TcxTextEdit [3]
       Left = 117
-      Top = 128
+      Top = 138
       ParentFont = False
       Properties.CharCase = ecUpperCase
       Properties.MaxLength = 16
@@ -42,12 +42,15 @@ inherited fFormSysParam: TfFormSysParam
       Left = 23
       Top = 111
       AutoSize = False
+      Caption = #36816#34892#25968#25454#26609#22270#8595
       ParentFont = False
+      Properties.Alignment.Vert = taVCenter
       Properties.LineOptions.Alignment = cxllaBottom
       Properties.LineOptions.Visible = True
       Transparent = True
-      Height = 12
-      Width = 241
+      Height = 22
+      Width = 264
+      AnchorY = 122
     end
     object EditQInterval: TcxTextEdit [5]
       Left = 117
@@ -59,16 +62,16 @@ inherited fFormSysParam: TfFormSysParam
     end
     object EditUIMax: TcxTextEdit [6]
       Left = 117
-      Top = 153
+      Top = 163
       ParentFont = False
       TabOrder = 5
       Width = 121
     end
     object EditChartCount: TcxTextEdit [7]
       Left = 117
-      Top = 178
+      Top = 215
       ParentFont = False
-      TabOrder = 6
+      TabOrder = 7
       Width = 121
     end
     object EditPage: TcxTextEdit [8]
@@ -80,32 +83,42 @@ inherited fFormSysParam: TfFormSysParam
     end
     object CheckSend: TcxCheckBox [9]
       Left = 23
-      Top = 220
+      Top = 265
       Caption = #36816#34892#26102#25968#25454':'#26174#31034#21457#36865
-      ParentFont = False
-      TabOrder = 8
-      Transparent = True
-      Width = 121
-    end
-    object CheckRecv: TcxCheckBox [10]
-      Left = 23
-      Top = 246
-      Caption = #36816#34892#26102#25968#25454':'#26174#31034#25509#25910
       ParentFont = False
       TabOrder = 9
       Transparent = True
       Width = 121
     end
+    object CheckRecv: TcxCheckBox [10]
+      Left = 23
+      Top = 291
+      Caption = #36816#34892#26102#25968#25454':'#26174#31034#25509#25910
+      ParentFont = False
+      TabOrder = 10
+      Transparent = True
+      Width = 121
+    end
     object cxLabel2: TcxLabel [11]
       Left = 23
-      Top = 203
+      Top = 188
       AutoSize = False
+      Caption = #36816#34892#30417#25511#26354#32447#8595
       ParentFont = False
+      Properties.Alignment.Vert = taVCenter
       Properties.LineOptions.Alignment = cxllaBottom
       Properties.LineOptions.Visible = True
       Transparent = True
-      Height = 12
-      Width = 281
+      Height = 22
+      Width = 264
+      AnchorY = 199
+    end
+    object EditChartTime: TcxTextEdit [12]
+      Left = 117
+      Top = 240
+      ParentFont = False
+      TabOrder = 8
+      Width = 187
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
@@ -140,14 +153,19 @@ inherited fFormSysParam: TfFormSysParam
           Control = EditUIMax
           ControlOptions.ShowBorder = False
         end
+        object dxLayout1Item12: TdxLayoutItem
+          ShowCaption = False
+          Control = cxLabel2
+          ControlOptions.ShowBorder = False
+        end
         object dxLayout1Item7: TdxLayoutItem
           Caption = #26354#32447#28857#25968#19978#38480':'
           Control = EditChartCount
           ControlOptions.ShowBorder = False
         end
-        object dxLayout1Item12: TdxLayoutItem
-          ShowCaption = False
-          Control = cxLabel2
+        object dxLayout1Item13: TdxLayoutItem
+          Caption = #20445#25345#26102#38271'('#20998#38047'):'
+          Control = EditChartTime
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item10: TdxLayoutItem

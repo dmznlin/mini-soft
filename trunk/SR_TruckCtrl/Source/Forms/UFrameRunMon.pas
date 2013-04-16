@@ -28,16 +28,27 @@ type
     CheckBreakPipe: TcxCheckBox;
     CheckTotalPipe: TcxCheckBox;
     cxSplitter1: TcxSplitter;
+    CheckCross: TcxCheckBox;
     procedure TimerStartTimer(Sender: TObject);
     procedure TimerUITimer(Sender: TObject);
     procedure CheckBreakPipeClick(Sender: TObject);
     procedure ListDeviceClick(Sender: TObject);
+    procedure Chart1MouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure Chart1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Chart1MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure CheckCrossClick(Sender: TObject);
   protected
     { Protected declarations }
     FDataList: TList;
+    FLastDraw: Int64;
+    FCanDrawCross: Boolean;
     procedure OnShowFrame; override;
     procedure OnDestroyFrame; override;
     procedure BuildDeviceList;
+    procedure DrawSeriesValue(const nPosX,nPosY: Integer);
     //ui data
     procedure InitDataItem(const nData: Pointer; const nType: TItemType;
      const nSeries: TComponent; const nDev: PDeviceItem);
@@ -76,6 +87,9 @@ end;
 
 procedure TfFrameRunMon.OnShowFrame;
 begin
+  FLastDraw := 0;
+  FCanDrawCross := True;
+
   FDataList := TList.Create;
   TimerStart.Enabled := True;
 end;
@@ -96,7 +110,56 @@ end;
 procedure TfFrameRunMon.TimerStartTimer(Sender: TObject);
 begin
   TimerStart.Enabled := False;
+  InitChartStyle(Chart1);
   BuildDeviceList;
+end;
+
+procedure TfFrameRunMon.CheckCrossClick(Sender: TObject);
+begin
+  FCanDrawCross := CheckCross.Checked;
+end;
+
+procedure TfFrameRunMon.Chart1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FCanDrawCross := False;
+  if FLastDraw > 0 then
+  begin
+    FLastDraw := 0;
+    Chart1.Repaint;
+  end;
+end;
+
+procedure TfFrameRunMon.Chart1MouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  with Chart1 do
+  begin
+    if not (FCanDrawCross and CheckCross.Checked) then Exit;
+    if Chart1.SeriesList.Count < 1 then Exit;
+
+    Repaint;
+    FLastDraw := GetTickCount;
+
+    if X < ChartRect.Left then X := ChartRect.Left + 1;
+    if X > ChartRect.Right then X := ChartRect.Right - 1;
+    if Y < ChartRect.Top then Y := ChartRect.Top + 1;
+    if Y > ChartRect.Bottom then Y := ChartRect.Bottom - 1;
+
+    Canvas.Pen.Color := clAqua;
+    Canvas.Pen.Style := psSolid;
+    Canvas.DoVertLine(X, ChartRect.Top, ChartRect.Bottom);
+    Canvas.DoHorizLine(ChartRect.Left, ChartRect.Right, Y);
+
+    DrawSeriesValue(X, Y);
+    //绘制数据
+  end;
+end;
+
+procedure TfFrameRunMon.Chart1MouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FCanDrawCross := CheckCross.Checked;
 end;
 
 //------------------------------------------------------------------------------
@@ -132,6 +195,52 @@ begin
   end;
 end;
 
+procedure TfFrameRunMon.DrawSeriesValue(const nPosX,nPosY: Integer);
+var nRect: TRect;
+    nL,nT: Integer;
+    nVal,nDate: string;
+    nDVal,nDDate: Double;
+begin
+  with Chart1 do
+  begin
+    Canvas.Font.Color := clGreen;
+    //SetBkMode(Canvas.Handle, TRANSPARENT);
+
+    Chart1.Series[0].GetCursorValues(nDDate, nDVal);
+    nVal := '数值: ' + Format('%.2f', [nDVal]);
+    nDate := '时间: ' + FormatDateTime('mm-dd hh:mm:ss:zzz', TDateTime(nDDate));
+
+    nL := Canvas.TextWidth(nVal);
+    nT := Canvas.TextWidth(nDate);
+
+    if nL > nT then
+         nRect.Right := nL + 2
+    else nRect.Right := nT + 2;
+
+    nT := Canvas.TextHeight(nVal) * 2 + 2;
+    nRect.Bottom := nT + 2;
+
+    if nPosX - ChartRect.Left < nRect.Right then
+         nRect.Left := nPosX + 2
+    else nRect.Left := nPosX - nRect.Right;
+
+    if nPosY - ChartRect.Top < nRect.Bottom then
+         nRect.Top := nPosY + 2
+    else nRect.Top := nPosY - nRect.Bottom;
+
+    if (nPosX < nRect.Left) and (nPosY < nRect.Top) then
+    begin
+      nRect.Left := nRect.Left + 32;
+      //nRect.Top := nRect.Top + 10;
+    end;
+
+    Canvas.TextOut(nRect.Left, nRect.Top, nVal);
+    nRect.Top := nRect.Top + 2 + Canvas.TextHeight(nVal);
+    Canvas.TextOut(nRect.Left, nRect.Top, nDate);
+  end;
+
+end;
+
 //Date: 2013-3-18
 //Parm: 数据;节点类型;对象
 //Desc: 初始化数据项
@@ -153,17 +262,37 @@ end;
 procedure TfFrameRunMon.AddDataItem(const nDevice: PDeviceItem;
   const nType: TItemType);
 var nStr: string;
+    nColor: TColor;
     nData: PDataItem;
     nSeries: TFastLineSeries;
 begin
   case nType of
-   itBreakPipe : nStr := Format('%s:%s', [nDevice.FCarriage.FName, sBreakPipe]);
-   itBreakPot  : nStr := Format('%s:%s', [nDevice.FCarriage.FName, sBreakPot]);
-   itTotalPipe : nStr := Format('%s:%s', [nDevice.FCarriage.FName, sTotalPipe]);
+   itBreakPipe:
+    begin
+      nStr := Format('%s:%s', [nDevice.FCarriage.FName, sBreakPipe]);
+      nColor := nDevice.FColorBreakPipe;
+    end;
+   itBreakPot:
+    begin
+      nStr := Format('%s:%s', [nDevice.FCarriage.FName, sBreakPot]);
+      nColor := nDevice.FColorBreakPot;
+    end;
+   itTotalPipe:
+    begin
+      nStr := Format('%s:%s', [nDevice.FCarriage.FName, sTotalPipe]);
+      nColor := nDevice.FColorTotalPipe;
+    end else
+    begin
+      nColor := 0;
+    end;
   end;
 
   nSeries := TFastLineSeries.Create(Chart1);
   nSeries.Title := nStr;
+  nSeries.XValues.DateTime := True;
+
+  if nColor <> 0 then
+    nSeries.SeriesColor := nColor;
   Chart1.AddSeries(nSeries);
 
   New(nData);
@@ -286,16 +415,72 @@ end;
 
 //------------------------------------------------------------------------------
 //Date: 2013-3-18
-//Parm: 对象;数据;个数
+//Parm: 对象;数据;类型
 //Desc: 为nSeries添加nData数据
 procedure AddSeriesData(const nSeries: TFastLineSeries;
- const nData: array of TDeviceData; const nNum: Word);
+ const nDevice: PDeviceItem; const nType: TItemType);
 var nIdx: Integer;
+    nDate: TDateTime;
 begin
-  for nIdx:=Low(nData) to nNum - 1 do
-    nSeries.AddY(nData[nIdx].FData, Time2Str(Now));
-  //xxxxx
+  if gSysParam.FChartTime > 0 then
+  begin
+    nDate := Now - gSysParam.FChartTime / (24 * 60);
+    nIdx := 0;
 
+    while nIdx < nSeries.XValues.Count do
+    begin
+      if nSeries.XValues[nIdx] < nDate then
+           nSeries.Delete(nIdx)
+      else Break;
+    end; //清除超时数据
+  end;
+
+  case nType of
+   itBreakPipe:
+    begin
+      nDate := nDevice.FBreakPipeTimeBase;
+      //init base time
+      
+      for nIdx:=0 to nDevice.FBreakPipeNum - 1 do
+      begin
+        nSeries.AddXY(nDate, nDevice.FBreakPipe[nIdx].FData);
+        if nDevice.FBreakPipe[nIdx].FNum >= 3 then
+        begin
+          TPortReadManager.IncTime(nDate, nDevice.FBreakPipe[nIdx].FNum - 1);
+          nSeries.AddXY(nDate, nDevice.FBreakPipe[nIdx].FData);
+        end else
+        begin
+          TPortReadManager.IncTime(nDate, nDevice.FBreakPipe[nIdx].FNum);
+          //next time
+        end;
+      end;
+    end;
+   itBreakPot:
+    begin
+      nDate := nDevice.FBreakPotTimeBase;
+      //init base time
+      
+      for nIdx:=0 to nDevice.FBreakPotNum - 1 do
+      begin
+        nSeries.AddXY(nDate, nDevice.FBreakPot[nIdx].FData);
+        if nDevice.FBreakPot[nIdx].FNum >= 3 then
+        begin
+          TPortReadManager.IncTime(nDate, nDevice.FBreakPot[nIdx].FNum - 1);
+          nSeries.AddXY(nDate, nDevice.FBreakPot[nIdx].FData);
+        end else
+        begin
+          TPortReadManager.IncTime(nDate, nDevice.FBreakPot[nIdx].FNum);
+          //next time
+        end;
+      end;
+    end;
+   itTotalPipe:
+    begin
+      nDate := nDevice.FTotalPipeTimeNow;
+      nSeries.AddXY(nDate, nDevice.FTotalPipe);
+    end;
+  end;
+     
   if nSeries.YValues.Count > gSysParam.FChartCount then
   begin
     for nIdx:=nSeries.YValues.Count - gSysParam.FChartCount downto 0 do
@@ -309,8 +494,14 @@ procedure TfFrameRunMon.TimerUITimer(Sender: TObject);
 var nIdx: integer;
     nData: PDataItem;
     nSeries: TFastLineSeries;
-    nArray: array[0..0] of TDeviceData;
 begin
+  if (FLastDraw > 0) and (GetTickCount - FLastDraw > 3200) and
+     (GetKeyState(VK_SHIFT) and $80000000 = 0) then
+  begin
+    FLastDraw := 0;
+    Chart1.Repaint;
+  end;
+
   for nIdx:=Chart1.SeriesCount - 1 downto 0 do
   begin
     nSeries := Chart1.Series[nIdx] as TFastLineSeries;
@@ -319,24 +510,7 @@ begin
     if nData.FLastScan = nData.FDevice.FLastActive then Exit;
     //未更新
     nData.FLastScan := nData.FDevice.FLastActive;
-
-    case nData.FItemType of
-     itBreakPipe:
-      begin
-        AddSeriesData(nSeries, nData.FDevice.FBreakPipe,
-                               nData.FDevice.FBreakPipeNum);
-      end;
-     itBreakPot:
-      begin
-        AddSeriesData(nSeries, nData.FDevice.FBreakPot,
-                               nData.FDevice.FBreakPotNum);
-      end;
-     itTotalPipe:
-      begin
-        nArray[0].FData := nData.FDevice.FTotalPipe;
-        AddSeriesData(nSeries, nArray, 1);
-      end;
-    end;
+    AddSeriesData(nSeries, nData.FDevice, nData.FItemType);
   end;
 end;
 
