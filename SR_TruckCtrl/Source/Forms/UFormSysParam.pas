@@ -34,6 +34,8 @@ type
     dxLayout1Item11: TdxLayoutItem;
     dxLayout1Item12: TdxLayoutItem;
     cxLabel2: TcxLabel;
+    dxLayout1Item13: TdxLayoutItem;
+    EditChartTime: TcxTextEdit;
   protected
     { Protected declarations }
     procedure InitFormData;
@@ -83,6 +85,7 @@ begin
     EditUIInterval.Text := IntToStr(FUIInterval);
     EditUIMax.Text := IntToStr(Trunc(FUIMaxValue));
     EditChartCount.Text := IntToStr(FChartCount);
+    EditChartTime.Text := IntToStr(FChartTime);
     EditPage.Text := IntToStr(FReportPage);
   end;
 end;
@@ -133,6 +136,13 @@ begin
               (StrToInt(EditChartCount.Text) >= 500);
     nHint := '点数上限应大于500';
   end else
+
+  if Sender = EditChartTime then
+  begin
+    Result := IsNumber(EditChartTime.Text, False) and
+              (StrToInt(EditChartTime.Text) >= 1);
+    nHint := '保持时长应大于1分钟';
+  end;
 end;
 
 function BoolYN(const nVal: Boolean): string;
@@ -155,6 +165,7 @@ begin
     FUIInterval := StrToInt(EditUIInterval.Text);
     FUIMaxValue := StrToInt(EditUIMax.Text);
     FChartCount := StrToInt(EditChartCount.Text);
+    FChartTime  := StrToInt(EditChartTime.Text);
     FReportPage := StrToInt(EditPage.Text);
 
     nStr := Format('D_Name=''%s''', [sFlag_TrainID]);
@@ -183,6 +194,10 @@ begin
 
     nStr := Format('D_Name=''%s''', [sFlag_ChartCount]);
     nStr := MakeSQLByStr([SF('D_Value', FChartCount)], sTable_SysDict, nStr, False);
+    nList.Add(nStr);
+
+    nStr := Format('D_Name=''%s''', [sFlag_ChartTime]);
+    nStr := MakeSQLByStr([SF('D_Value', FChartTime)], sTable_SysDict, nStr, False);
     nList.Add(nStr);
 
     nStr := Format('D_Name=''%s''', [sFlag_ReportPage]);

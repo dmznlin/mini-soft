@@ -7,7 +7,7 @@ unit USysConst;
 interface
 
 uses
-  Windows, SysUtils, Classes, Forms, IniFiles, Registry, UMgrDBConn,
+  Windows, SysUtils, Classes, Chart, Forms, IniFiles, Registry, UMgrDBConn,
   dxStatusBar, UBase64, ULibFun, UDataModule, UFormWait;
 
 const
@@ -64,12 +64,15 @@ type
     FAutoMin    : Boolean;                           //启动最小化
 
     FTrainID    : string;                            //火车标识
-    FQInterval  : Cardinal;                          //查询指令间隔
+    FQInterval  : Word;                              //查询指令间隔(毫秒)
+    FCollectTM  : Word;                              //数据采样间隔(毫秒)
+    FResetTime  : Word;                              //时间同步间隔(分钟)
     FPrintSend  : Boolean;
     FPrintRecv  : Boolean;                           //打印运行数据
     FUIInterval : Integer;                           //界面组件间隔
     FUIMaxValue : Double;                            //进度条最大值
     FChartCount : Integer;                           //曲线数据点个数
+    FChartTime  : Integer;                           //曲线保持时长(分钟)
     FReportPage : Integer;                           //报表页大小
   end;
   //系统参数
@@ -131,6 +134,8 @@ procedure ActionDBConfig(const nIsRead: Boolean);
 //读写数据库配置
 function CheckDBConnection(const nHint: Boolean = True): Boolean;
 
+procedure InitChartStyle(const nChart: TChart);
+//初始化表图风格
 procedure ShowMsgOnLastPanelOfStatusBar(const nMsg: string);
 procedure StatusBarMsg(const nMsg: string; const nIdx: integer);
 //在状态栏显示信息
@@ -269,6 +274,27 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+//Date: 2013-4-15
+//Parm: 表图
+//Desc: 初始化nChart风格
+procedure InitChartStyle(const nChart: TChart);
+begin
+  with nChart.LeftAxis do
+  begin
+    Automatic := False;
+    Increment := 100;
+    Maximum := gSysParam.FUIMaxValue + 10;
+    Minimum := -10; 
+  end;
+
+  with nChart.BottomAxis do
+  begin
+    Grid.Visible := False;
+    DateTimeFormat := 'hh:mm:ss';
+    Increment := 3 / (24 * 3600);
+  end;
+end;
+
 //Desc: 在全局状态栏最后一个Panel上显示nMsg消息
 procedure ShowMsgOnLastPanelOfStatusBar(const nMsg: string);
 begin

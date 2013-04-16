@@ -60,6 +60,9 @@ type
     //等待对象
     FCMDBuffer: TList;
     //命令缓冲
+    FLastInit: Int64;
+    FInitDevice: Boolean;
+    //重置设备
     FSyncLock: TCriticalSection;
     //同步锁定
   protected
@@ -108,6 +111,8 @@ type
     //创建释放
     class procedure WriteReaderLog(const nMsg: string);
     //记录日志
+    class procedure IncTime(var nDate: TDateTime; const nNum: Word);
+    //累加时间
     procedure StartReader;
     procedure StopReader;
     //起停服务
@@ -313,6 +318,16 @@ begin
   Result := Length(FReaders) > 0;
 end;
 
+//Date: 2013-4-12
+//Parm: 时间;采集间隔数
+//Desc: 为nDate增加nNum间隔的时间
+class procedure TPortReadManager.IncTime(var nDate: TDateTime; const nNum: Word);
+begin
+  if nNum > 0 then
+    nDate := nDate + (nNum * gSysParam.FCollectTM) / (24 * 3600 * 1000);
+  //1ms = 1 / (24*3600*1000)
+end;
+
 //------------------------------------------------------------------------------
 constructor TPortReader.Create(AOwner: TPortReadManager; APort: PCOMItem);
 var nIdx: Integer;
@@ -498,9 +513,10 @@ end;
 
 procedure TPortReader.Execute;
 var nStr: string;
-    nInit: Boolean;
 begin
-  nInit := False;
+  FLastInit := 0;
+  FInitDevice := False;
+
   FCOMPort.FParam.FLastQuery := 0;
   FCOMPort.FParam.FLastActive := GetTickCount;
   //init default
@@ -532,15 +548,20 @@ begin
     FCOMPort.FParam.FLastActive := GetTickCount;
     //connection is active
 
-    if not nInit then
+    if (gSysParam.FResetTime > 0) and
+       (GetTickCount - FLastInit > gSysParam.FResetTime * 60 * 1000) then
+      FInitDevice := False;
+    //定时同步时钟
+
+    if not FInitDevice then
     begin
       nStr := Format('[%s]尝试重置设备.', [FCOMPort.FParam.FPortName]);
       FCOMPort.FParam.FRunFlag := nStr;
 
-      nInit := SendResetFrame;
+      FInitDevice := SendResetFrame;
       //发送重置指令
       
-      if not nInit then
+      if not FInitDevice then
       begin
         DelayWait(1 * 1000);
         Continue;
@@ -784,6 +805,16 @@ begin
       FDataLen := 0;
     end;
 
+    nDevice.FTotalPipeTimeBase := Now();
+    nDevice.FBreakPipeTimeBase := nDevice.FTotalPipeTimeBase;
+    nDevice.FBreakPotTimeBase := nDevice.FTotalPipeTimeBase;
+    //init base time
+
+    nDevice.FTotalPipeTimeNow := nDevice.FTotalPipeTimeBase;
+    nDevice.FBreakPipeTimeNow := nDevice.FTotalPipeTimeBase;
+    nDevice.FBreakPotTimeNow := nDevice.FTotalPipeTimeBase;
+    //init cureent time
+    
     WriteData(@nData);
     ReceiveData(500, True);
 
@@ -798,6 +829,7 @@ begin
     end;  
   end;
 
+  FLastInit := GetTickCount;
   Result := True;
   //all done
 end;
@@ -1153,6 +1185,21 @@ begin
     end;
   end;
 
+  nDevice.FBreakPipeTimeBase := nDevice.FBreakPipeTimeNow;
+  for nIdx:=0 to nDevice.FBreakPipeNum - 1 do
+    FOwner.IncTime(nDevice.FBreakPipeTimeNow, nDevice.FBreakPipe[nIdx].FNum);
+  //add timebase
+
+  nDevice.FBreakPotTimeBase := nDevice.FBreakPotTimeNow;
+  for nIdx:=0 to nDevice.FBreakPotNum - 1 do
+    FOwner.IncTime(nDevice.FBreakPotTimeNow, nDevice.FBreakPot[nIdx].FNum);
+  //add timebase
+
+  nDevice.FTotalPipeTimeBase := nDevice.FTotalPipeTimeNow;
+  if nDevice.FBreakPipeTimeNow > nDevice.FBreakPotTimeNow then
+       nDevice.FTotalPipeTimeNow := nDevice.FBreakPipeTimeNow
+  else nDevice.FTotalPipeTimeNow := nDevice.FBreakPotTimeNow;
+  
   if Assigned(FOwner.FOnData) then
   try
     FCOMPort.FParam.FRunFlag := Format('[%s] OnData.', [

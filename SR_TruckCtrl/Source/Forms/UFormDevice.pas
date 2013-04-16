@@ -10,7 +10,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   UFormNormal, UFormBase, USysProtocol, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxContainer, cxEdit, cxMaskEdit,
-  cxDropDownEdit, cxLabel, cxTextEdit, dxLayoutControl, StdCtrls;
+  cxDropDownEdit, cxLabel, cxTextEdit, dxLayoutControl, StdCtrls,
+  cxColorComboBox;
 
 type
   TfFormDevice = class(TfFormNormal)
@@ -30,6 +31,16 @@ type
     dxLayout1Item9: TdxLayoutItem;
     EditPort: TcxComboBox;
     dxLayout1Item10: TdxLayoutItem;
+    dxLayout1Item11: TdxLayoutItem;
+    EditTotalPipe: TcxColorComboBox;
+    dxLayout1Item12: TdxLayoutItem;
+    EditBreakPot: TcxColorComboBox;
+    dxLayout1Item13: TdxLayoutItem;
+    EditBreakPipe: TcxColorComboBox;
+    dxLayout1Group2: TdxLayoutGroup;
+    dxLayout1Group3: TdxLayoutGroup;
+    dxLayout1Item14: TdxLayoutItem;
+    cxLabel2: TcxLabel;
     procedure BtnOKClick(Sender: TObject);
     procedure EditCarPropertiesChange(Sender: TObject);
   private
@@ -123,6 +134,10 @@ var nStr: string;
     nPort: PCOMItem;
     nCar: PCarriageItem;
 begin
+  EditBreakPipe.ColorValue := 0;
+  EditBreakPot.ColorValue := 0;
+  EditTotalPipe.ColorValue := 0;
+
   nList := gDeviceManager.LockPortList;
   try
     for nIdx:=0 to nList.Count - 1 do
@@ -200,6 +215,10 @@ begin
     with EditCar do
       ItemIndex := Properties.Items.IndexOfObject(TObject(FDevice.FCarriage));
     //xxxxx
+
+    EditBreakPipe.ColorValue := FDevice.FColorBreakPipe;
+    EditBreakPot.ColorValue := FDevice.FColorBreakPot;
+    EditTotalPipe.ColorValue := FDevice.FColorTotalPipe;
   end;
 end;
 
@@ -273,6 +292,10 @@ begin
 
   nDevice.FIndex := StrToInt(EditIndex.Text);
   nDevice.FSerial := EditSerial.Text;
+
+  nDevice.FColorBreakPipe := EditBreakPipe.ColorValue;
+  nDevice.FColorBreakPot := EditBreakPot.ColorValue;
+  nDevice.FColorTotalPipe := EditTotalPipe.ColorValue;
 
   with EditCar do
   begin
@@ -359,7 +382,11 @@ begin
 
     nStr := MakeSQLByStr([SF('D_Port', nDev.FCOMPort),
             SF('D_Serial', nDev.FSerial), SF('D_Index', nDev.FIndex),
-            SF('D_Carriage', nCar.FItemID)], sTable_Device, '', True);
+            SF('D_Carriage', nCar.FItemID),
+            SF('D_clBreakPipe', EditBreakPipe.ColorValue, sfVal),
+            SF('D_clBreakPot', EditBreakPot.ColorValue, sfVal),
+            SF('D_clTotalPot', EditTotalPipe.ColorValue, sfVal)],
+            sTable_Device, '', True);
     FDM.ExecuteSQL(nStr);
 
     nInt := FDM.GetFieldMax(sTable_Device, 'R_ID');
@@ -417,7 +444,11 @@ begin
     nStr := Format('D_ID=''%s''', [FDevice.FItemID]);
     nStr := MakeSQLByStr([SF('D_Port', nDev.FCOMPort),
             SF('D_Serial', nDev.FSerial), SF('D_Index', nDev.FIndex),
-            SF('D_Carriage', nCar.FItemID)],sTable_Device, nStr, False);
+            SF('D_Carriage', nCar.FItemID),
+            SF('D_clBreakPipe', EditBreakPipe.ColorValue, sfVal),
+            SF('D_clBreakPot', EditBreakPot.ColorValue, sfVal),
+            SF('D_clTotalPot', EditTotalPipe.ColorValue, sfVal)],
+            sTable_Device, nStr, False);
     FDM.ExecuteSQL(nStr);
 
     FDM.ADOConn.CommitTrans;

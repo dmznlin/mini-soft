@@ -2,23 +2,23 @@ inherited fFormDevice: TfFormDevice
   Left = 253
   Top = 248
   Caption = #35774#22791
-  ClientHeight = 351
-  ClientWidth = 327
+  ClientHeight = 371
+  ClientWidth = 335
   Position = poMainFormCenter
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 327
-    Height = 351
+    Width = 335
+    Height = 371
     inherited BtnOK: TButton
-      Left = 181
-      Top = 318
-      TabOrder = 8
+      Left = 189
+      Top = 338
+      TabOrder = 12
     end
     inherited BtnExit: TButton
-      Left = 251
-      Top = 318
-      TabOrder = 9
+      Left = 259
+      Top = 338
+      TabOrder = 13
     end
     object EditIndex: TcxTextEdit [2]
       Left = 81
@@ -30,7 +30,7 @@ inherited fFormDevice: TfFormDevice
     end
     object EditCarName: TcxTextEdit [3]
       Left = 81
-      Top = 153
+      Top = 163
       ParentFont = False
       Properties.CharCase = ecUpperCase
       Properties.MaxLength = 16
@@ -41,16 +41,19 @@ inherited fFormDevice: TfFormDevice
       Left = 23
       Top = 111
       AutoSize = False
+      Caption = #25152#22312#36710#21410#8595
       ParentFont = False
+      Properties.Alignment.Vert = taVCenter
       Properties.LineOptions.Alignment = cxllaBottom
       Properties.LineOptions.Visible = True
       Transparent = True
-      Height = 12
-      Width = 241
+      Height = 22
+      Width = 281
+      AnchorY = 122
     end
     object EditCarType: TcxComboBox [5]
       Left = 81
-      Top = 178
+      Top = 188
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.DropDownRows = 12
@@ -60,7 +63,7 @@ inherited fFormDevice: TfFormDevice
     end
     object EditCarMode: TcxComboBox [6]
       Left = 81
-      Top = 203
+      Top = 213
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.DropDownRows = 12
@@ -70,7 +73,7 @@ inherited fFormDevice: TfFormDevice
     end
     object EditCar: TcxComboBox [7]
       Left = 81
-      Top = 128
+      Top = 138
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.DropDownRows = 20
@@ -95,6 +98,59 @@ inherited fFormDevice: TfFormDevice
       Properties.ItemHeight = 18
       TabOrder = 0
       Width = 121
+    end
+    object EditTotalPipe: TcxColorComboBox [10]
+      Left = 229
+      Top = 265
+      ParentFont = False
+      Properties.ColorComboStyle = cxccsComboList
+      Properties.CustomColors = <>
+      Properties.DefaultDescription = #40664#35748
+      Properties.DropDownRows = 15
+      Properties.PrepareList = cxplX11
+      Properties.ShowDescriptions = False
+      TabOrder = 11
+      Width = 85
+    end
+    object EditBreakPot: TcxColorComboBox [11]
+      Left = 81
+      Top = 290
+      ParentFont = False
+      Properties.ColorComboStyle = cxccsComboList
+      Properties.CustomColors = <>
+      Properties.DefaultDescription = #40664#35748
+      Properties.DropDownRows = 15
+      Properties.PrepareList = cxplX11
+      Properties.ShowDescriptions = False
+      TabOrder = 10
+      Width = 85
+    end
+    object EditBreakPipe: TcxColorComboBox [12]
+      Left = 81
+      Top = 265
+      ParentFont = False
+      Properties.ColorComboStyle = cxccsComboList
+      Properties.CustomColors = <>
+      Properties.DefaultDescription = #40664#35748
+      Properties.DropDownRows = 15
+      Properties.PrepareList = cxplX11
+      Properties.ShowDescriptions = False
+      TabOrder = 9
+      Width = 85
+    end
+    object cxLabel2: TcxLabel [13]
+      Left = 23
+      Top = 238
+      AutoSize = False
+      Caption = #26354#32447#39068#33394#8595
+      ParentFont = False
+      Properties.Alignment.Vert = taVCenter
+      Properties.LineOptions.Alignment = cxllaBottom
+      Properties.LineOptions.Visible = True
+      Transparent = True
+      Height = 22
+      Width = 281
+      AnchorY = 249
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
@@ -138,6 +194,40 @@ inherited fFormDevice: TfFormDevice
           Caption = #36710#21410#22411#21495':'
           Control = EditCarMode
           ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item14: TdxLayoutItem
+          ShowCaption = False
+          Control = cxLabel2
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Group2: TdxLayoutGroup
+          ShowCaption = False
+          Hidden = True
+          LayoutDirection = ldHorizontal
+          ShowBorder = False
+          object dxLayout1Group3: TdxLayoutGroup
+            ShowCaption = False
+            Hidden = True
+            ShowBorder = False
+            object dxLayout1Item13: TdxLayoutItem
+              Caption = #21046' '#21160' '#31649':'
+              Control = EditBreakPipe
+              ControlOptions.ShowBorder = False
+            end
+            object dxLayout1Item12: TdxLayoutItem
+              AutoAligns = [aaVertical]
+              Caption = #21046' '#21160' '#32568':'
+              Control = EditBreakPot
+              ControlOptions.ShowBorder = False
+            end
+          end
+          object dxLayout1Item11: TdxLayoutItem
+            AutoAligns = [aaVertical]
+            AlignHorz = ahClient
+            Caption = #24635' '#39118' '#31649':'
+            Control = EditTotalPipe
+            ControlOptions.ShowBorder = False
+          end
         end
       end
     end

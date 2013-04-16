@@ -11,6 +11,9 @@ inherited fFrameRunMon: TfFrameRunMon
     BorderWidth = 3
     Color = clWhite
     TabOrder = 0
+    DesignSize = (
+      531
+      451)
     object LabelHint: TcxLabel
       Left = 3
       Top = 3
@@ -39,6 +42,12 @@ inherited fFrameRunMon: TfFrameRunMon
       AnimatedZoom = True
       BackWall.Brush.Color = clWhite
       BackWall.Brush.Style = bsClear
+      Foot.Font.Charset = ANSI_CHARSET
+      Foot.Font.Color = clRed
+      Foot.Font.Height = -16
+      Foot.Font.Name = #23435#20307
+      Foot.Font.Style = []
+      Foot.Visible = False
       Gradient.Direction = gdFromCenter
       Gradient.EndColor = 14280412
       Gradient.StartColor = clBlack
@@ -54,7 +63,6 @@ inherited fFrameRunMon: TfFrameRunMon
       Title.Text.Strings = (
         #31995#32479#36816#34892#30417#25511#26354#32447)
       BottomAxis.Axis.Visible = False
-      BottomAxis.LabelStyle = talText
       LeftAxis.Axis.Visible = False
       LeftAxis.LabelsFont.Charset = GB2312_CHARSET
       LeftAxis.LabelsFont.Color = clBlack
@@ -79,6 +87,9 @@ inherited fFrameRunMon: TfFrameRunMon
       BevelOuter = bvNone
       Color = clWhite
       TabOrder = 1
+      OnMouseDown = Chart1MouseDown
+      OnMouseMove = Chart1MouseMove
+      OnMouseUp = Chart1MouseUp
     end
     object CheckBreakPipe: TcxCheckBox
       Tag = 10
@@ -112,6 +123,24 @@ inherited fFrameRunMon: TfFrameRunMon
       Style.IsFontAssigned = True
       TabOrder = 3
       OnClick = CheckBreakPipeClick
+      Width = 75
+    end
+    object CheckCross: TcxCheckBox
+      Tag = 30
+      Left = 453
+      Top = 6
+      Anchors = [akTop, akRight]
+      Caption = #21313#23383#32447
+      ParentFont = False
+      State = cbsChecked
+      Style.Font.Charset = GB2312_CHARSET
+      Style.Font.Color = clGreen
+      Style.Font.Height = -16
+      Style.Font.Name = #23435#20307
+      Style.Font.Style = []
+      Style.IsFontAssigned = True
+      TabOrder = 4
+      OnClick = CheckCrossClick
       Width = 75
     end
   end
@@ -196,16 +225,16 @@ inherited fFrameRunMon: TfFrameRunMon
     Enabled = False
     Interval = 300
     OnTimer = TimerStartTimer
-    Left = 33
-    Top = 32
+    Left = 470
+    Top = 33
   end
   object ImageList1: TImageList
     Height = 32
     Width = 32
-    Left = 61
-    Top = 32
+    Left = 498
+    Top = 33
     Bitmap = {
-      494C010102000400040020002000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C010102000400040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -737,13 +766,14 @@ inherited fFrameRunMon: TfFrameRunMon
       8000000180000001000000000000000080000001800000010000000000000000
       8000000180000001000000000000000080000001FFFFFFFF0000000000000000
       C0000003FFFFFFFF0000000000000000FFFFFFFFFFFFFFFF0000000000000000
-      FFFFFFFFFFFFFFFF0000000000000000}
+      FFFFFFFFFFFFFFFF000000000000000000000000000000000000000000000000
+      000000000000}
   end
   object TimerUI: TTimer
     Enabled = False
     Interval = 500
     OnTimer = TimerUITimer
-    Left = 5
-    Top = 32
+    Left = 442
+    Top = 33
   end
 end

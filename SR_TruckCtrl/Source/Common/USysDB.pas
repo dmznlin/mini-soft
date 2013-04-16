@@ -75,11 +75,14 @@ ResourceString
   sFlag_TrainID       = 'TrainID';                   //火车标识
 
   sFlag_QInterval     = 'QueryInterval';             //查询间隔
+  sFlag_CollectTime   = 'CollectInterval';           //采集间隔
+  sFlag_ResetTime     = 'FrameResetTime';            //时钟同步
   sFlag_PrintSend     = 'PrintSendData';
   sFlag_PrintRecv     = 'PrintRecvData';             //打印数据
   sFlag_UIInterval    = 'UIItemInterval';            //界面间隔
   sFlag_UIMaxValue    = 'UIItemMaxValue';            //最大进度
   sFlag_ChartCount    = 'ChartMaxCount';             //最大点数
+  sFlag_ChartTime     = 'ChartTimeLong';             //数据时长
   sFlag_ReportPage    = 'ReportPageSize';            //报表页(小时)
 
   {*数据表*}
@@ -173,7 +176,8 @@ ResourceString
 
   sSQL_NewDevice = 'Create Table $Table(R_ID $Inc, D_ID varChar(15),' +
        'D_Port varChar(16), D_Serial varChar(50), D_Index Integer,' +
-       'D_Carriage varChar(15))';
+       'D_Carriage varChar(15), D_clBreakPipe Integer, D_clBreakPot Integer,' +
+       'D_clTotalPot Integer)';
   {-----------------------------------------------------------------------------
    设备: Device
    *.R_ID: 记录号
@@ -182,6 +186,7 @@ ResourceString
    *.D_Serial: 装置号
    *.D_Index: 地址索引
    *.D_Carriage: 车厢
+   *.D_clBreakPipe,D_clBreakPot,D_clTotalPot: 曲线颜色
   -----------------------------------------------------------------------------}
 
   sSQL_NewCOMPort = 'Create Table $Table(R_ID $Inc, C_ID varChar(15),' +

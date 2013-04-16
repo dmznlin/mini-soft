@@ -90,6 +90,7 @@ procedure TfFrameReport.TimerUITimer(Sender: TObject);
 begin
   TimerUI.Enabled := False;
   wPage.ActivePageIndex := 0;
+  InitChartStyle(Chart1);
 
   FLastDevice := '';
   LoadDeviceList;
@@ -211,6 +212,8 @@ procedure TfFrameReport.AddChartItem(const nType: TItemType; nInit: Boolean);
 var nStr: string;
     nIdx: Integer;
     nDS: TDataSet;
+    nColor: TColor;
+    nDate: TDateTime;
     nSeries: TFastLineSeries;
 begin
   if nInit then
@@ -225,18 +228,21 @@ begin
     begin
       if not CheckBreakPipe.Checked then Exit;
       nStr := sBreakPipe;
+      nColor := clRed;
       nDS := QueryBreakPipe;
     end;
    itBreakPot:
     begin
       if not CheckBreakPot.Checked then Exit;
       nDS := QueryBreakPot;
+      nColor := clBlue;
       nStr := sBreakPot;
     end;
    itTotalPipe:
     begin
       if not CheckTotalPipe.Checked then Exit;
       nStr := sTotalPipe;
+      nColor := clTeal;
       nDS := QueryTotalPipe;
     end else Exit;
   end;
@@ -244,13 +250,28 @@ begin
   nSeries := TFastLineSeries.Create(Chart1);
   nSeries.Title := nStr;
   nSeries.Tag := Ord(nType);
+
+  if nColor <> clNone then
+    nSeries.SeriesColor := nColor;
   Chart1.AddSeries(nSeries);
 
   nDS.First;
   while not nDS.Eof do
   begin
-    nSeries.AddY(nDS.FieldByName('P_Value').AsFloat,
-                 Time2Str(nDS.FieldByName('P_Date').AsDateTime));
+    nDate := nDS.FieldByName('P_Date').AsDateTime;
+    nSeries.AddXY(nDate, nDS.FieldByName('P_Value').AsFloat, Time2Str(nDate));
+    //起始点
+
+    if nDS.FindField('P_Number') <> nil then
+    begin
+      nIdx := nDS.FieldByName('P_Number').AsInteger;
+      if nIdx * gSysParam.FCollectTM >= 500 then
+      begin
+        TPortReadManager.IncTime(nDate, nIdx);
+        nSeries.AddXY(nDate, nDS.FieldByName('P_Value').AsFloat, Time2Str(nDate));
+      end; //超半秒加一个点
+    end;
+
     nDS.Next;
   end;
 end;
