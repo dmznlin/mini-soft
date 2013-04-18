@@ -48,7 +48,6 @@ type
     procedure OnShowFrame; override;
     procedure OnDestroyFrame; override;
     procedure BuildDeviceList;
-    procedure DrawSeriesValue(const nPosX,nPosY: Integer);
     //ui data
     procedure InitDataItem(const nData: Pointer; const nType: TItemType;
      const nSeries: TComponent; const nDev: PDeviceItem);
@@ -151,7 +150,7 @@ begin
     Canvas.DoVertLine(X, ChartRect.Top, ChartRect.Bottom);
     Canvas.DoHorizLine(ChartRect.Left, ChartRect.Right, Y);
 
-    DrawSeriesValue(X, Y);
+    DrawChartCrossLine(Chart1, X, Y);
     //绘制数据
   end;
 end;
@@ -193,52 +192,6 @@ begin
   finally
     gDeviceManager.ReleaseLock;
   end;
-end;
-
-procedure TfFrameRunMon.DrawSeriesValue(const nPosX,nPosY: Integer);
-var nRect: TRect;
-    nL,nT: Integer;
-    nVal,nDate: string;
-    nDVal,nDDate: Double;
-begin
-  with Chart1 do
-  begin
-    Canvas.Font.Color := clGreen;
-    //SetBkMode(Canvas.Handle, TRANSPARENT);
-
-    Chart1.Series[0].GetCursorValues(nDDate, nDVal);
-    nVal := '数值: ' + Format('%.2f', [nDVal]);
-    nDate := '时间: ' + FormatDateTime('mm-dd hh:mm:ss:zzz', TDateTime(nDDate));
-
-    nL := Canvas.TextWidth(nVal);
-    nT := Canvas.TextWidth(nDate);
-
-    if nL > nT then
-         nRect.Right := nL + 2
-    else nRect.Right := nT + 2;
-
-    nT := Canvas.TextHeight(nVal) * 2 + 2;
-    nRect.Bottom := nT + 2;
-
-    if nPosX - ChartRect.Left < nRect.Right then
-         nRect.Left := nPosX + 2
-    else nRect.Left := nPosX - nRect.Right;
-
-    if nPosY - ChartRect.Top < nRect.Bottom then
-         nRect.Top := nPosY + 2
-    else nRect.Top := nPosY - nRect.Bottom;
-
-    if (nPosX < nRect.Left) and (nPosY < nRect.Top) then
-    begin
-      nRect.Left := nRect.Left + 32;
-      //nRect.Top := nRect.Top + 10;
-    end;
-
-    Canvas.TextOut(nRect.Left, nRect.Top, nVal);
-    nRect.Top := nRect.Top + 2 + Canvas.TextHeight(nVal);
-    Canvas.TextOut(nRect.Left, nRect.Top, nDate);
-  end;
-
 end;
 
 //Date: 2013-3-18

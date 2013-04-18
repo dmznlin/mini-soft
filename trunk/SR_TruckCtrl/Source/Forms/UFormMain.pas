@@ -27,6 +27,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Timer1Timer(Sender: TObject);
     procedure wPageChange(Sender: TObject);
+    procedure wPageCanClose(Sender: TObject; var ACanClose: Boolean);
   private
     { Private declarations }
     procedure FormLoadConfig;
@@ -146,21 +147,52 @@ begin
   nTab.TabWidth := Trunc(nTab.ClientWidth / nTab.Tabs.Count) - 10;
 end;
 
+//Desc: 面板对应的FrameID
+function TabLinkedFrame(const nTab: Integer): Integer;
+begin
+  case nTab of
+   0: Result := cFI_FrameRealTime;
+   1: Result := cFI_FrameRunMon;
+   2: Result := cFI_FrameReport;
+   3: Result := cFI_FrameRunlog;
+   4: Result := cFI_FrameConfig else Result := -1;
+  end;
+end;
+
 //Desc: 动态载入面板
 procedure TfFormMain.wPageChange(Sender: TObject);
 begin
   LockWindowUpdate(Handle);
   try
-    case wPage.TabIndex of
-     0: CreateBaseFrameItem(cFI_FrameRealTime, Self);
-     1: CreateBaseFrameItem(cFI_FrameRunMon, Self);
-     2: CreateBaseFrameItem(cFI_FrameReport, Self);
-     3: CreateBaseFrameItem(cFI_FrameRunlog, Self);
-     4: CreateBaseFrameItem(cFI_FrameConfig, Self);
-    end;
+    CreateBaseFrameItem(TabLinkedFrame(wPage.TabIndex), Self);
+    //new frame
+
+    if wPage.TabIndex = 0 then
+         wPage.Options := wPage.Options - [pcoCloseButton]
+    else wPage.Options := wPage.Options + [pcoCloseButton];
   finally
     Application.ProcessMessages;
     LockWindowUpdate(0);
+  end;
+end;
+
+procedure TfFormMain.wPageCanClose(Sender: TObject;
+  var ACanClose: Boolean);
+var nIdx: Integer;
+    nFrame: TfFrameBase;
+begin
+  ACanClose := False;
+
+  for nIdx:=ControlCount - 1 downto 0 do
+  if Controls[nIdx] is TfFrameBase then
+  begin
+    nFrame := Controls[nIdx] as TfFrameBase;
+    if nFrame.FrameID = TabLinkedFrame(wPage.TabIndex) then
+    begin
+      nFrame.Close();
+      wPage.TabIndex := 0;
+      Break;
+    end;
   end;
 end;
 

@@ -205,11 +205,13 @@ ResourceString
   -----------------------------------------------------------------------------}
 
   sSQL_NewBreakPipe = 'Create Table $Table(R_ID $Inc, P_Train varChar(15),' +
-       'P_Carriage varChar(15), P_Value $Float, P_Number Integer, P_Date DateTime)';
+       'P_Device varChar(15), P_Carriage varChar(15),' +
+       'P_Value $Float, P_Number Integer, P_Date DateTime)';
   {-----------------------------------------------------------------------------
    制动管: BreakPipe
    *.R_ID: 记录号
    *.P_Train: 车辆标识
+   *.P_Device: 设备
    *.P_Carriage: 车厢
    *.P_Value: 数据
    *.P_Number: 个数
@@ -217,11 +219,13 @@ ResourceString
   -----------------------------------------------------------------------------}
 
   sSQL_NewBreakPot = 'Create Table $Table(R_ID $Inc, P_Train varChar(15),' +
-       'P_Carriage varChar(15), P_Value $Float, P_Number Integer, P_Date DateTime)';
+       'P_Device varChar(15), P_Carriage varChar(15),' +
+       'P_Value $Float, P_Number Integer, P_Date DateTime)';
   {-----------------------------------------------------------------------------
    制动缸: BreakPot
    *.R_ID: 记录号
    *.P_Train: 车辆标识
+   *.P_Device: 设备
    *.P_Carriage: 车厢
    *.P_Value: 数据
    *.P_Number: 个数
@@ -229,11 +233,13 @@ ResourceString
   -----------------------------------------------------------------------------}
 
   sSQL_NewTotalPipe = 'Create Table $Table(R_ID $Inc, P_Train varChar(15),' +
-       'P_Carriage varChar(15), P_Value $Float, P_Date DateTime)';
+       'P_Device varChar(15), P_Carriage varChar(15),' +
+       'P_Value $Float, P_Date DateTime)';
   {-----------------------------------------------------------------------------
-   制动缸: TotalPipe
+   总风管: TotalPipe
    *.R_ID: 记录号
    *.P_Train: 车辆标识
+   *.P_Device: 设备
    *.P_Carriage: 车厢
    *.P_Value: 数据
    *.P_Date: 采集日期
