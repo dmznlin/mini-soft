@@ -1345,6 +1345,7 @@ object fFormMain: TfFormMain
       #21442#25968#35774#32622)
     TabSlants.Kind = skCutCorner
     TabWidth = 140
+    OnCanClose = wPageCanClose
     OnChange = wPageChange
     OnResize = wPageResize
     ClientRectBottom = 42

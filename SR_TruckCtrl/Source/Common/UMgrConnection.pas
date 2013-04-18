@@ -1074,7 +1074,7 @@ var nVal: Word;
     nFirst: Boolean;
 begin
   if nDevice.FLastFrameID <> nData.FData[0] then
-  begin
+    begin
     SendRepairFrame(nDevice);
     Exit;
   end; //to repair
@@ -1084,18 +1084,12 @@ begin
     nDevice.FLastFrameID := 0;
   //reset id
 
-  DecodeVal(nData.FData[1], nData.FData[2], nDevice.FTotalPipe, nVal);
-  //total pipe value
-
-  nVal := nData.FData[3] + 3;
-  if nVal > High(nData.FData) then Exit;
-  //overflow data
-  
+  //----------------------------------------------------------------------------
   nL := 0; nH := 0;
-  nDevice.FBreakPipeNum := 0;
+  nVal := nData.FDataLen - 1; //index start from 0
 
+  nIdx := 1;
   nFirst := True;
-  nIdx := 4;
 
   while nIdx <= nVal do
   begin
@@ -1118,8 +1112,61 @@ begin
       end else
       begin
         if nFirst then
-             nL := $FF
-        else nH := $FF;
+             nL := nData.FData[nIdx]
+        else nH := nData.FData[nIdx];
+      end;
+    end else
+    begin
+      if nFirst then
+           nL := nData.FData[nIdx]
+      else nH := nData.FData[nIdx];
+    end;
+
+    Inc(nIdx);
+    nFirst := not nFirst;
+
+    if nFirst then //high-low is pair
+    begin
+      DecodeVal(nL, nH, nDevice.FTotalPipe, nVal);
+      //total pipe value
+      Break;
+    end;
+  end;
+
+  //----------------------------------------------------------------------------
+  nVal := nData.FData[nIdx] + nIdx;
+  if nVal > High(nData.FData) then Exit;
+  //overflow data
+
+  nL := 0; nH := 0;
+  nDevice.FBreakPipeNum := 0;
+  
+  Inc(nIdx);
+  nFirst := True;
+
+  while nIdx <= nVal do
+  begin
+    if nData.FData[nIdx] = $FF then
+    begin
+      if nIdx + 1 > nVal then Break;
+      //is end
+
+      if nData.FData[nIdx + 1] = $FF then
+      begin
+        if nFirst then
+        begin
+          nL := cFooter_0;
+          Inc(nIdx);
+        end else
+        begin
+          nH := cFooter_0;
+          Inc(nIdx);
+        end;
+      end else
+      begin
+        if nFirst then
+             nL := nData.FData[nIdx]
+        else nH := nData.FData[nIdx];
       end;
     end else
     begin
@@ -1164,8 +1211,8 @@ begin
       end else
       begin
         if nFirst then
-             nL := $FF
-        else nH := $FF;
+             nL := nData.FData[nIdx]
+        else nH := nData.FData[nIdx];
       end;
     end else
     begin

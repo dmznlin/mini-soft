@@ -7,8 +7,8 @@ unit USysConst;
 interface
 
 uses
-  Windows, SysUtils, Classes, Chart, Forms, IniFiles, Registry, UMgrDBConn,
-  dxStatusBar, UBase64, ULibFun, UDataModule, UFormWait;
+  Windows, SysUtils, Classes, Chart, Forms, Graphics, IniFiles, Registry,
+  dxStatusBar, UMgrDBConn, UBase64, ULibFun, UDataModule, UFormWait;
 
 const
   cSBar_Date            = 0;                         //日期面板索引
@@ -136,6 +136,8 @@ function CheckDBConnection(const nHint: Boolean = True): Boolean;
 
 procedure InitChartStyle(const nChart: TChart);
 //初始化表图风格
+procedure DrawChartCrossLine(const nChart: TChart; const nPosX, nPosY: Integer);
+//绘制表图十字线
 procedure ShowMsgOnLastPanelOfStatusBar(const nMsg: string);
 procedure StatusBarMsg(const nMsg: string; const nIdx: integer);
 //在状态栏显示信息
@@ -292,6 +294,55 @@ begin
     Grid.Visible := False;
     DateTimeFormat := 'hh:mm:ss';
     Increment := 3 / (24 * 3600);
+  end;
+end;
+
+//Date: 2013-4-15
+//Parm: 图标;鼠标位置
+//Desc: 绘制鼠标所在位置的总横轴数值
+procedure DrawChartCrossLine(const nChart: TChart; const nPosX, nPosY: Integer);
+var nRect: TRect;
+    nL,nT: Integer;
+    nVal,nDate: string;
+    nDVal,nDDate: Double;
+begin
+  with nChart do
+  begin
+    Canvas.Font.Color := clGreen;
+    Canvas.Brush.Color := clWhite;
+    SetBkMode(Canvas.Handle, OPAQUE);
+
+    Series[0].GetCursorValues(nDDate, nDVal);
+    nVal := '压力: ' + Format('%.2f', [nDVal]);
+    nDate := '时间: ' + FormatDateTime('mm-dd hh:mm:ss:zzz', TDateTime(nDDate));
+
+    nL := Canvas.TextWidth(nVal);
+    nT := Canvas.TextWidth(nDate);
+
+    if nL > nT then
+         nRect.Right := nL + 2
+    else nRect.Right := nT + 2;
+
+    nT := Canvas.TextHeight(nVal) * 2 + 2;
+    nRect.Bottom := nT + 2;
+
+    if nPosX - ChartRect.Left < nRect.Right then
+         nRect.Left := nPosX + 2
+    else nRect.Left := nPosX - nRect.Right;
+
+    if nPosY - ChartRect.Top < nRect.Bottom then
+         nRect.Top := nPosY + 2
+    else nRect.Top := nPosY - nRect.Bottom;
+
+    if (nPosX < nRect.Left) and (nPosY < nRect.Top) then
+    begin
+      nRect.Left := nRect.Left + 32;
+      //nRect.Top := nRect.Top + 10;
+    end;
+
+    Canvas.TextOut(nRect.Left, nRect.Top, nVal);
+    nRect.Top := nRect.Top + 2 + Canvas.TextHeight(nVal);
+    Canvas.TextOut(nRect.Left, nRect.Top, nDate);
   end;
 end;
 

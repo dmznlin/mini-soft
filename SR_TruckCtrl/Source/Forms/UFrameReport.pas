@@ -45,6 +45,7 @@ type
     DBGrid3: TDBGrid;
     Bevel1: TBevel;
     EditCheck: TcxComboBox;
+    EditPage: TcxComboBox;
     procedure TimerUITimer(Sender: TObject);
     procedure CheckBreakPipeClick(Sender: TObject);
     procedure BtnPreClick(Sender: TObject);
@@ -53,17 +54,35 @@ type
     procedure EditTimeKeyPress(Sender: TObject; var Key: Char);
     procedure EditCheckPropertiesChange(Sender: TObject);
     procedure EditDevicePropertiesCloseUp(Sender: TObject);
+    procedure Chart1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Chart1MouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure Chart1MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure EditPagePropertiesChange(Sender: TObject);
   protected
     { Protected declarations }
+    FDataList: TList;
+    FLastDraw: Int64;
+    FCanDrawCross: Boolean;
     FLastDevice: string;
     FPageBegin,FPageEnd: TDateTime;
     procedure OnShowFrame; override;
+    procedure OnDestroyFrame; override;
     //inhere
+    function GetPageSize: TDateTime;
     function BuildDeviceIDList: string;
     procedure LoadDeviceList;
-    procedure QueryData(const nQuery: Boolean = True);
+    procedure QueryData(nInitChart: Boolean = False; nQuery: Boolean = True);
     //ui data
-    procedure AddChartItem(const nType: TItemType; nInit: Boolean = False);
+    procedure InitDataItem(const nData: Pointer; const nType: TItemType;
+     const nSeries: TComponent; const nDev: PDeviceItem);
+    function GetSeries(nDevice: string; nType: TItemType): TFastLineSeries;
+    function AddSeries(nDevice: PDeviceItem; nType: TItemType): TFastLineSeries;
+    procedure AddDataItem(const nType: TItemType);
+    procedure AddChartItem(const nType: TItemType; nInit: Boolean = False);      
+    procedure RemoveDataItem(const nSeries: TObject);
     //series
   public
     { Public declarations }
@@ -75,6 +94,14 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UMgrControl, UMgrConnection, UFormWait, USysLoger, USysConst, USysDB;
+  
+type
+  PDataItem = ^TDataItem;
+  TDataItem = record
+    FItemType: TItemType;
+    FSeries: TComponent;
+    FDevice: PDeviceItem;
+  end;
 
 class function TfFrameReport.FrameID: integer;
 begin
@@ -83,12 +110,49 @@ end;
 
 procedure TfFrameReport.OnShowFrame;
 begin
+  FLastDraw := 0;
+  FCanDrawCross := True;
+
+  FDataList := TList.Create;
   TimerUI.Enabled := True;
+  TimerUI.Tag := 10;
+end;
+
+procedure TfFrameReport.OnDestroyFrame;
+var nIdx: Integer;
+begin
+  for nIdx:=FDataList.Count - 1 downto 0 do
+  begin
+    Dispose(PDataItem(FDataList[nIdx]));
+    FDataList.Delete(nIdx);
+  end;
+
+  FreeAndNil(FDataList);
 end;
 
 procedure TfFrameReport.TimerUITimer(Sender: TObject);
+var nIdx: Integer;
 begin
-  TimerUI.Enabled := False;
+  if (FLastDraw > 0) and (GetTickCount - FLastDraw > 3200) and
+     (GetKeyState(VK_SHIFT) and $80000000 = 0) then
+  begin
+    FLastDraw := 0;
+    Chart1.Repaint;
+  end;
+  
+  if TimerUI.Tag < 1 then Exit;
+  TimerUI.Tag := 0;
+
+  EditPage.Properties.Items.Add('默认');
+  EditPage.ItemIndex := 0;
+
+  nIdx := 5;
+  while nIdx < 65 do
+  begin
+    EditPage.Properties.Items.Add(IntToStr(nIdx));
+    Inc(nIdx, 5);
+  end;
+
   wPage.ActivePageIndex := 0;
   InitChartStyle(Chart1);
 
@@ -96,8 +160,268 @@ begin
   LoadDeviceList;
 
   FPageEnd := Now;
-  FPageBegin := FPageEnd - (gSysParam.FReportPage / 24);;
-  QueryData(False);
+  FPageBegin := FPageEnd - GetPageSize;
+  QueryData(True, False);
+end;
+
+procedure TfFrameReport.Chart1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FCanDrawCross := False;
+  if FLastDraw > 0 then
+  begin
+    FLastDraw := 0;
+    Chart1.Repaint;
+  end;
+end;
+
+procedure TfFrameReport.Chart1MouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  with Chart1 do
+  begin
+    if not FCanDrawCross then Exit;
+    if Chart1.SeriesList.Count < 1 then Exit;
+    
+    Repaint;
+    FLastDraw := GetTickCount;
+
+    if X < ChartRect.Left then X := ChartRect.Left + 1;
+    if X > ChartRect.Right then X := ChartRect.Right - 1;
+    if Y < ChartRect.Top then Y := ChartRect.Top + 1;
+    if Y > ChartRect.Bottom then Y := ChartRect.Bottom - 1;
+
+    Canvas.Pen.Color := clAqua;
+    Canvas.Pen.Style := psSolid;
+    Canvas.DoVertLine(X, ChartRect.Top, ChartRect.Bottom);
+    Canvas.DoHorizLine(ChartRect.Left, ChartRect.Right, Y);
+
+    DrawChartCrossLine(Chart1, X, Y);
+    //绘制数据
+  end;
+end;
+
+procedure TfFrameReport.Chart1MouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FCanDrawCross := True;
+end;
+
+//------------------------------------------------------------------------------
+//Date: 2013-04-17
+//Parm: 数据;节点类型;对象
+//Desc: 初始化数据项
+procedure TfFrameReport.InitDataItem(const nData: Pointer;
+  const nType: TItemType; const nSeries: TComponent; const nDev: PDeviceItem);
+var nP: PDataItem;
+begin
+  nP := nData;
+  FillChar(nP^, SizeOf(TDataItem), #0);
+
+  nP.FItemType := nType;
+  nP.FSeries := nSeries;
+  nP.FDevice := nDev;
+end;
+
+//Date: 2013-04-17
+//Parm: 设备;类型
+//Desc: 添加一个nDevice.nType的图表
+function TfFrameReport.AddSeries(nDevice: PDeviceItem;
+  nType: TItemType): TFastLineSeries;
+var nStr: string;
+    nIdx: Integer;
+    nColor: TColor;
+    nData: PDataItem;
+    nSeries: TFastLineSeries;
+begin
+  for nIdx:=Chart1.SeriesList.Count - 1 downto 0 do
+  begin
+    nData := FDataList[Chart1.Series[nIdx].Tag];
+    if (nData.FDevice = nDevice) and (nData.FItemType = nType) then
+    begin
+      Result := Chart1.Series[nIdx] as TFastLineSeries;
+      Exit;
+    end;
+  end;
+
+  case nType of
+   itBreakPipe:
+    begin
+      nStr := Format('%s:%s', [nDevice.FCarriage.FName, sBreakPipe]);
+      nColor := nDevice.FColorBreakPipe;
+    end;
+   itBreakPot:
+    begin
+      nStr := Format('%s:%s', [nDevice.FCarriage.FName, sBreakPot]);
+      nColor := nDevice.FColorBreakPot;
+    end;
+   itTotalPipe:
+    begin
+      nStr := Format('%s:%s', [nDevice.FCarriage.FName, sTotalPipe]);
+      nColor := nDevice.FColorTotalPipe;
+    end else
+    begin
+      nColor := 0;
+    end;
+  end;
+
+  nSeries := TFastLineSeries.Create(Chart1);
+  Result := nSeries;
+  Chart1.AddSeries(nSeries);
+
+  nSeries.Title := nStr;
+  nSeries.XValues.DateTime := True;
+  if nColor <> 0 then
+    nSeries.SeriesColor := nColor;
+  //xxxxx
+
+  New(nData);
+  nSeries.Tag := FDataList.Add(nData);
+  InitDataItem(nData, nType, nSeries, nDevice);
+end;
+
+//Date: 2013-04-17
+//Parm: 设备编号;类型
+//Desc: 检索nDevice.nType的图表
+function TfFrameReport.GetSeries(nDevice: string;
+  nType: TItemType): TFastLineSeries;
+var nIdx: Integer;
+    nData: PDataItem;
+begin
+  Result := nil;
+
+  for nIdx:=Chart1.SeriesList.Count - 1 downto 0 do
+  begin
+    nData := FDataList[Chart1.Series[nIdx].Tag];
+    if (nData.FDevice.FItemID = nDevice) and (nData.FItemType = nType) then
+    begin
+      Result := Chart1.Series[nIdx] as TFastLineSeries;
+      Exit;
+    end;
+  end;
+end;
+
+//Date: 2013-04-17
+//Parm: 类型
+//Desc: 添加nType的数据到图表
+procedure TfFrameReport.AddDataItem(const nType: TItemType);
+var nDS: TDataSet;
+    nInt: Integer;
+    nDate: TDateTime;
+    nSeries: TFastLineSeries;
+begin
+  case nType of
+   itBreakPipe : nDS := QueryBreakPipe;
+   itBreakPot  : nDS := QueryBreakPot;
+   itTotalPipe : nDS := QueryTotalPipe else Exit;
+  end;
+
+  if (not nDS.Active) or (nDS.RecordCount < 1) then Exit;
+  //no data
+  nDS.First;
+  
+  while not nDS.Eof do
+  try
+    nSeries := GetSeries(nDS.FieldByName('P_Device').AsString, nType);
+    if not Assigned(nSeries) then Continue;
+
+    nDate := nDS.FieldByName('P_Date').AsDateTime;
+    //init base time
+
+    nSeries.AddXY(nDate, nDS.FieldByName('P_Value').AsFloat);
+    if nType = itTotalPipe then Continue;
+
+    nInt := nDS.FieldByName('P_Number').AsInteger;
+    if nInt >= 3 then
+    begin
+      TPortReadManager.IncTime(nDate, nInt - 1);
+      nSeries.AddXY(nDate, nDS.FieldByName('P_Value').AsFloat);
+    end;
+  finally
+    nDS.Next;
+  end;
+end;
+
+//Date: 2013-3-18
+//Parm: 类型
+//Desc: 添加nType类型曲线到Chart
+procedure TfFrameReport.AddChartItem(const nType: TItemType; nInit: Boolean);
+var nIdx: Integer;
+    nDev: PDeviceItem;
+begin
+  if nInit then
+  begin
+    for nIdx:=Chart1.SeriesCount - 1 downto 0 do
+      Chart1.RemoveSeries(Chart1.Series[nIdx]);
+    //clear
+  end;
+
+  for nIdx:=0 to EditDevice.Properties.Items.Count - 1 do
+  if EditDevice.States[nIdx] = cbsChecked then
+  begin
+    nDev := Pointer(EditDevice.Properties.Items[nIdx].Tag);
+    if nType = itAll then
+    begin
+      if CheckBreakPipe.Checked then AddSeries(nDev, itBreakPipe).Clear;
+      if CheckBreakPot.Checked then AddSeries(nDev, itBreakPot).Clear;
+      if CheckTotalPipe.Checked then AddSeries(nDev, itTotalPipe).Clear;
+    end else
+    begin
+      AddSeries(nDev, nType).Clear;
+    end;
+  end;
+
+  if nType = itAll then
+  begin
+    if CheckBreakPipe.Checked then AddDataItem(itBreakPipe);
+    if CheckBreakPot.Checked then AddDataItem(itBreakPot);
+    if CheckTotalPipe.Checked then AddDataItem(itTotalPipe);
+  end else
+  begin
+    AddDataItem(nType);
+  end;
+end;
+
+//Date: 2013-04-17
+//Parm: 对象
+//Desc: 删除nSeries对象的数据节点
+procedure TfFrameReport.RemoveDataItem(const nSeries: TObject);
+var nIdx: Integer;
+    nData: PDataItem;
+begin
+  for nIdx:=FDataList.Count - 1 downto 0 do
+  begin
+    nData := FDataList[nIdx];
+    if nData.FSeries <> nSeries then Continue;
+
+    Dispose(nData);
+    FDataList.Delete(nIdx);
+  end;
+
+  for nIdx:=FDataList.Count - 1 downto 0 do
+  begin
+    nData := FDataList[nIdx];
+    nData.FSeries.Tag := nIdx;
+  end; //adjust index
+end;
+
+//------------------------------------------------------------------------------
+//Desc: 获取分页大小
+function TfFrameReport.GetPageSize: TDateTime;
+begin
+  Result := gSysParam.FReportPage / 24;
+  if EditPage.ItemIndex <> 0 then
+  begin
+    if IsNumber(EditPage.Text, False) then
+    begin
+      Result := StrToInt(EditPage.Text) / (24 * 60);
+      //minute
+    end else
+    begin
+      EditPage.ItemIndex := 0;
+      //default
+    end;
+  end;
 end;
 
 //Desc: 构建设备列表
@@ -154,14 +478,14 @@ end;
 //Date: 2013-3-18
 //Parm: 时间
 //Desc: 查询nData前3小时数据
-procedure TfFrameReport.QueryData(const nQuery: Boolean);
+procedure TfFrameReport.QueryData(nInitChart, nQuery: Boolean);
 var nStr,nSQL,nDevs: string;
     nInit: Int64;
 begin
   if FPageEnd > Now() then
   begin
     FPageEnd := Now();
-    FPageBegin := FPageEnd - (gSysParam.FReportPage / 24);
+    FPageBegin := FPageEnd - GetPageSize;
   end;
 
   EditTime.Date := FPageEnd;
@@ -184,17 +508,17 @@ begin
     nSQL := Format(nStr, [sTable_BreakPipe, sTable_Carriage, nDevs,
             DateTime2Str(FPageBegin), DateTime2Str(FPageEnd)]);
     FDM.QueryData(QueryBreakPipe, nSQL);
-    AddChartItem(itBreakPipe, True);
 
     nSQL := Format(nStr, [sTable_BreakPot, sTable_Carriage, nDevs,
             DateTime2Str(FPageBegin), DateTime2Str(FPageEnd)]);
     FDM.QueryData(QueryBreakPot, nSQL);
-    AddChartItem(itBreakPot);
 
     nSQL := Format(nStr, [sTable_TotalPipe, sTable_Carriage, nDevs,
             DateTime2Str(FPageBegin), DateTime2Str(FPageEnd)]);
     FDM.QueryData(QueryTotalPipe, nSQL);
-    AddChartItem(itTotalPipe);
+
+    AddChartItem(itAll, nInitChart);
+    //add series
   finally
     Application.ProcessMessages;
     LockWindowUpdate(0);
@@ -205,81 +529,11 @@ begin
   end;
 end;
 
-//Date: 2013-3-18
-//Parm: 类型
-//Desc: 添加nType类型曲线到Chart
-procedure TfFrameReport.AddChartItem(const nType: TItemType; nInit: Boolean);
-var nStr: string;
-    nIdx: Integer;
-    nDS: TDataSet;
-    nColor: TColor;
-    nDate: TDateTime;
-    nSeries: TFastLineSeries;
-begin
-  if nInit then
-  begin
-    for nIdx:=Chart1.SeriesCount - 1 downto 0 do
-      Chart1.RemoveSeries(Chart1.Series[nIdx]);
-    //clear
-  end;
-
-  case nType of
-   itBreakPipe:
-    begin
-      if not CheckBreakPipe.Checked then Exit;
-      nStr := sBreakPipe;
-      nColor := clRed;
-      nDS := QueryBreakPipe;
-    end;
-   itBreakPot:
-    begin
-      if not CheckBreakPot.Checked then Exit;
-      nDS := QueryBreakPot;
-      nColor := clBlue;
-      nStr := sBreakPot;
-    end;
-   itTotalPipe:
-    begin
-      if not CheckTotalPipe.Checked then Exit;
-      nStr := sTotalPipe;
-      nColor := clTeal;
-      nDS := QueryTotalPipe;
-    end else Exit;
-  end;
-  
-  nSeries := TFastLineSeries.Create(Chart1);
-  nSeries.Title := nStr;
-  nSeries.Tag := Ord(nType);
-
-  if nColor <> clNone then
-    nSeries.SeriesColor := nColor;
-  Chart1.AddSeries(nSeries);
-
-  nDS.First;
-  while not nDS.Eof do
-  begin
-    nDate := nDS.FieldByName('P_Date').AsDateTime;
-    nSeries.AddXY(nDate, nDS.FieldByName('P_Value').AsFloat, Time2Str(nDate));
-    //起始点
-
-    if nDS.FindField('P_Number') <> nil then
-    begin
-      nIdx := nDS.FieldByName('P_Number').AsInteger;
-      if nIdx * gSysParam.FCollectTM >= 500 then
-      begin
-        TPortReadManager.IncTime(nDate, nIdx);
-        nSeries.AddXY(nDate, nDS.FieldByName('P_Value').AsFloat, Time2Str(nDate));
-      end; //超半秒加一个点
-    end;
-
-    nDS.Next;
-  end;
-end;
-
 //Desc: 选择曲线
 procedure TfFrameReport.CheckBreakPipeClick(Sender: TObject);
 var nIdx: Integer;
     nType: TItemType;
+    nData: PDataItem;
 begin
   case (Sender as TComponent).Tag of
    10: nType := itBreakPipe;
@@ -293,9 +547,16 @@ begin
   end else
   begin
     for nIdx:=Chart1.SeriesCount - 1 downto 0 do
-     if Chart1.Series[nIdx].Tag = Ord(nType) then
-      Chart1.RemoveSeries(Chart1.Series[nIdx]);
-    //remove fixed
+    begin
+      nData := FDataList[Chart1.Series[nIdx].Tag];
+      //data
+
+      if nData.FItemType = nType then
+      begin
+        RemoveDataItem(Chart1.Series[nIdx]);
+        Chart1.RemoveSeries(Chart1.Series[nIdx]);
+      end;
+    end;
   end;
 end;
 
@@ -303,7 +564,7 @@ end;
 procedure TfFrameReport.BtnPreClick(Sender: TObject);
 begin
   FPageEnd := FPageBegin;
-  FPageBegin := FPageEnd - (gSysParam.FReportPage / 24);
+  FPageBegin := FPageEnd - GetPageSize;
   QueryData;
 end;
 
@@ -311,7 +572,7 @@ end;
 procedure TfFrameReport.BtnNextClick(Sender: TObject);
 begin
   FPageBegin := FPageEnd;
-  FPageEnd := FPageBegin + (gSysParam.FReportPage / 24);
+  FPageEnd := FPageBegin + GetPageSize;
   QueryData;
 end;
 
@@ -323,7 +584,7 @@ begin
     FPageEnd := EditTime.Date;
     if FPageEnd < 0 then Exit;
     
-    FPageBegin := FPageEnd - (gSysParam.FReportPage / 24);
+    FPageBegin := FPageEnd - GetPageSize;
     QueryData;
   end;
 end;
@@ -368,7 +629,17 @@ begin
   
   if not EditCheck.Focused then
     EditCheck.ItemIndex := -1;
-  QueryData();
+  QueryData(True);
+end;
+
+//Desc: 应用分页变化
+procedure TfFrameReport.EditPagePropertiesChange(Sender: TObject);
+begin
+  if EditPage.IsFocused then
+  begin
+    FPageBegin := FPageEnd - GetPageSize;
+    QueryData;
+  end;
 end;
 
 initialization

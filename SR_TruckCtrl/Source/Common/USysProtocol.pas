@@ -79,7 +79,7 @@ const
   cCOM_StopBits: TStopBits = sbOneStopBit;    //停止位
 
 type
-  TItemType = (itBreakPipe, itBreakPot, itTotalPipe);
+  TItemType = (itBreakPipe, itBreakPot, itTotalPipe, itAll);
   //项类型
   TItemFlag = (ifRoot, ifPort, ifDevice, ifDeviceUnusedRoot, ifDeviceUnused);
   //项标

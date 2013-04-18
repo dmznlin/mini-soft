@@ -446,6 +446,7 @@ begin
     for nIdx:=0 to nData.FBreakPipeNum - 1 do
     begin
       nStr := MakeSQLByStr([SF('P_Train', gSysParam.FTrainID),
+              SF('P_Device', nData.FItemID),
               SF('P_Carriage', nData.FCarriageID),
               SF('P_Value', nData.FBreakPipe[nIdx].FData, sfVal),
               SF('P_Number', nData.FBreakPipe[nIdx].FNum, sfVal),
@@ -463,6 +464,7 @@ begin
     for nIdx:=0 to nData.FBreakPotNum - 1 do
     begin
       nStr := MakeSQLByStr([SF('P_Train', gSysParam.FTrainID),
+              SF('P_Device', nData.FItemID),
               SF('P_Carriage', nData.FCarriageID),
               SF('P_Value', nData.FBreakPot[nIdx].FData, sfVal),
               SF('P_Number', nData.FBreakPot[nIdx].FNum, sfVal),
@@ -475,9 +477,10 @@ begin
     end;
 
     nStr := MakeSQLByStr([SF('P_Train', gSysParam.FTrainID),
+            SF('P_Device', nData.FItemID),
             SF('P_Carriage', nData.FCarriageID),
             SF('P_Value', nData.FTotalPipe, sfVal),
-            SF('P_Date', nData.FTotalPipeTimeBase)
+            SF('P_Date', nData.FTotalPipeTimeNow)
             ], sTable_TotalPipe, '', True);
     gDBConnManager.WorkerExec(nDBConn, nStr);
   finally

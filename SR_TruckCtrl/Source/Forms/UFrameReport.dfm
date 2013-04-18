@@ -29,7 +29,7 @@ inherited fFrameReport: TfFrameReport
         Shape = bsBottomLine
       end
       object BtnNext: TButton
-        Left = 608
+        Left = 680
         Top = 10
         Width = 62
         Height = 27
@@ -72,7 +72,7 @@ inherited fFrameReport: TfFrameReport
         Width = 220
       end
       object BtnPre: TButton
-        Left = 545
+        Left = 618
         Top = 10
         Width = 62
         Height = 27
@@ -118,9 +118,10 @@ inherited fFrameReport: TfFrameReport
       end
       object EditCheck: TcxComboBox
         Left = 195
-        Top = 13
+        Top = 10
         ParentFont = False
         Properties.DropDownListStyle = lsEditFixedList
+        Properties.DropDownRows = 20
         Properties.ItemHeight = 25
         Properties.Items.Strings = (
           #20840#36873
@@ -129,11 +130,28 @@ inherited fFrameReport: TfFrameReport
         Properties.OnChange = EditCheckPropertiesChange
         Style.Font.Charset = GB2312_CHARSET
         Style.Font.Color = clGreen
-        Style.Font.Height = -16
+        Style.Font.Height = -19
         Style.Font.Name = #23435#20307
         Style.Font.Style = []
         Style.IsFontAssigned = True
         TabOrder = 6
+        Width = 72
+      end
+      object EditPage: TcxComboBox
+        Left = 541
+        Top = 10
+        ParentFont = False
+        Properties.DropDownListStyle = lsEditFixedList
+        Properties.DropDownRows = 20
+        Properties.ItemHeight = 25
+        Properties.OnChange = EditPagePropertiesChange
+        Style.Font.Charset = GB2312_CHARSET
+        Style.Font.Color = clGreen
+        Style.Font.Height = -19
+        Style.Font.Name = #23435#20307
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 7
         Width = 72
       end
     end
@@ -142,7 +160,7 @@ inherited fFrameReport: TfFrameReport
       Top = 45
       Width = 770
       Height = 414
-      ActivePage = SheetChart
+      ActivePage = SheetBreakPipe
       Align = alClient
       Font.Charset = GB2312_CHARSET
       Font.Color = clWindowText
@@ -321,7 +339,6 @@ inherited fFrameReport: TfFrameReport
           Title.Text.Strings = (
             #31995#32479#36816#34892#30417#25511#26354#32447)
           BottomAxis.Axis.Visible = False
-          BottomAxis.LabelStyle = talText
           LeftAxis.Axis.Visible = False
           LeftAxis.Title.Caption = #21387#21147#20540': '#21333#20301#21315#24085
           LeftAxis.Title.Font.Charset = GB2312_CHARSET
@@ -339,6 +356,9 @@ inherited fFrameReport: TfFrameReport
           BevelOuter = bvNone
           Color = clWhite
           TabOrder = 0
+          OnMouseDown = Chart1MouseDown
+          OnMouseMove = Chart1MouseMove
+          OnMouseUp = Chart1MouseUp
           object CheckBreakPipe: TcxCheckBox
             Tag = 10
             Left = 2
