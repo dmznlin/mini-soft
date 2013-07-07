@@ -1,0 +1,26 @@
+发起: RMX -> Con_MIT
+协议:
+ *.任务单号
+ *.生产线编号
+ *.生产线名称
+ *.产品编号
+ *.产品名称
+ *.操作员
+ *.IP,Port
+
+应答: Con_MIT -> RMX
+协议:
+ *.车牌号
+XML描述:
+<call_truck>
+  <response>
+    <truck>鄂F-123</truck>
+  </response>
+</call_truck>
+
+
+数据包: RMX <-> Con_MIT
+结构:
+ *.协议头: 2Byte,值$1C,$2B
+ *.数据内容: xml数据
+ 
