@@ -8,8 +8,8 @@ unit UMITConst;
 interface
 
 uses
-  Windows, SysUtils, Classes, ComCtrls, Forms, IniFiles, Registry,
-  ZnExeData, USysMAC;
+  Windows, SysUtils, Classes, ComCtrls, Forms, IniFiles, Registry, IdUDPServer,
+  USysMAC;
 
 const
   cSBar_Date            = 0;                         //日期面板索引
@@ -36,6 +36,7 @@ type
     FLocalIP    : string;                            //本机IP
     FLocalMAC   : string;                            //本机MAC
     FLocalName  : string;                            //本机名称
+    F2ClientUDP : Integer;                           //对客户端UDP
   end;
   //系统参数
 
@@ -43,7 +44,7 @@ var
   gPath: string;                                     //程序所在路径
   gSysParam:TSysParam;                               //程序环境参数
   gStatusBar: TStatusBar;                            //全局使用状态栏
-  gHardShareData: TZnPostData;                       //硬件守护数据共享
+  gClientUDPServer: TIdUDPServer;                    //客户端UDP通道
 
 procedure InitSystemEnvironment;
 //初始化系统运行环境的变量
@@ -121,6 +122,7 @@ begin
 
         FLocalMAC   := MakeActionID_MAC;
         GetLocalIPConfig(FLocalName, FLocalIP);
+        F2ClientUDP := ReadInteger('System', 'ClientUDPPort', 8050);
       end else
       begin
         WriteBool('System', 'AutoMin', FAutoMin);

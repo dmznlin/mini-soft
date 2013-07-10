@@ -1,26 +1,89 @@
+数据包: RMX <-> Con_MIT
+结构:
+ *.协议头: 2Byte,值$2A,$2B
+ *.命令字: 1,叫车;2,打印;3,重装发料
+ *.数据内容: xml数据
+
+//------------------------------------------------------------------------------
 发起: RMX -> Con_MIT
 协议:
  *.任务单号
  *.生产线编号
  *.生产线名称
- *.产品编号
- *.产品名称
  *.操作员
  *.IP,Port
+XML描述:
+<call_truck>
+  <call_truck_row>
+    <joid></joid>
+    <lineId></lineid>
+    <linename></linename>
+    <operator></operator>
+    <ip></ip>
+    <port></port>
+  </call_truck_row>
+</call_truck>
 
 应答: Con_MIT -> RMX
 协议:
  *.车牌号
 XML描述:
-<call_truck>
-  <response>
+<call_truck_responese>
+  <call_truck_responese_row>
+    <result>y/n</result>
+    <hint>aa</hint>
     <truck>鄂F-123</truck>
-  </response>
-</call_truck>
+  </call_truck_responese_row>
+</call_truck_responese>
+
+//------------------------------------------------------------------------------
+发起: RMX -> Con_MIT
+协议:
+ *.车牌号
+ *.小票好
+ *.发车序号
+XML描述:
+<call_print>
+  <call_print_row>
+    <truck></truck>
+    <doid>小票 char(6)</doid>
+    <sea>发车序号 char(3)</sea>
+    <ip></ip>
+    <port></port>
+  </call_print_row>
+</call_print>
+
+应答: Con_MIT -> RMX
+协议:
+XML描述:
+<call_print_responese>
+  <call_print_responese_row>
+    <result>y/n</result>
+    <hint>aa</hint>
+  </call_print_responese_row>
+</call_print_responese>
 
 
-数据包: RMX <-> Con_MIT
-结构:
- *.协议头: 2Byte,值$1C,$2B
- *.数据内容: xml数据
- 
+//------------------------------------------------------------------------------
+发起: RMX -> Con_MIT
+协议:
+ *.车牌号
+ *.剩余量
+XML描述:
+<call_truckin_status>
+  <call_truckin_row>
+    <truck></truck>
+    <weight></weight>
+  </call_truckin_row>
+</call_truckin_status>
+
+应答: Con_MIT -> RMX
+协议:
+XML描述:
+<call_truckin_responese>
+  <call_truckin__responese_row>
+    <result>y/n</result>
+    <hint>aa</hint>
+  </call_truckin__responese_row>
+</call_truckin_responese>
+

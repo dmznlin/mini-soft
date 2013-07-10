@@ -9,7 +9,8 @@ interface
 
 uses
   SysUtils, Classes, SyncObjs, IdContext, uROClassFactories, uROServerIntf,
-  uROIndyTCPServer, uROClient, uROServer, uROIndyHTTPServer,
+  IdGlobal, IdSocketHandle, IdBaseComponent, IdComponent, IdUDPBase,
+  IdUDPServer, uROIndyTCPServer, uROClient, uROServer, uROIndyHTTPServer,
   uROSOAPMessage, uROBinMessage;
 
 type
@@ -37,6 +38,7 @@ type
     ROSOAPMsg: TROSOAPMessage;
     ROHttp1: TROIndyHTTPServer;
     ROTcp1: TROIndyTCPServer;
+    ServerUDP1: TIdUDPServer;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure ROHttp1AfterServerActivate(Sender: TObject);
@@ -44,6 +46,8 @@ type
     procedure ROHttp1InternalIndyServerConnect(AContext: TIdContext);
     procedure ROHttp1InternalIndyServerDisconnect(AContext: TIdContext);
     procedure ROTcp1InternalIndyServerDisconnect(AContext: TIdContext);
+    procedure ServerUDP1UDPRead(AThread: TIdUDPListenerThread;
+      AData: TIdBytes; ABinding: TIdSocketHandle);
   private
     { Private declarations }
     FStatus: TROModuleStatus;
@@ -81,10 +85,9 @@ implementation
 {$R *.dfm}
 
 uses
-  UMgrQUeue, UMgrLEDCard, UMgrHardHelper, U02NReader, UHardBusiness,
-  UMgrRemoteVoice,
-  USysLoger, UParamManager, UMgrDBConn, UMITConst,
-  SrvBusiness_Impl, SrvConnection_Impl, MIT_Service_Invk;
+  SrvBusiness_Impl, SrvConnection_Impl, MIT_Service_Invk, UMgrQUeue,
+  UMgrLEDCard, UMgrHardHelper, U02NReader, UHardBusiness,
+  UMgrRemoteVoice, USysLoger, UParamManager, UMgrDBConn, UMITConst;
 
 //------------------------------------------------------------------------------
 procedure TROModule.DataModuleCreate(Sender: TObject);
@@ -178,6 +181,13 @@ begin
   end;
 end;
 
+//Desc: udpÒµÎñ
+procedure TROModule.ServerUDP1UDPRead(AThread: TIdUDPListenerThread;
+  AData: TIdBytes; ABinding: TIdSocketHandle);
+begin
+  When2ClientUDPRead(AThread, AData, ABinding);
+end;
+
 //------------------------------------------------------------------------------
 procedure Create_SrvBusiness(out anInstance : IUnknown);
 begin
@@ -230,6 +240,16 @@ begin
     RegClassFactories;
   //xxxxx
 
+  gClientUDPServer := ServerUDP1;
+  //for global use
+  
+  with gClientUDPServer do
+  begin
+    Active := False;
+    DefaultPort := gSysParam.F2ClientUDP;
+    Active := True;
+  end;
+
   with gParamManager do
   begin
     gDBConnManager.AddParam(gParamManager.ActiveParam.FDB^);
@@ -241,16 +261,16 @@ begin
     gCardManager.StartSender;
     //led display
 
-    gHardwareHelper.OnProce := nil;
-    gHardwareHelper.StartRead;
+    gHardwareHelper.OnProce := WhenReaderCardArrived;
+    //gHardwareHelper.StartRead;
     //long reader
 
-    g02NReader.OnCardIn := nil;
+    g02NReader.OnCardIn := WhenReaderCardIn;
     g02NReader.OnCardOut := nil;
     g02NReader.StartReader;
     //near reader
 
-    gVoiceHelper.StartVoice;
+    //gVoiceHelper.StartVoice;
     //voice
   end;
 end;

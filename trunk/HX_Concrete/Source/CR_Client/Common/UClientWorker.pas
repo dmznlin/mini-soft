@@ -32,7 +32,7 @@ type
     //Ö´ÐÐÒµÎñ
   end;
 
-  TClientWorkerQueryField = class(TClient2MITWorker)
+  TClientBusinessCommand = class(TClient2MITWorker)
   public
     function GetFlagStr(const nFlag: Integer): string; override;
     class function FunctionName: string; override;
@@ -213,21 +213,21 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-class function TClientWorkerQueryField.FunctionName: string;
+class function TClientBusinessCommand.FunctionName: string;
 begin
-  Result := sCLI_GetQueryField;
+  Result := sCLI_BusinessCommand;
 end;
 
-function TClientWorkerQueryField.GetFlagStr(const nFlag: Integer): string;
+function TClientBusinessCommand.GetFlagStr(const nFlag: Integer): string;
 begin
-  inherited GetFlagStr(nFlag);
+  Result := inherited GetFlagStr(nFlag);
 
   case nFlag of
-   cWorker_GetPackerName : Result := sBus_GetQueryField;
-   cWorker_GetMITName    : Result := sBus_GetQueryField;
+   cWorker_GetPackerName : Result := sBus_BusinessCommand;
+   cWorker_GetMITName    : Result := sBus_BusinessCommand;
   end;
 end;
 
 initialization
-
+  gBusinessWorkerManager.RegisteWorker(TClientBusinessCommand);
 end.

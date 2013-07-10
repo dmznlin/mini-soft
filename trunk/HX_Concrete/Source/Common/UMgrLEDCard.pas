@@ -320,9 +320,9 @@ begin
     FWaiter.EnterWait;
     if Terminated then Break;
 
-    if FQueueLast = gTruckQueueManager.LineChanged then Continue;
+    if FQueueLast = gTruckQueueManager.QueueChanged then Continue;
     //队列没有变动
-    nInit := gTruckQueueManager.LineChanged;
+    nInit := gTruckQueueManager.QueueChanged;
     //保存变动时间
 
     for nIdx:=0 to FOwner.FCards.Count - 1 do
@@ -390,13 +390,12 @@ procedure TCardSendThread.DrawQueue;
 var nStr: string;
     nBmp: TBitmap;
     nCard: PCardItem;
-    nLine: PLineItem;
     nTruck: PTruckItem;
     i,nI,nIdx: Integer;
-    nL,nT,nML,nMT: Integer;
+    nL,nT,nDL,nDT: Integer;
 
-    //Desc: 在当前参数的中间位置绘制nText字符
-    procedure MidDrawText(const nText: string);
+    //Desc: 在当前参数的左边位置绘制nText字符
+    procedure LeftDrawText(const nText: string);
     begin
       with nBmp,FNowItem^ do
       begin
@@ -410,15 +409,13 @@ var nStr: string;
                Font.Style := Font.Style + [fsBold]
           else Font.Style := Font.Style - [fsBold];
         end;
-        
-        nML := Canvas.TextWidth(nText);
-        nML := nL + Trunc((FColWidth[nI] - nML) / 2);
 
-        nMT := Canvas.TextHeight(nText);
-        nMT := nT + Trunc((FRowHeight - nMT) / 2);
+        nDL := nL + 1;
+        nDT := Canvas.TextHeight(nText);
+        nDT := nT + Trunc((FRowHeight - nDT) / 2);
         
         SetBkMode(Handle, Windows.TRANSPARENT);
-        Canvas.TextOut(nML, nMT, nText);
+        Canvas.TextOut(nDL, nDT, nText);
         Inc(nT, FRowHeight);
       end;
     end;
@@ -430,11 +427,9 @@ begin
 
   with FNowItem^, gTruckQueueManager do
   try
-    for nIdx:=0 to Lines.Count - 1 do
+    nIdx := 0;
+    while nIdx < Trucks.Count do
     begin
-      nLine := Lines[nIdx];
-      if not nLine.FIsValid then Continue;
-
       if not Assigned(nBmp) then
       begin
         Inc(FPicNum);
@@ -449,29 +444,6 @@ begin
           Canvas.Brush.Color := clBlack;
           Canvas.FillRect(Rect(0, 0, Width, Height));
 
-          Canvas.Pen.Color := clRed;
-          Canvas.Pen.Width := 1;
-          Canvas.Rectangle(Rect(1, 1, Width-1, Height-1));
-
-          Canvas.Pen.Color := clRed;
-          Canvas.Pen.Width := 1;
-          nL := 1;
-          
-          for i:=Low(FColWidth) to High(FColWidth)-1 do
-          begin
-            Inc(nL, FColWidth[i]);
-            Canvas.MoveTo(nL, 1);
-            Canvas.LineTo(nL, Height-1);
-          end; //竖线
-
-          nT := 1;
-          for i:=1 to FRowNum-1 do
-          begin
-            Inc(nT, FRowHeight);
-            Canvas.MoveTo(1, nT);
-            Canvas.LineTo(Width-1, nT);
-          end; //横线
-
           nL := 1;
           nT := 1;
           nI := Low(FColWidth);
@@ -481,21 +453,15 @@ begin
       
       with nBmp do
       begin
-        nLine := Lines[nIdx];
-        MidDrawText(nLine.FName);
-
-        if nLine.FIsValid then
-             nStr := '启用'
-        else nStr := '停用';
-        MidDrawText(nStr);
-
-        for i:=0 to nLine.FTrucks.Count-1 do
+        i := 0;
+        while nIdx < Trucks.Count do
         begin
-          if i >= FRowNum-2 then Break;
+          if i >= FRowNum then Break;
           //row is enough to fill truck
-          
-          nTruck := nLine.FTrucks[i];
-          MidDrawText(nTruck.FTruck);
+
+          nTruck := Trucks[nIdx];
+          LeftDrawText(nTruck.FTruck);
+          Inc(nIdx); Inc(i);
         end;
 
         Inc(nL, FColWidth[nI]);

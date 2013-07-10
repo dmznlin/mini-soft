@@ -100,7 +100,7 @@ Conditionals=
 DebugSourceDirs=
 UsePackages=0
 [Parameters]
-RunParams=SAP_MIT
+RunParams=Hard_Mon
 HostApplication=
 Launcher=
 UseLauncher=0

@@ -1,73 +1,59 @@
 inherited fFormCard: TfFormCard
   Left = 409
   Top = 437
-  Caption = #20851#32852#30913#21345
-  ClientHeight = 180
-  ClientWidth = 310
+  Caption = #30913#21345
+  ClientHeight = 190
+  ClientWidth = 388
   Position = poMainFormCenter
   OnClose = FormClose
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 15
   inherited dxLayout1: TdxLayoutControl
-    Width = 310
-    Height = 180
+    Width = 388
+    Height = 190
     inherited BtnOK: TButton
-      Left = 164
-      Top = 147
+      Left = 206
+      Top = 148
       Caption = #30830#23450
-      TabOrder = 4
+      TabOrder = 3
     end
     inherited BtnExit: TButton
-      Left = 234
-      Top = 147
-      TabOrder = 5
+      Left = 293
+      Top = 148
+      TabOrder = 4
     end
-    object EditBill: TcxTextEdit [2]
-      Left = 81
-      Top = 36
+    object EditTruck: TcxTextEdit [2]
+      Left = 87
+      Top = 45
       ParentFont = False
       Properties.ReadOnly = True
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
-      Width = 121
+      Width = 152
     end
-    object EditTruck: TcxTextEdit [3]
-      Left = 81
-      Top = 61
-      ParentFont = False
-      Properties.ReadOnly = True
-      TabOrder = 1
-      OnKeyPress = OnCtrlKeyPress
-      Width = 121
-    end
-    object cxLabel1: TcxLabel [4]
-      Left = 23
-      Top = 86
+    object cxLabel1: TcxLabel [3]
+      Left = 29
+      Top = 70
       AutoSize = False
       ParentFont = False
       Properties.LineOptions.Alignment = cxllaBottom
       Properties.LineOptions.Visible = True
       Transparent = True
-      Height = 20
-      Width = 287
+      Height = 25
+      Width = 359
     end
-    object EditCard: TcxTextEdit [5]
-      Left = 81
-      Top = 111
+    object EditCard: TcxTextEdit [4]
+      Left = 87
+      Top = 100
       ParentFont = False
       Properties.MaxLength = 15
-      TabOrder = 3
+      TabOrder = 2
       OnKeyPress = EditCardKeyPress
-      Width = 121
+      Width = 152
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
         Caption = ''
-        object dxLayout1Item3: TdxLayoutItem
-          Caption = #20132#36135#21333#21495':'
-          Control = EditBill
-          ControlOptions.ShowBorder = False
-        end
         object dxLayout1Item4: TdxLayoutItem
           Caption = #36710#33337#21495#30721':'
           Control = EditTruck

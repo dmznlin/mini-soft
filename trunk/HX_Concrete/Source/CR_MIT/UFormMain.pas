@@ -70,12 +70,13 @@ begin
   nLabel.Left := 12;
   nLabel.Top := (HintPanel.Height + nLabel.Height - 12) div 2;
 end;
-       
+
+
 //Desc: ‘ÿ»Î≈‰÷√
 procedure TfFormMain.FormLoadConfig;
 var nStr: string;
     nIni: TIniFile;
-begin     
+begin
   SetHintText(HintLabel);
   HintPanel.DoubleBuffered := True; 
   gStatusBar := sBar;

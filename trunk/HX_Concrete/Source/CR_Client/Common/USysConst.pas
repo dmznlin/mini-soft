@@ -33,8 +33,11 @@ const
   cFI_FormIncInfo       = $1003;                     //公司信息
   cFI_FormChangePwd     = $1005;                     //修改密码
   cFI_FormOptions       = $1006;                     //系统选项
+  cFI_FormMemo          = $1007;                     //备注信息
 
   cFI_FormArea          = $1020;                     //区域管理
+  cFI_FormMakeCard      = $1021;                     //关联磁卡
+  cFI_FormBusiness      = $1022;                     //业务窗体
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -163,6 +166,11 @@ begin
 
   AddMenuModuleItem('MAIN_B01', cFI_FrameTruckCard);
   AddMenuModuleItem('MAIN_B02', cFI_FrameArea);
+
+  AddMenuModuleItem('MAIN_D01', cFI_FormBusiness, mtForm);
+  AddMenuModuleItem('MAIN_D02', cFI_FormBusiness, mtForm);
+  AddMenuModuleItem('MAIN_D03', cFI_FormBusiness, mtForm);
+  AddMenuModuleItem('MAIN_D04', cFI_FormBusiness, mtForm);
 end;
 
 //Desc: 清理模块列表

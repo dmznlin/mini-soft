@@ -10,12 +10,11 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   CPort, CPortTypes, UFormNormal, UFormBase, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
-  dxLayoutControl, StdCtrls, cxGraphics;
+  dxLayoutControl, StdCtrls, cxGraphics, dxSkinsCore,
+  dxSkinsDefaultPainters;
 
 type
   TfFormCard = class(TfFormNormal)
-    EditBill: TcxTextEdit;
-    dxLayout1Item3: TdxLayoutItem;
     EditTruck: TcxTextEdit;
     dxLayout1Item4: TdxLayoutItem;
     cxLabel1: TcxLabel;
@@ -78,11 +77,14 @@ begin
   with TfFormCard.Create(Application) do
   try
     FParam := nParam;
+    dxGroup1.Caption := FParam.FParamB;
+    
     InitFormData;
     ActionComPort(False);
 
     FParam.FCommand := cCmd_ModalResult;
     FParam.FParamA := ShowModal;
+    FParam.FParamB := EditCard.Text;
   finally
     Free;
   end;
@@ -96,8 +98,7 @@ end;
 procedure TfFormCard.InitFormData;
 begin
   ActiveControl := EditCard;
-  EditBill.Text := FParam.FParamA;
-  EditTruck.Text := FParam.FParamB;
+  EditTruck.Text := FParam.FParamA;
 end;
 
 //Desc: ´®¿Ú²Ù×÷
@@ -145,11 +146,13 @@ begin
        15: StopBits := sbOne5StopBits
        else StopBits := sbOneStopBit;
       end;
+
+      if nIni.ReadBool('Param', 'Enabled', True) then
+        ComPort1.Open;
+      //open comport
     finally
       nIni.Free;
     end;
-
-    ComPort1.Open;
   end;
 end;
 
@@ -198,9 +201,16 @@ begin
     Exit;
   end;
 
-  if SaveBillCard(EditBill.Text, EditTruck.Text, EditCard.Text) then
+  if FParam.FCommand = cCmd_AddData then
+  begin
+    if SaveTruckCard(EditTruck.Text, EditCard.Text) then
+      ModalResult := mrOk;
+    //done
+  end else
+  begin
     ModalResult := mrOk;
-  //done
+    //return card no
+  end;
 end;
 
 initialization

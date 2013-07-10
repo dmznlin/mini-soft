@@ -91,7 +91,10 @@ ResourceString
   sFlag_CardUsed      = 'U';                         //使用中
   sFlag_CardLoss      = 'L';                         //挂失卡
   sFlag_CardInvalid   = 'N';                         //注销卡
-                                                               
+
+  sFlag_SerailSYS     = 'SYSTableID';                //SYS编码组
+  sFlag_TruckLog      = 'SYS_TruckLog';              //车辆记录
+
   sFlag_Company       = 'Company';                   //公司名
   sFlag_ForceHint     = 'Bus_HintMsg';               //强制提示
 
@@ -117,7 +120,7 @@ ResourceString
 
   sTable_Area         = 'S_Area';                    //区域
   sTable_Card         = 'S_Card';                    //磁卡
-  sTable_Truck        = 'S_Truck';                   //车辆表
+  sTable_Truck        = 'C_PRODKIND';                //车辆表
   sTable_TruckLog     = 'S_TruckLog';                //车辆日志
 
   sTable_ZCLines      = 'S_ZCLines';                 //装车道
@@ -263,7 +266,7 @@ ResourceString
 
   sSQL_NewTruckLog = 'Create Table $Table(R_ID $Inc, T_ID varChar(15),' +
        'T_Truck varChar(15),T_Status Char(1), T_NextStatus Char(1),' +
-       'T_Line varChar(15), T_LineName varChar(32),' +
+       'T_Line varChar(15), T_LineName varChar(32), T_TaskID varChar(32),' +
        'T_InTime DateTime, T_InMan varChar(32),' +
        'T_OutTime DateTime, T_OutMan varChar(32),' +
        'T_QueueIn DateTime, T_QInMan varChar(32),' +
@@ -274,6 +277,7 @@ ResourceString
    *.T_Truck:车牌号
    *.T_Status,T_NextStatus:状态
    *.T_Line,T_LineName:装车线
+   *.T_TaskID: 任务单号
    *.T_InTime,T_InMan:进厂时间,放行人
    *.T_OutTime,T_OutMan:出厂时间,放行人
    *.T_QueueIn,T_QInMan:进队时间,操作人
@@ -300,8 +304,8 @@ ResourceString
 
   sSQL_NewZCTrucks = 'Create Table $Table(R_ID $Inc, T_Truck varChar(15),' +
        'T_Card varChar(16), T_ConNo varChar(20), T_ConName varChar(80), ' +
-       'T_ConType Char(1), T_Line varChar(15), T_TruckLog varChar(15),' +
-       'T_VIP Char(1), T_Valid Char(1))';
+       'T_ConType Char(1), T_TaskID varChar(32), T_Line varChar(15), ' +
+       'T_TruckLog varChar(15), T_VIP Char(1), T_Valid Char(1))';
   {-----------------------------------------------------------------------------
    待装车队列: ZCTrucks
    *.R_ID: 记录号
@@ -310,6 +314,7 @@ ResourceString
    *.T_ConNo: 品种编号
    *.T_ConName: 品种名称
    *.T_ConType: 品种类型(待定)
+   *.T_TaskID: 任务单
    *.T_Line: 所在道
    *.T_TruckLog: 行车记录号
    *.T_VIP: 特权

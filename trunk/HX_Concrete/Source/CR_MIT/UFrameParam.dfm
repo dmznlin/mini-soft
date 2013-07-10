@@ -6,7 +6,7 @@ inherited fFrameParam: TfFrameParam
     Top = 0
     Width = 573
     Height = 386
-    ActivePage = TabSheet5
+    ActivePage = TabSheet4
     Align = alClient
     MultiLine = True
     TabOrder = 0
@@ -107,13 +107,6 @@ inherited fFrameParam: TfFrameParam
           Height = 12
           Caption = #21442#25968#26126#32454':'
         end
-        object Label5: TLabel
-          Left = 320
-          Top = 48
-          Width = 24
-          Height = 12
-          Caption = 'SAP:'
-        end
         object Label6: TLabel
           Left = 182
           Top = 99
@@ -163,16 +156,6 @@ inherited fFrameParam: TfFrameParam
           TabOrder = 0
           OnClick = ListPackClick
         end
-        object NamesSAP: TComboBox
-          Left = 320
-          Top = 62
-          Width = 115
-          Height = 20
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          ItemHeight = 12
-          TabOrder = 2
-          OnChange = EditPackChange
-        end
         object NamesDB: TComboBox
           Left = 182
           Top = 114
@@ -180,7 +163,7 @@ inherited fFrameParam: TfFrameParam
           Height = 20
           ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 12
-          TabOrder = 3
+          TabOrder = 2
           OnChange = EditPackChange
         end
         object NamesPerform: TComboBox
@@ -190,7 +173,7 @@ inherited fFrameParam: TfFrameParam
           Height = 20
           ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 12
-          TabOrder = 4
+          TabOrder = 3
           OnChange = EditPackChange
         end
         object EditPack: TLabeledEdit
@@ -204,186 +187,6 @@ inherited fFrameParam: TfFrameParam
           ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 1
           OnChange = EditPackChange
-        end
-      end
-    end
-    object TabSheet2: TTabSheet
-      Caption = 'SAP'#37197#32622
-      ImageIndex = 1
-      DesignSize = (
-        565
-        359)
-      object GroupSAP: TGroupBox
-        Left = 5
-        Top = 5
-        Width = 555
-        Height = 320
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 0
-        DesignSize = (
-          555
-          320)
-        object Label8: TLabel
-          Left = 10
-          Top = 20
-          Width = 54
-          Height = 12
-          Caption = #21442#25968#21015#34920':'
-        end
-        object Bevel2: TBevel
-          Left = 175
-          Top = 32
-          Width = 320
-          Height = 5
-          Shape = bsBottomLine
-        end
-        object Label9: TLabel
-          Left = 175
-          Top = 20
-          Width = 54
-          Height = 12
-          Caption = #21442#25968#26126#32454':'
-        end
-        object BtnSAPAdd: TSpeedButton
-          Left = 62
-          Top = 18
-          Width = 18
-          Height = 17
-          Caption = '+'
-          Flat = True
-        end
-        object BtnDelSAP: TSpeedButton
-          Left = 80
-          Top = 18
-          Width = 18
-          Height = 17
-          Caption = '-'
-          Flat = True
-        end
-        object ListSAP: TCheckListBox
-          Left = 10
-          Top = 35
-          Width = 152
-          Height = 275
-          OnClickCheck = ListPackClickCheck
-          Anchors = [akLeft, akTop, akBottom]
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          ItemHeight = 20
-          Items.Strings = (
-            'aa'
-            'bb'
-            'cc')
-          Style = lbOwnerDrawFixed
-          TabOrder = 0
-        end
-        object EditSAP: TLabeledEdit
-          Left = 182
-          Top = 65
-          Width = 115
-          Height = 20
-          Hint = 'S.1'
-          EditLabel.Width = 54
-          EditLabel.Height = 12
-          EditLabel.Caption = 'Param ID:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          TabOrder = 1
-        end
-        object LabeledEdit2: TLabeledEdit
-          Left = 320
-          Top = 65
-          Width = 115
-          Height = 20
-          Hint = 'S.2'
-          EditLabel.Width = 66
-          EditLabel.Height = 12
-          EditLabel.Caption = 'App Server:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          TabOrder = 2
-        end
-        object LabeledEdit3: TLabeledEdit
-          Left = 182
-          Top = 110
-          Width = 115
-          Height = 20
-          Hint = 'S.3'
-          EditLabel.Width = 30
-          EditLabel.Height = 12
-          EditLabel.Caption = 'User:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          TabOrder = 3
-        end
-        object LabeledEdit4: TLabeledEdit
-          Left = 320
-          Top = 109
-          Width = 115
-          Height = 20
-          Hint = 'S.4'
-          EditLabel.Width = 54
-          EditLabel.Height = 12
-          EditLabel.Caption = 'Password:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          PasswordChar = '*'
-          TabOrder = 4
-        end
-        object LabeledEdit5: TLabeledEdit
-          Left = 182
-          Top = 154
-          Width = 115
-          Height = 20
-          Hint = 'S.5'
-          EditLabel.Width = 48
-          EditLabel.Height = 12
-          EditLabel.Caption = 'System_:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          TabOrder = 5
-        end
-        object LabeledEdit6: TLabeledEdit
-          Left = 320
-          Top = 153
-          Width = 115
-          Height = 20
-          Hint = 'S.6'
-          EditLabel.Width = 84
-          EditLabel.Height = 12
-          EditLabel.Caption = 'System Number:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          TabOrder = 6
-        end
-        object LabeledEdit7: TLabeledEdit
-          Left = 182
-          Top = 198
-          Width = 115
-          Height = 20
-          Hint = 'S.7'
-          EditLabel.Width = 42
-          EditLabel.Height = 12
-          EditLabel.Caption = 'Client:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          TabOrder = 7
-        end
-        object LabeledEdit8: TLabeledEdit
-          Left = 320
-          Top = 198
-          Width = 115
-          Height = 20
-          Hint = 'S.8'
-          EditLabel.Width = 54
-          EditLabel.Height = 12
-          EditLabel.Caption = 'Language:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          TabOrder = 8
-        end
-        object LabeledEdit9: TLabeledEdit
-          Left = 182
-          Top = 243
-          Width = 115
-          Height = 20
-          Hint = 'S.9'
-          EditLabel.Width = 54
-          EditLabel.Height = 12
-          EditLabel.Caption = 'Codepage:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          TabOrder = 9
         end
       end
     end
@@ -790,55 +593,6 @@ inherited fFrameParam: TfFrameParam
           ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 2
           OnChange = EditPerformChange
-        end
-      end
-    end
-    object TabSheet5: TTabSheet
-      Caption = #26381#21153#22320#22336
-      ImageIndex = 4
-      DesignSize = (
-        565
-        359)
-      object GroupRemote: TGroupBox
-        Left = 5
-        Top = 5
-        Width = 555
-        Height = 155
-        Anchors = [akLeft, akTop, akRight]
-        Caption = ' '#36828#31243'URL '
-        TabOrder = 0
-        object MemoRemote: TMemo
-          Left = 2
-          Top = 14
-          Width = 551
-          Height = 139
-          Align = alClient
-          BorderStyle = bsNone
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          ScrollBars = ssBoth
-          TabOrder = 0
-          OnChange = MemoRemoteChange
-        end
-      end
-      object GroupLocal: TGroupBox
-        Left = 5
-        Top = 165
-        Width = 555
-        Height = 155
-        Anchors = [akLeft, akTop, akRight]
-        Caption = ' '#26412#22320'URL '
-        TabOrder = 1
-        object MemoLocal: TMemo
-          Left = 2
-          Top = 14
-          Width = 551
-          Height = 139
-          Align = alClient
-          BorderStyle = bsNone
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
-          ScrollBars = ssBoth
-          TabOrder = 0
-          OnChange = MemoRemoteChange
         end
       end
     end

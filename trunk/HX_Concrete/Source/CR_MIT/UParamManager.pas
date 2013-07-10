@@ -63,9 +63,6 @@ type
     procedure UpdateActivePack;
     //更新参数
   public
-    URLRemote: string;
-    URLLocal: string;
-    //服务地址URL
     constructor Create(const nFile: string);
     destructor Destroy; override;
     //创建释放
@@ -148,16 +145,6 @@ begin
     if nIsRead then
     with nIni do
     begin
-      URLRemote := ReadString(sSection_System, 'URLRemote', '');
-      if URLRemote <> '' then
-        URLRemote := DecodeBase64(URLRemote);
-      //remote url
-
-      URLLocal  := ReadString(sSection_System, 'URLLocal', '');
-      if URLLocal <> '' then
-        URLLocal := DecodeBase64(URLLocal);
-      //local url
-
       FActive := nil;
       nInt := ReadInteger(sSection_DB, 'Number', 0);
       SetLength(FItemDB, nInt);
@@ -231,10 +218,6 @@ begin
 
     with nIni do
     begin
-      WriteString(sSection_System, 'URLRemote', EncodeBase64(URLRemote));
-      WriteString(sSection_System, 'URLLocal', EncodeBase64(URLLocal));
-      //url
-
       nInt := 0;
       nIni.EraseSection(sSection_Packet);
       

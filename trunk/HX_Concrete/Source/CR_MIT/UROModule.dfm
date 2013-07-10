@@ -58,4 +58,11 @@ object ROModule: TROModule
     Left = 30
     Top = 68
   end
+  object ServerUDP1: TIdUDPServer
+    Bindings = <>
+    DefaultPort = 0
+    OnUDPRead = ServerUDP1UDPRead
+    Left = 216
+    Top = 20
+  end
 end
