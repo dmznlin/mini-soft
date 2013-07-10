@@ -11,8 +11,8 @@ interface
 
 uses
   //System Object
-  UHardWorker, UMITPacker, UMgrChannel, UMgrDBConn, UMgrQueue,
-  UMgrLEDCard, UMgrHardHelper, U02NReader, UMgrRemoteVoice;
+  UHardWorker, UMITPacker, UMgrDBConn, UMgrQueue, UMgrLEDCard, UMgrHardHelper,
+  U02NReader, UMgrRemoteVoice;
 
 procedure InitSystemObject;
 procedure RunSystemObject(const nFormHandle: THandle);
@@ -37,7 +37,7 @@ begin
     gParamManager.GetParamPack(gSysParam.FProgID, True);
   //runtime parameter
 
-  gProcessMonitorClient := TProcessMonitorClient.Create(gSysParam.FProgID);
+  //gProcessMonitorClient := TProcessMonitorClient.Create(gSysParam.FProgID);
   //process monitor
 
   gHardwareHelper := THardwareHelper.Create;
@@ -72,10 +72,7 @@ end;
 
 //Desc: 释放系统对象
 procedure FreeSystemObject;
-begin
-  FreeAndNil(gHardShareData);
-  //hard monitor
-  
+begin     
   if Assigned(gProcessMonitorClient) then
   begin
     gProcessMonitorClient.StopMonitor(Application.Active);

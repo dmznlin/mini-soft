@@ -11,6 +11,13 @@ uses
   Windows, Classes, DB, SysUtils, SyncObjs, UMgrDBConn, UWaitItem, ULibFun,
   USysLoger, USysDB;
 
+const
+  cTruckMaxCalledNum = 2;
+  //单车最多呼叫次数
+  cCall_Prefix_1     = $1C;
+  cCall_Prefix_2     = $2B;
+  //呼叫协议前缀
+
 type
   PLineItem = ^TLineItem;
   TLineItem = record
@@ -25,7 +32,6 @@ type
     FIsVIP      : string;
     FIsValid    : Boolean;
     FIndex      : Integer;
-    FTrucks     : TList;
   end;//装车线
 
   PTruckItem = ^TTruckItem;
@@ -36,17 +42,20 @@ type
     FConName    : string;      //品种名
     FLine       : string;      //装车线
     FTaskID     : string;      //任务单
-    
-    FInTime     : Int64;       //进队时间
-    FInFact     : Boolean;     //是否进厂
-    FInLade     : Boolean;     //是否提货
     FIsVIP      : string;      //特权车
-    FIndex      : Integer;     //队列索引
+
+    FCallNum    : Byte;        //呼叫次数
+    FCallIP     : string;
+    FCallPort   : Integer;     //呼叫地址
+    FAnswered   : Boolean;     //刷卡应答
   end;
 
   TQueueParam = record
     FLoaded     : Boolean;     //载入标记
   end;
+
+  TTruckScanCallback = function (const nTruck: PTruckItem): Boolean;
+  //车辆扫描回调函数
 
   TTruckQueueManager = class;
   TTruckQueueDBReader = class(TThread)
@@ -59,7 +68,6 @@ type
     //等待对象
     FParam: TQueueParam;
     //队列参数
-    FTruckChanged: Boolean;
     FTruckPool: array of TTruckItem;
     //车辆缓存
   protected
@@ -70,11 +78,15 @@ type
     procedure LoadQueueParam;
     //载入排队参数
     procedure LoadLines;
-    //载入装车线
     procedure LoadTrucks;
     //载入车辆
+    function GetLine(const nLineID: string): Integer;
+    function TruckInPool(const nTruck: string): Integer;
+    function TruckInList(const nTruck: string): Integer;
+    //检索车辆
     procedure InvalidTruckOutofQueue;
-    //队列处理
+    procedure MakeTruckIn(var nStart: Integer; const nFilter: TTruckScanCallback);
+    //扫描队列
   public
     constructor Create(AOwner: TTruckQueueManager);
     destructor Destroy; override;
@@ -89,16 +101,19 @@ type
     FDBName: string;
     //数据标识
     FLines: TList;
-    //装车线
+    FTrucks: TList;
+    //车辆列表
     FLineLoaded: Boolean;
     //是否已载入
-    FLineChanged: Int64;
+    FQueueChanged: Int64;
     //队列变动
     FSyncLock: TCriticalSection;
     //同步锁
     FDBReader: TTruckQueueDBReader;
     //数据读写
   protected
+    procedure FreeTruck(nItem: PTruckItem; nIdx: Integer = -1);
+    procedure ClearTrucks(const nFree: Boolean);
     procedure FreeLine(nItem: PLineItem; nIdx: Integer = -1);
     procedure ClearLines(const nFree: Boolean);
     //释放资源
@@ -109,18 +124,16 @@ type
     procedure StartQueue(const nDB: string);
     procedure StopQueue;
     //启停队列
+    function TruckInQueue(const nTruck: string; const nLocked: Boolean): Integer;
+    //车辆检索
     function GetVoiceTruck(const nSeparator: string;
      const nLocked: Boolean): string;
     //语音车辆
     procedure RefreshTrucks(const nLoadLine: Boolean);
     //刷新队列
-    function GetLine(const nLineID: string): Integer;
-    //装车线
-    function TruckInQueue(const nTruck: string): Integer;
-    function TruckInLine(const nTruck: string; const nList: TList): Integer;
-    //车辆检索
     property Lines: TList read FLines;
-    property LineChanged: Int64 read FLineChanged;
+    property Trucks: TList read FTrucks;
+    property QueueChanged: Int64 read FQueueChanged;
     property SyncLock: TCriticalSection read FSyncLock;
     //属性相关
   end;
@@ -141,9 +154,10 @@ constructor TTruckQueueManager.Create;
 begin
   FDBReader := nil;
   FLineLoaded := False;
-  FLineChanged := GetTickCount;
+  FQueueChanged := GetTickCount;
 
   FLines := TList.Create;
+  FTrucks := TList.Create;
   FSyncLock := TCriticalSection.Create;
 end;
 
@@ -151,16 +165,39 @@ destructor TTruckQueueManager.Destroy;
 begin
   StopQueue;
   ClearLines(True);
+  ClearTrucks(True);
 
   FSyncLock.Free;
   inherited;
 end;
 
+//Desc: 释放车辆
+procedure TTruckQueueManager.FreeTruck(nItem: PTruckItem; nIdx: Integer);
+begin
+  if (nIdx < 0) and Assigned(nItem) then
+    nIdx := FTrucks.IndexOf(nItem);
+  if nIdx < 0 then Exit;
+
+  if (not Assigned(nItem)) and (nIdx > -1) then
+    nItem := FTrucks[nIdx];
+  if not Assigned(nItem) then Exit;
+
+  Dispose(nItem);
+  FTrucks.Delete(nIdx);
+end;
+
+procedure TTruckQueueManager.ClearTrucks(const nFree: Boolean);
+var nIdx: Integer;
+begin
+  for nIdx:=FTrucks.Count - 1 downto 0 do
+    FreeTruck(nil, nIdx);
+  if nFree then FreeAndNil(FTrucks);
+end;
+
 //Desc: 释放装车线
 procedure TTruckQueueManager.FreeLine(nItem: PLineItem; nIdx: Integer);
-var i: Integer;
 begin
-  if Assigned(nItem) then
+  if (nIdx < 0) and Assigned(nItem) then
     nIdx := FLines.IndexOf(nItem);
   if nIdx < 0 then Exit;
 
@@ -168,14 +205,7 @@ begin
     nItem := FLines[nIdx];
   if not Assigned(nItem) then Exit;
 
-  for i:=nItem.FTrucks.Count - 1 downto 0 do
-  begin
-    Dispose(PTruckItem(nItem.FTrucks[i]));
-    nItem.FTrucks.Delete(i);
-  end;
-
-  nItem.FTrucks.Free;
-  Dispose(PLineItem(nItem));
+  Dispose(nItem);
   FLines.Delete(nIdx);
 end;
 
@@ -208,29 +238,39 @@ begin
   FDBReader := nil;
 end;
 
+//Date: 2013-07-08
+//Parm: 车牌号;是否锁定
+//Desc: 检索nTruck在队列中的位置索引
+function TTruckQueueManager.TruckInQueue(const nTruck: string;
+  const nLocked: Boolean): Integer;
+var nIdx: Integer;
+begin
+  if nLocked then SyncLock.Enter;
+  try
+    Result := -1;
+
+    for nIdx:=FTrucks.Count - 1 downto 0 do
+    if CompareText(nTruck, PTruckItem(FTrucks[nIdx]).FTruck) = 0 then
+    begin
+      Result := nIdx;
+      Break;
+    end;
+  finally
+    if nLocked then SyncLock.Leave;
+  end;
+end;
+
 //Date: 2012-8-24
 //Parm: 分隔符;是否锁定
 //Desc: 获取语音播发的车辆列表
 function TTruckQueueManager.GetVoiceTruck(const nSeparator: string;
   const nLocked: Boolean): string;
 var i,nIdx: Integer;
-    nLine: PLineItem;
     nTruck: PTruckItem;
 begin
   if nLocked then SyncLock.Enter;
   try
     Result := '';
-
-    for nIdx:=0 to Lines.Count - 1 do
-    begin
-      nLine := Lines[nIdx];
-      for i:=0 to nLine.FTrucks.Count - 1 do
-      begin
-        nTruck := nLine.FTrucks[i];
-        Result := Result + nTruck.FTruck + nSeparator;
-        //xxxxx
-      end;
-    end;
 
     i := Length(Result);
     if i > 0 then
@@ -250,55 +290,6 @@ begin
     if nLoadLine then
       FLineLoaded := False;
     FDBReader.Wakup;
-  end;
-end;
-
-//Date: 2012-4-15
-//Parm: 装车线表示
-//Desc: 检索标识为nLineID的装车线(需加锁调用)
-function TTruckQueueManager.GetLine(const nLineID: string): Integer;
-var nIdx: Integer;
-begin
-  Result := -1;
-              
-  for nIdx:=FLines.Count - 1 downto 0 do
-  if CompareText(nLineID, PLineItem(FLines[nIdx]).FLineID) = 0 then
-  begin
-    Result := nIdx;
-    Break;
-  end;
-end;
-
-//Date: 2012-4-14
-//Parm: 车牌号;列表
-//Desc: 判定nTruck是否在nList单道队列中(需加锁调用)
-function TTruckQueueManager.TruckInLine(const nTruck: string;
-  const nList: TList): Integer;
-var nIdx: Integer;
-begin
-  Result := -1;
-
-  for nIdx:=nList.Count - 1 downto 0 do
-  if CompareText(nTruck, PTruckItem(nList[nIdx]).FTruck) = 0 then
-  begin
-    Result := nIdx;
-    Break;
-  end;
-end;
-
-//Date: 2012-4-14
-//Parm: 车牌号
-//Desc: 判断nTruck是否在队列中(需加锁调用)
-function TTruckQueueManager.TruckInQueue(const nTruck: string): Integer;
-var nIdx: Integer;
-begin
-  Result := -1;
-
-  for nIdx:=FLines.Count - 1 downto 0 do
-  if TruckInLine(nTruck, PLineItem(FLines[nIdx]).FTrucks) > -1 then
-  begin
-    Result := nIdx;
-    Break;
   end;
 end;
 
@@ -363,8 +354,6 @@ begin
       FOwner.FSyncLock.Enter;
       try
         LoadQueueParam;
-
-        FTruckChanged := False;
         LoadLines;
         LoadTrucks;
       finally
@@ -396,7 +385,9 @@ end;
 procedure TTruckQueueDBReader.LoadQueueParam;
 var nStr: string;
 begin
+  Exit;
   if FParam.FLoaded then Exit;
+
   nStr := 'Select D_Value,D_Memo From %s Where D_Name=''%s''';
   nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam]);
 
@@ -410,6 +401,22 @@ begin
     begin
       Next;
     end;
+  end;
+end;
+
+//Date: 2012-4-15
+//Parm: 装车线标识
+//Desc: 检索标识为nLineID的装车线
+function TTruckQueueDBReader.GetLine(const nLineID: string): Integer;
+var nIdx: Integer;
+begin
+  Result := -1;
+
+  for nIdx:=FOwner.FLines.Count - 1 downto 0 do
+  if CompareText(nLineID, PLineItem(FOwner.FLines[nIdx]).FLineID) = 0 then
+  begin
+    Result := nIdx;
+    Break;
   end;
 end;
 
@@ -432,9 +439,7 @@ begin
       PLineItem(FLines[nIdx]).FEnable := False;
     //xxxxx
 
-    FLineChanged := GetTickCount;
     First;
-
     while not Eof do
     begin
       nStr := FieldByName('Z_ID').AsString;
@@ -444,7 +449,6 @@ begin
       begin
         New(nLine);
         FLines.Add(nLine);
-        nLine.FTrucks := TList.Create;
       end else nLine := FLines[nIdx];
 
       with nLine^ do
@@ -496,20 +500,126 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+//Date: 2013-07-07
+//Parm: 车牌号
+//Desc: 检索nTruck在FTruckPool中的位置
+function TTruckQueueDBReader.TruckInPool(const nTruck: string): Integer;
+var nIdx: Integer;
+begin
+  Result := - 1;
+  
+  for nIdx:=Low(FTruckPool) to High(FTruckPool) do
+  if CompareText(nTruck, FTruckPool[nIdx].FTruck) = 0 then
+  begin
+    Result := nIdx;
+    Break;
+  end;
+end;
+
+//Date: 2013-07-07
+//Parm: 车牌号
+//Desc: 检索nTruck在FTrucks中的位置
+function TTruckQueueDBReader.TruckInList(const nTruck: string): Integer;
+var nIdx: Integer;
+begin
+  Result := - 1;
+
+  for nIdx:=FOwner.FTrucks.Count - 1 downto 0 do
+  if CompareText(nTruck, PTruckItem(FOwner.FTrucks[nIdx]).FTruck) = 0 then
+  begin
+    Result := nIdx;
+    Break;
+  end;    
+end;
+
+//Date: 2012-4-15
+//Desc: 将无效车辆(已出厂,进厂超时)移出队列
+procedure TTruckQueueDBReader.InvalidTruckOutofQueue;
+var nIdx: Integer;
+    nTruck: PTruckItem;
+begin
+  for nIdx:=FOwner.FTrucks.Count - 1 downto 0 do
+  begin
+    nTruck := FOwner.FTrucks[nIdx];
+    if TruckInPool(nTruck.FTruck) >= 0 then Continue;
+
+    {$IFDEF DEBUG}
+    WriteLog(Format('车辆[ %s ]无效出队.', [nTruck.FTruck]));
+    {$ENDIF}
+
+    FOwner.FreeTruck(nTruck, nIdx);
+    FOwner.FQueueChanged := GetTickCount;
+  end;
+end;
+
+//Date: 2013-07-07
+//Parm: 扫描FTrucks起始索引;过滤器
+//Desc: 将FTruckPool符合nFilter的车辆添加到nStart开始的列表中
+procedure TTruckQueueDBReader.MakeTruckIn(var nStart: Integer;
+  const nFilter: TTruckScanCallback);
+var nIdx,nPos: Integer;
+    nTruck: PTruckItem;
+begin
+  with FOwner do
+  begin
+    for nIdx:=Low(FTruckPool) to High(FTruckPool) do
+    begin
+      if not nFilter(@FTruckPool[nIdx]) then Continue;
+      //不符合筛选条件
+
+      nPos := TruckInList(FTruckPool[nIdx].FTruck);
+      if nPos = nStart then
+      begin
+        Inc(nStart);
+        Continue;
+      end;
+      //车辆在正确位置,不予处理
+
+      FQueueChanged := GetTickCount;
+      //更新队列变动标记
+
+      if nPos < 0 then
+      begin
+        New(nTruck);
+        FTrucks.Insert(nStart, nTruck);
+
+        nTruck^ := FTruckPool[nIdx];
+        Inc(nStart);
+      end else //不在队列则添加
+      begin
+        nTruck := FTrucks[nStart];
+        FTrucks[nIdx] := FTrucks[nPos];
+
+        FTrucks[nPos] := nTruck;
+        Inc(nStart);
+      end;     //已在队列则交换
+    end;
+  end;
+end;
+
+//Desc: 装车线为空回调
+function Filter_LineIsNull(const nTruck: PTruckItem): Boolean;
+begin
+  Result := nTruck.FLine = '';
+end;
+
+//Desc: 装车线不为空回调
+function Filter_LineIsNotNull(const nTruck: PTruckItem): Boolean;
+begin
+  Result := nTruck.FLine <> '';
+end;
+
 //Desc: Desc: 载入装车队列
 procedure TTruckQueueDBReader.LoadTrucks;
 var nStr: string;
-    i,nIdx: Integer;
+    i,j,nIdx,nPos: Integer;
+    nTruck,nTmp: PTruckItem;
 begin
-  nStr := 'Select * From %s Where IsNull(T_Valid,''%s'')<>''%s'' $Ext ' +
-          'Order By T_Index ASC,T_InFact ASC,T_InTime ASC';
-  nStr := Format(nStr, [sTable_ZCTrucks, sFlag_Yes, sFlag_No]);
-
-  {++++++++++++++++++++++++++++++ 注意 +++++++++++++++++++++++++
-   1.厂外模式时,进厂时间(T_InFact)为空,车辆以开单时间(T_InTime)为准.
-   2.厂内模式时,车辆已进厂时间为准.
-   3.排序条件上, T_InFact和T_InTime不能调换顺序.
-  -------------------------------------------------------------}
+  nStr := 'Select zt.* From %s zt ' +
+          ' Left Join %s tl on tl.T_ID=zt.T_TruckLog ' +
+          'Where IsNull(T_Valid,''%s'')<>''%s'' ' +
+          'Order By T_InTime ASC';
+  nStr := Format(nStr, [sTable_ZCTrucks, sTable_TruckLog, sFlag_Yes, sFlag_No]);
 
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
   if RecordCount > 0 then
@@ -531,11 +641,10 @@ begin
         FTaskID     := FieldByName('T_TaskID').AsString;
         FIsVIP      := FieldByName('T_VIP').AsString;
 
-        FInFact     := FieldByName('T_InFact').AsString <> '';
-        FInLade     := FieldByName('T_InLade').AsString <> '';
-
-        FIndex      := FieldByName('T_Index').AsInteger;
-        if FIndex < 1 then FIndex := MaxInt;
+        FCallNum    := 0;
+        FCallIP     := '';
+        FCallPort   := 0;
+        FAnswered   := False;
       end;
       
       Inc(nIdx);
@@ -545,70 +654,14 @@ begin
   //可进厂和已在队列车辆缓冲池
 
   InvalidTruckOutofQueue;
-  //将无效车辆移出队列
+  //无效车辆出队
 
-  if Length(FTruckPool) < 1 then Exit;
-  //无新车辆处理
+  nIdx := 0;
+  MakeTruckIn(nIdx, @Filter_LineIsNotNull);
+  //装车线不为空优先
 
-  //--------------------------------------------------------------------------
-  for nIdx:=0 to FOwner.FLines.Count - 1 do
-  with PLineItem(FOwner.Lines[nIdx])^,FOwner do
-  begin
-    for i:=Low(FTruckPool) to High(FTruckPool) do
-    if FTruckPool[i].FEnable then
-    begin
-      if FTruckPool[i].FLine <> FLineID then Continue;
-      if TruckInLine(FTruckPool[i].FTruck, FTrucks) >= 0 then Continue;
-
-      //MakePoolTruckIn(i, FOwner.Lines[nIdx]);
-      //本队列车辆优先,全部进队
-    end;
-
-  end;
-end;
-
-//Date: 2012-4-15
-//Desc: 将无效车辆(已出厂,进厂超时)移出队列
-procedure TTruckQueueDBReader.InvalidTruckOutofQueue;
-var nStr: string;
-    i,j,nIdx: Integer;
-    nLine: PLineItem;
-    nTruck: PTruckItem;
-begin
-  with FOwner do
-  begin
-    for nIdx:=FLines.Count - 1 downto 0 do
-     with PLineItem(FLines[nIdx])^ do
-      for i:=FTrucks.Count - 1 downto 0 do
-       PTruckItem(FTrucks[i]).FEnable := False;
-    //xxxxx
-  end;
-
-  for nIdx:=FOwner.FLines.Count - 1 downto 0 do
-  begin
-
-  end;
-
-  for nIdx:=FOwner.FLines.Count - 1 downto 0 do
-  begin
-    nLine := FOwner.FLines[nIdx];
-    for i:=nLine.FTrucks.Count - 1 downto 0 do
-    begin
-      nTruck := nLine.FTrucks[i];
-      if nTruck.FEnable then Continue;
-
-      {$IFDEF DEBUG}
-      WriteLog(Format('车辆[ %s ]无效出队.', [nTruck.FTruck]));
-      {$ENDIF}
-      
-      Dispose(nTruck);
-      nLine.FTrucks.Delete(i);
-
-      FTruckChanged := True;
-      FOwner.FLineChanged := GetTickCount;
-    end;
-  end;
-  //清理无效车辆
+  MakeTruckIn(nIdx, @Filter_LineIsNull);
+  //正常车辆进队
 end;
 
 initialization

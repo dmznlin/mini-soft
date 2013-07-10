@@ -7,7 +7,7 @@
 {.$DEFINE TrialVersion}
 //试用版本
 
-{$DEFINE UseReport}
+{.$DEFINE UseReport}
 //报表支持
 
 {.$DEFINE RandomID}

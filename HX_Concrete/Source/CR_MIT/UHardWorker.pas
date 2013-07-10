@@ -45,6 +45,12 @@ type
     //base funciton
     function ExecuteSQL(var nData: string): Boolean;
     //执行SQL语句
+    function DoReaderCardIn(var nData: string): Boolean;
+    //现场刷卡
+    function CardVerify(const nCard: string; var nData: string): Boolean;
+    function DoMakeTruckIn(var nData: string): Boolean;
+    function DoMakeTruckOut(var nData: string): Boolean;
+    //车辆进出厂
   public
     constructor Create; override;
     destructor destroy; override;
@@ -57,7 +63,8 @@ implementation
 
 {$I Link.Inc}
 uses
-  ULibFun, USysLoger, UMITConst, USysDB, UMgrHardHelper, UMgrQueue;
+  ULibFun, UFormCtrl, UBase64, USysLoger, UMITConst, USysDB,
+  UMgrHardHelper, UMgrQueue;
 
 //Date: 2012-3-13
 //Parm: 如参数护具
@@ -148,7 +155,7 @@ end;
 //------------------------------------------------------------------------------
 class function THarareBusinessCommander.FunctionName: string;
 begin
-  Result := sHM_BusinessCommand;
+  Result := sBus_BusinessCommand;
 end;
 
 constructor THarareBusinessCommander.Create;
@@ -197,6 +204,9 @@ begin
 
   case FIn.FCommand of
    cBC_RemoteExecSQL : Result := ExecuteSQL(nData);
+   cBC_ReaderCardIn  : Result := DoReaderCardIn(nData);
+   cBC_MakeTruckIn   : Result := DoMakeTruckIn(nData);
+   cBC_MakeTruckOut  : Result := DoMakeTruckOut(nData);
    else
     begin
       Result := False;
@@ -212,6 +222,260 @@ begin
   Result := True;
   nInt := gDBConnManager.WorkerExec(FDBConn, PackerDecodeStr(FIn.FData));
   FOut.FData := IntToStr(nInt);
+end;
+
+//Date: 2012-3-25
+//Parm: 分组;对象;开启事务
+//Desc: 获取nGroup.nObject当前的记录编号
+function GetSerailID(const nGroup,nObject: string; const nDB: PDBWorker;
+  const nTrans: Boolean = True): string;
+var nStr,nP,nB: string;
+begin
+  if nTrans then nDB.FConn.BeginTrans;
+  try
+    nStr := 'Update %s Set B_Base=B_Base+1 ' +
+            'Where B_Group=''%s'' And B_Object=''%s''';
+    nStr := Format(nStr, [sTable_SerialBase, nGroup, nObject]);
+    gDBConnManager.WorkerExec(nDB, nStr);
+
+    nStr := 'Select B_Prefix,B_IDLen,B_Base From %s ' +
+            'Where B_Group=''%s'' And B_Object=''%s''';
+    nStr := Format(nStr, [sTable_SerialBase, nGroup, nObject]);
+
+    with gDBConnManager.WorkerQuery(nDB, nStr) do
+    begin
+      nP := Fields[0].AsString;
+      nB := Fields[2].AsString;
+
+      nStr := StringOfChar('0', Fields[1].AsInteger-Length(nP)-Length(nB));
+      Result := nP + nStr + nB;
+    end;
+
+    if nTrans then nDB.FConn.CommitTrans;
+  except
+    if nTrans then
+      nDB.FConn.RollbackTrans;
+    raise;
+  end;
+end;
+
+//Desc: 现场用户刷卡
+function THarareBusinessCommander.DoReaderCardIn(var nData: string): Boolean;
+var nIdx: Integer;
+    nStr,nTruck: string;
+    nPTruck: PTruckItem;
+begin
+  Result := False;
+  FListA.Text := FIn.FData;
+
+  nStr := 'Select T_Truck From %s Where T_Card=''%s''';
+  nStr := Format(nStr, [sTable_ZCTrucks, FListA.Values['Card']]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nTruck := Fields[0].AsString;
+    end else
+    begin
+      nData := '没有找到磁卡匹配的车牌号.';
+      Exit;
+    end;
+  end;
+
+  gTruckQueueManager.SyncLock.Enter;
+  try
+    nIdx := gTruckQueueManager.TruckInQueue(nTruck, False);
+    if nIdx < 0 then
+    begin
+      nData := Format('车辆[ %s ]不在队列中.', [nTruck]);
+      Exit;
+    end;
+
+    nPTruck := gTruckQueueManager.Trucks[nIdx];
+    if nPTruck.FCallNum >= cTruckMaxCalledNum then
+    begin
+      nData := Format('车辆[ %s ]已呼叫超时.', [nTruck]);
+      Exit;
+    end;
+
+    if nPTruck.FLine <> FListA.Values['Line'] then
+    begin
+      nData := Format('车辆[ %s ]需在[ %s ]仓装车.', [nTruck, nPTruck.FLine]);
+      Exit;
+    end;
+
+    nStr := '<call_truck><response><truck>%s</truck></response></call_truck>';
+    nStr := Format(nStr, [nTruck]);
+    nStr := Char(cCall_Prefix_1) + Char(cCall_Prefix_2) + EncodeBase64(nStr);
+
+    for nIdx:=1 to 2 do
+    begin
+      gClientUDPServer.Send(nPTruck.FCallIP, nPTruck.FCallPort, nStr);
+      Sleep(100);
+    end; //防止丢包
+
+    nPTruck.FAnswered := True;
+    //应答标记
+    Result := True;
+    FOut.FBase.FResult := True;
+  finally
+    gTruckQueueManager.SyncLock.Leave;
+  end;
+end;
+
+//Date: 2013-07-08
+//Parm: 磁卡;结果
+//Desc: 验证nCard是否有效
+function THarareBusinessCommander.CardVerify(const nCard: string;
+  var nData: string): Boolean;
+var nStr: string;
+begin
+  Result := True;
+  nStr := 'Select C_Status,C_Freeze,C_TruckNo From %s Where C_Card=''%s''';
+  nStr := Format(nStr, [sTable_Card, nCard]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  if RecordCount > 0 then
+  begin
+    if Fields[0].AsString <> sFlag_CardUsed then
+    begin
+      nData := '磁卡[ %s ]状态为[ %s ],无法进站.';
+      nData := Format(nData, [nCard, CardStatusToStr(Fields[0].AsString)]);
+      
+      Result := False;
+      Exit;
+    end;
+
+    if Fields[1].AsString = sFlag_Yes then
+    begin
+      nData := '磁卡[ %s ]已被冻结,无法提货.';
+      nData := Format(nData, [nCard]);
+      
+      Result := False;
+      Exit;
+    end;
+
+    nData := Fields[2].AsString;
+    //truck
+  end;
+end;
+
+//Desc: 车辆进站
+function THarareBusinessCommander.DoMakeTruckIn(var nData: string): Boolean;
+var nStr,nTID,nTruck: string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  Result := CardVerify(FIn.FData, nData);
+  if not Result then Exit;
+  nTruck := nData;
+
+  nList := TStringList.Create;
+  try
+    nStr := 'Select zt.T_TruckLog,tl.T_Status From %s zt ' +
+            ' Left Join %s tl On tl.T_ID = zt.T_TruckLog ' +
+            'Where zt.T_Card=''%s''';
+    nStr := Format(nStr, [sTable_ZCTrucks, sTable_TruckLog, FIn.FData]);
+
+    with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+    if RecordCount > 0 then
+    begin
+      if Fields[1].AsString = sFlag_TruckIn then
+        Exit;
+      //新进站状态,允许多次刷卡
+
+      nStr := 'Delete From %s Where T_TruckLog=''%s''';
+      nStr := Format(nStr, [sTable_ZCTrucks, Fields[0].AsString]);
+      nList.Add(nStr);
+
+      nStr := 'Delete From %s Where T_ID=''%s''';
+      nStr := Format(nStr, [sTable_ZCTrucks, Fields[0].AsString]);
+      nList.Add(nStr);
+    end;
+
+    FDBConn.FConn.BeginTrans;
+    try
+      nTID := GetSerailID(sFlag_SerailSYS, sFlag_TruckLog, FDBConn, False);
+      nStr := MakeSQLByStr([SF('T_ID', nTID), SF('T_Truck', nTruck),
+              SF('T_Status', sFlag_TruckIn),
+              SF('T_NextStatus', sFlag_TruckQIn),
+              SF('T_InTime' ,sField_SQLServer_Now, sfVal),
+              SF('T_InMan', FIn.FBase.FFrom.FUser)], sTable_TruckLog, '', True);
+      nList.Add(nStr);
+
+      nStr := MakeSQLByStr([SF('T_Truck', nTruck),
+              SF('T_Card', FIn.FData),
+              SF('T_TruckLog', nTID),
+              SF('T_Valid', sFlag_Yes)], sTable_ZCTrucks, '', True);
+      nList.Add(nStr);
+
+      for nIdx:=0 to nList.Count - 1 do
+        gDBConnManager.WorkerExec(FDBConn, nList[nIdx]);
+      FDBConn.FConn.CommitTrans;
+    except
+      FDBConn.FConn.RollbackTrans;
+      raise;
+    end;
+  finally
+    nList.Free;
+  end;
+end;
+
+//Desc: 车辆出站
+function THarareBusinessCommander.DoMakeTruckOut(var nData: string): Boolean;
+var nStr,nTID,nTruck: string;
+    nIdx: Integer;
+begin
+  Result := False;
+  if not CardVerify(FIn.FData, nData) then Exit;
+  nTruck := nData;
+
+  nStr := 'Select zt.T_TruckLog,tl.T_NextStatus From %s zt ' +
+          ' Left Join %s tl On tl.T_ID = zt.T_TruckLog ' +
+          'Where zt.T_Card=''%s''';
+  nStr := Format(nStr, [sTable_ZCTrucks, sTable_TruckLog, FIn.FData]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount < 1 then
+    begin
+      nData := '该磁卡没有需要出站的车辆.';
+      Exit;
+    end;
+
+    nStr := Fields[1].AsString;
+    if nStr <> sFlag_TruckOut then
+    begin
+      nStr := CardStatusToStr(nStr);
+      nData := Format('车辆[ %s ]下一状态为[ %s ].', [nTruck, nStr]);
+      Exit;
+    end;
+
+    nTID := Fields[0].AsString;
+    //truck id
+  end;
+
+  FDBConn.FConn.BeginTrans;
+  try
+    nStr := 'Delete From %s Where T_Card=''%s''';
+    nStr := Format(nStr, [sTable_ZCTrucks, FIn.FData]);
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+
+    nStr := MakeSQLByStr([SF('T_Status', sFlag_TruckOut),
+            SF('T_NextStatus', ''),
+            SF('T_OutTime' ,sField_SQLServer_Now, sfVal),
+            SF('T_OutMan', FIn.FBase.FFrom.FUser)
+            ], sTable_TruckLog, SF('T_ID', nTID), False);
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+
+    FDBConn.FConn.CommitTrans;
+    //commit trans
+    Result := True;
+  except
+    FDBConn.FConn.RollbackTrans;
+    raise;
+  end;
 end;
 
 initialization

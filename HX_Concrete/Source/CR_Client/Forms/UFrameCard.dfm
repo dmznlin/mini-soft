@@ -49,24 +49,10 @@ inherited fFrameCard: TfFrameCard
       Top = 93
       Hint = 'T.C_Card'
       ParentFont = False
-      TabOrder = 5
+      TabOrder = 3
       Width = 100
     end
-    object EditCus: TcxButtonEdit [1]
-      Left = 407
-      Top = 36
-      ParentFont = False
-      Properties.Buttons = <
-        item
-          Default = True
-          Kind = bkEllipsis
-        end>
-      Properties.OnButtonClick = EditTruckPropertiesButtonClick
-      TabOrder = 2
-      OnKeyPress = OnCtrlKeyPress
-      Width = 100
-    end
-    object EditCard: TcxButtonEdit [2]
+    object EditCard: TcxButtonEdit [1]
       Left = 81
       Top = 36
       ParentFont = False
@@ -80,8 +66,8 @@ inherited fFrameCard: TfFrameCard
       OnKeyPress = OnCtrlKeyPress
       Width = 100
     end
-    object EditDate: TcxButtonEdit [3]
-      Left = 570
+    object EditDate: TcxButtonEdit [2]
+      Left = 416
       Top = 36
       ParentFont = False
       Properties.Buttons = <
@@ -91,27 +77,19 @@ inherited fFrameCard: TfFrameCard
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
-      TabOrder = 3
+      TabOrder = 2
       Width = 185
     end
-    object cxTextEdit4: TcxTextEdit [4]
-      Left = 244
+    object cxTextEdit2: TcxTextEdit [3]
+      Left = 232
       Top = 93
-      Hint = 'T.L_ID'
+      Hint = 'T.C_TruckNo'
       ParentFont = False
-      TabOrder = 6
-      Width = 100
-    end
-    object cxTextEdit2: TcxTextEdit [5]
-      Left = 407
-      Top = 93
-      Hint = 'T.L_CusName'
-      ParentFont = False
-      TabOrder = 7
+      TabOrder = 4
       Width = 121
     end
-    object EditBill: TcxButtonEdit [6]
-      Left = 244
+    object EditTruck: TcxButtonEdit [4]
+      Left = 232
       Top = 36
       ParentFont = False
       Properties.Buttons = <
@@ -121,20 +99,15 @@ inherited fFrameCard: TfFrameCard
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
       TabOrder = 1
-      OnKeyPress = OnCtrlKeyPress
-      Width = 100
-    end
-    object EditTruck: TcxButtonEdit [7]
-      Left = 806
-      Top = 36
-      ParentFont = False
-      Properties.Buttons = <
-        item
-          Default = True
-          Kind = bkEllipsis
-        end>
-      TabOrder = 4
       Width = 121
+    end
+    object cxTextEdit3: TcxTextEdit [5]
+      Left = 416
+      Top = 93
+      Hint = 'T.C_Status'
+      ParentFont = False
+      TabOrder = 5
+      Width = 185
     end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
@@ -143,24 +116,14 @@ inherited fFrameCard: TfFrameCard
           Control = EditCard
           ControlOptions.ShowBorder = False
         end
-        object dxLayout1Item5: TdxLayoutItem
-          Caption = #20219#21153#21333#21495':'
-          Control = EditBill
-          ControlOptions.ShowBorder = False
-        end
-        object dxLayout1Item2: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
-          Control = EditCus
+        object dxLayout1Item8: TdxLayoutItem
+          Caption = #36710#29260#21495':'
+          Control = EditTruck
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
           Caption = #26085#26399#31579#36873':'
           Control = EditDate
-          ControlOptions.ShowBorder = False
-        end
-        object dxLayout1Item8: TdxLayoutItem
-          Caption = #36710#29260#21495':'
-          Control = EditTruck
           ControlOptions.ShowBorder = False
         end
       end
@@ -170,16 +133,15 @@ inherited fFrameCard: TfFrameCard
           Control = cxTextEdit1
           ControlOptions.ShowBorder = False
         end
-        object dxLayout1Item7: TdxLayoutItem
-          Caption = #20219#21153#21333#21495':'
-          Control = cxTextEdit4
-          ControlOptions.ShowBorder = False
-        end
         object dxLayout1Item4: TdxLayoutItem
           AutoAligns = [aaVertical]
-          AlignHorz = ahClient
-          Caption = #23458#25143#21517#31216':'
+          Caption = #36710#29260#21495':'
           Control = cxTextEdit2
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item2: TdxLayoutItem
+          Caption = #30913#21345#29366#24577':'
+          Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end
       end

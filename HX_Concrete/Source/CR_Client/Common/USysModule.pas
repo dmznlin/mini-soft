@@ -14,7 +14,8 @@ uses
   UBusinessWorker, UClientWorker, UBusinessPacker, UMITPacker,
   {Normal Module}
   UFrameLog, UFrameSysLog, UFormIncInfo, UFormBackupSQL, UFormRestoreSQL,
-  UFormPassword, UFrameArea, UFormArea, UFrameCard, UFormCard;
+  UFormPassword, UFormMemo, UFrameArea, UFormArea, UFrameCard, UFormCard,
+  UFormForMenu;
 
 procedure InitSystemObject;
 procedure RunSystemObject;

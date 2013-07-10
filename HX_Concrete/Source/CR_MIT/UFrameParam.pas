@@ -16,7 +16,6 @@ type
     ImageList1: TImageList;
     wPage: TPageControl;
     TabSheet1: TTabSheet;
-    TabSheet2: TTabSheet;
     Group1: TGroupBox;
     Label1: TLabel;
     CheckAutoMin: TCheckBox;
@@ -29,29 +28,11 @@ type
     TabSheet4: TTabSheet;
     Bevel1: TBevel;
     Label4: TLabel;
-    Label5: TLabel;
-    NamesSAP: TComboBox;
     Label6: TLabel;
     NamesDB: TComboBox;
     Label7: TLabel;
     NamesPerform: TComboBox;
-    GroupSAP: TGroupBox;
-    Label8: TLabel;
-    Bevel2: TBevel;
-    Label9: TLabel;
-    ListSAP: TCheckListBox;
-    EditSAP: TLabeledEdit;
-    LabeledEdit2: TLabeledEdit;
-    LabeledEdit3: TLabeledEdit;
-    LabeledEdit4: TLabeledEdit;
-    LabeledEdit5: TLabeledEdit;
-    LabeledEdit6: TLabeledEdit;
-    LabeledEdit7: TLabeledEdit;
-    LabeledEdit8: TLabeledEdit;
-    LabeledEdit9: TLabeledEdit;
     EditPack: TLabeledEdit;
-    BtnSAPAdd: TSpeedButton;
-    BtnDelSAP: TSpeedButton;
     BtnAddPack: TSpeedButton;
     BtnDelPack: TSpeedButton;
     GroupDB: TGroupBox;
@@ -89,11 +70,6 @@ type
     EditBehBus: TComboBox;
     LabeledEdit11: TLabeledEdit;
     LabeledEdit23: TLabeledEdit;
-    TabSheet5: TTabSheet;
-    GroupRemote: TGroupBox;
-    GroupLocal: TGroupBox;
-    MemoRemote: TMemo;
-    MemoLocal: TMemo;
     procedure CheckAutoRunClick(Sender: TObject);
     procedure BtnAddDBClick(Sender: TObject);
     procedure BtnDelDBClick(Sender: TObject);
@@ -109,7 +85,6 @@ type
     procedure ListPackClick(Sender: TObject);
     procedure EditPackChange(Sender: TObject);
     procedure ListPackClickCheck(Sender: TObject);
-    procedure MemoRemoteChange(Sender: TObject);
   private
     { Private declarations }
     function GetEditText(const nFlag: string): string;
@@ -147,24 +122,17 @@ begin
 
   with gParamManager do
   begin
-    LoadParam(NamesSAP.Items, ptSAP);
     LoadParam(NamesDB.Items, ptDB);
     LoadParam(NamesPerform.Items, ptPerform);
 
     LoadParam(ListPack.Items, ptPack);
     ListPackClickCheck(ListPack);
 
-    TabSheet2.TabVisible := False;
-    TabSheet5.Visible := False;
-
     LoadParam(ListDB.Items, ptDB);
     ListPackClickCheck(ListDB);
 
     LoadParam(ListPerform.Items, ptPerform);
     ListPackClickCheck(ListPerform);
-
-    MemoRemote.Text := URLRemote;
-    MemoLocal.Text := URLLocal;
   end;
 end;
 
@@ -188,7 +156,6 @@ procedure TfFrameParam.wPageChange(Sender: TObject);
 begin
   if (wPage.ActivePage = TabSheet1) and gParamManager.Modified then
   begin
-    gParamManager.LoadParam(NamesSAP.Items, ptSAP);
     gParamManager.LoadParam(NamesDB.Items, ptDB);
     gParamManager.LoadParam(NamesPerform.Items, ptPerform);
     gParamManager.ParamAction(False);
@@ -233,7 +200,6 @@ procedure TfFrameParam.SetEditText(const nFlag, nText: string);
 var nIdx: Integer;
     nCtrl: TWinControl;
 begin
-  if nFlag[1] = 'S' then nCtrl := GroupSAP else
   if nFlag[1] = 'D' then nCtrl := GroupDB else
   if nFlag[1] = 'P' then nCtrl := GroupPerform else Exit;
 
@@ -256,7 +222,6 @@ var nIdx: Integer;
     nCtrl: TWinControl;
 begin
   Result := '';
-  if nFlag[1] = 'S' then nCtrl := GroupSAP else
   if nFlag[1] = 'D' then nCtrl := GroupDB else
   if nFlag[1] = 'P' then nCtrl := GroupPerform else Exit;
 
@@ -599,19 +564,6 @@ begin
       //xxxxx
     end;
   end;
-end;
-
-procedure TfFrameParam.MemoRemoteChange(Sender: TObject);
-var nCtrl: TMemo;
-begin
-  nCtrl := Sender as TMemo;
-  if not nCtrl.Focused then Exit;
-
-  if nCtrl = MemoRemote then
-    gParamManager.URLRemote := Trim(MemoRemote.Text);
-  if nCtrl = MemoLocal then
-    gParamManager.URLLocal := Trim(MemoLocal.Text);
-  gParamManager.Modified := True;
 end;
 
 initialization

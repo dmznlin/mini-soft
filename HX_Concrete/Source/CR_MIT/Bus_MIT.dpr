@@ -2,6 +2,7 @@ program Bus_MIT;
 
 {$I link.inc}
 uses
+  FastMM4,
   Forms,
   UFormMain in 'UFormMain.pas' {fFormMain},
   UFrameSummary in 'UFrameSummary.pas' {fFrameSummary: TFrame},
@@ -9,7 +10,7 @@ uses
   UFrameParam in 'UFrameParam.pas' {fFrameParam: TFrame},
   UParamManager in 'UParamManager.pas',
   UROModule in 'UROModule.pas' {ROModule: TDataModule},
-  UFrameBase in '..\..\..\..\Program Files\MyVCL\znlib\LibForm\UFrameBase.pas' {fFrameBase: TFrame};
+  UFrameBase in 'UFrameBase.pas' {fFrameBase: TFrame};
 
 {$R *.res}
 

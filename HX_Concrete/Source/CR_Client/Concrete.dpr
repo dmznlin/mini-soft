@@ -13,7 +13,8 @@ uses
   UFormBase in 'Forms\UFormBase.pas' {BaseForm},
   UFrameNormal in 'Forms\UFrameNormal.pas' {fFrameNormal: TFrame},
   UFormNormal in 'Forms\UFormNormal.pas' {fFormNormal},
-  UFormArea in 'Forms\UFormArea.pas' {fFormArea};
+  UFormArea in 'Forms\UFormArea.pas' {fFormArea},
+  UFormForMenu in 'Forms\UFormForMenu.pas' {fFormForMenu};
 
 {$R *.res}
 var

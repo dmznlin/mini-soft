@@ -8,26 +8,22 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  IniFiles, UFrameNormal, cxGraphics, cxControls, cxLookAndFeels,
-  cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter, cxData,
-  cxDataStorage, cxEdit, DB, cxDBData, cxContainer, Menus, dxLayoutControl,
-  cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel, UBitmapPanel,
-  cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
-  cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, dxSkinsCore, dxSkinsDefaultPainters;
+  IniFiles, cxGraphics, cxControls, cxLookAndFeels,
+  cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinsDefaultPainters,
+  cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit, DB, cxDBData,
+  cxContainer, Menus, dxLayoutControl, cxMaskEdit, cxButtonEdit,
+  cxTextEdit, ADODB, cxLabel, UBitmapPanel, cxSplitter, cxGridLevel,
+  cxClasses, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
+  cxGridDBTableView, cxGrid, ComCtrls, ToolWin, UFrameNormal;
 
 type
   TfFrameCard = class(TfFrameNormal)
     cxTextEdit1: TcxTextEdit;
     dxLayout1Item1: TdxLayoutItem;
-    EditCus: TcxButtonEdit;
-    dxLayout1Item2: TdxLayoutItem;
     EditCard: TcxButtonEdit;
     dxLayout1Item3: TdxLayoutItem;
     EditDate: TcxButtonEdit;
     dxLayout1Item6: TdxLayoutItem;
-    cxTextEdit4: TcxTextEdit;
-    dxLayout1Item7: TdxLayoutItem;
     cxTextEdit2: TcxTextEdit;
     dxLayout1Item4: TdxLayoutItem;
     PMenu1: TPopupMenu;
@@ -53,10 +49,10 @@ type
     N15: TMenuItem;
     N16: TMenuItem;
     N17: TMenuItem;
-    EditBill: TcxButtonEdit;
-    dxLayout1Item5: TdxLayoutItem;
     EditTruck: TcxButtonEdit;
     dxLayout1Item8: TdxLayoutItem;
+    cxTextEdit3: TcxTextEdit;
+    dxLayout1Item2: TdxLayoutItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -87,8 +83,6 @@ type
     //未开条件
     FStart,FEnd: TDate;
     //时间区间
-    FFields,FFieldsNo: string;
-    //报表字段
     FQueryHas,FQueryNo: Boolean;
     //查询开关
     procedure OnCreateFrame; override;
@@ -107,13 +101,13 @@ implementation
 
 {$R *.dfm}
 uses
-  ULibFun, UMgrControl, USysBusiness, UBusinessConst, UFormBase, USysDataDict,
-  USysConst, USysDB, USysGrid, UDataModule, UFormDateFilter, UForminputbox;
+  ULibFun, UMgrControl, USysBusiness, UFormBase, UDataModule, USysDataDict,
+  USysConst, USysDB, USysGrid, UFormDateFilter;
 
 //------------------------------------------------------------------------------
 class function TfFrameCard.FrameID: integer;
 begin
-  Result := cFI_FrameBillCard;
+  Result := cFI_FrameTruckCard;
 end;
 
 procedure TfFrameCard.OnCreateFrame;
@@ -122,10 +116,7 @@ begin
   FWhereNo := '';
   FQueryNo := True;
   FQueryHas := True;
-
   InitDateRange(Name, FStart, FEnd);
-  FFields := GetQueryField(cQF_BillCard);
-  FFieldsNo := GetQueryField(cQF_Bill);
 end;
 
 procedure TfFrameCard.OnDestroyFrame;
@@ -151,7 +142,7 @@ begin
   cxGrid1.ActiveLevel := cxLevel2;
   cxGrid1ActiveTabChanged(cxGrid1, cxGrid1.ActiveLevel);
 
-  gSysEntityManager.BuildViewColumn(cxView2, 'MAIN_B02');
+  gSysEntityManager.BuildViewColumn(cxView2, 'MAIN_NOCARD');
   InitTableView(Name, cxView2, nIni);
 end;
 
@@ -169,32 +160,24 @@ begin
 
   if FQueryHas then
   begin
-    nStr := 'Select $Fields From $BC bc ' +
-            ' Left Join $Bill b On b.L_Card=bc.C_Card ';
-    //xxxxx
-
+    nStr := 'Select * From $BC ';
     if FWhere = '' then
          nStr := nStr + 'Where (C_Date>=''$S'' and C_Date<''$End'')'
     else nStr := nStr + 'Where (' + FWhere + ')';
 
     nStr := MacroValue(nStr, [MI('$BC', sTable_Card),
-            MI('$Bill', sTable_Bill), MI('$Fields', FFields),
             MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
     FDM.QueryData(SQLQuery, nStr);
   end;
 
   if not FQueryNo then Exit;
-  nStr := 'Select $Fields From $Bill Where (L_Card Is Null)';
+  nStr := 'Select * From $TR Where ENNAME Not In (Select C_TruckNo From $BC)';
 
-  if FWhereNo = '' then
-       nStr := nStr + ' And (L_Date>=''$S'' and L_Date<''$End'')'
-  else nStr := nStr + ' And (' + FWhereNo + ')';
-
-  nStr := MacroValue(nStr, [MI('$Bill', sTable_Bill),
-          MI('$Fields', FFieldsNo), 
-          MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
+  if FWhereNo <> '' then
+    nStr := nStr + ' And (' + FWhereNo + ')';
   //xxxxx
 
+  nStr := MacroValue(nStr, [MI('$TR', sTable_Truck), MI('$BC', sTable_Card)]);
   FDM.QueryData(SQLNo1, nStr);
 end;
 
@@ -218,26 +201,23 @@ end;
 
 //Desc: 办理
 procedure TfFrameCard.BtnAddClick(Sender: TObject);
-var nBill,nTruck: string;
+var nTruck: string;
 begin
   if BtnAdd.Enabled then
-  begin
-    nBill := '';
-    nTruck := '';
-  end else Exit;
+       nTruck := ''
+  else Exit;
 
   if cxGrid1.ActiveView = cxView2 then
   begin
     if cxView2.DataController.GetSelectedCount < 1 then
     begin
-      ShowMsg('请选择要办卡的记录', sHint); Exit;
+      ShowMsg('请选择要办卡的车辆', sHint); Exit;
     end;
 
-    nBill := SQLNo1.FieldByName('L_ID').AsString;
-    nTruck := SQLNo1.FieldByName('L_Truck').AsString;
+    nTruck := SQLNo1.FieldByName('ENNAME').AsString;
   end;
 
-  if SetBillCard(nBill, nTruck, False) then
+  if SetTruckCard(nTruck) then 
   begin
     FQueryNo := cxGrid1.ActiveView = cxView2;
     FQueryHas := True;
@@ -296,28 +276,17 @@ end;
 procedure TfFrameCard.EditDatePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  if ShowDateFilterForm(FStart, FEnd) then InitFormData(FWhere);
+  if ShowDateFilterForm(FStart, FEnd) then
+  begin
+    cxGrid1.ActiveLevel := cxLevel1;
+    InitFormData(FWhere);
+  end;
 end;
 
 //Desc: 执行查询
 procedure TfFrameCard.EditTruckPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  if Sender = EditCus then
-  begin
-    EditCus.Text := Trim(EditCus.Text);
-    if EditCus.Text = '' then Exit;
-
-    FWhere := 'L_CusPY like ''%%%s%%'' or L_CusName like ''%%%s%%''' +
-              'L_Id like ''%%%s%%'' ' ;
-    FWhere := Format(FWhere, [EditCus.Text, EditCus.Text, EditTruck.Text]);
-    FWhereNo := FWhere;
-    
-    FQueryNo := True;
-    FQueryHas := True;
-    InitFormData(FWhere);
-  end else
-
   if Sender = EditCard then
   begin
     EditCard.Text := Trim(EditCard.Text);
@@ -332,16 +301,16 @@ begin
     cxGrid1.ActiveLevel := cxLevel1;
   end else
 
-  if Sender = EditBill then
+  if Sender = EditTruck then
   begin
-    EditBill.Text := Trim(EditBill.Text);
-    if EditBill.Text = '' then Exit;
+    EditTruck.Text := Trim(EditTruck.Text);
+    if EditTruck.Text = '' then Exit;
 
     FQueryNo := True;
     FQueryHas := True;
 
-    FWhere := 'L_ID like ''%' + EditBill.Text + '%''';
-    FWhereNo := FWhere;
+    FWhere := 'C_TruckNo like ''%' + EditTruck.Text + '%''';
+    FWhereNo := 'ENNAME like ''%' + EditTruck.Text + '%''';
     InitFormData(FWhere);
 
     if SQLQuery.RecordCount > 0 then
@@ -468,12 +437,11 @@ end;
 
 //Desc: 补办磁卡
 procedure TfFrameCard.N11Click(Sender: TObject);
-var nBill,nTruck: string;
+var nTruck: string;
 begin
-  nBill := SQLQuery.FieldByName('L_ID').AsString;
   nTruck := SQLQuery.FieldByName('L_Truck').AsString;
 
-  if SetBillCard(nBill, nTruck, False) then
+  if SetTruckCard(nTruck) then
   begin
     InitFormData(FWhere);
     ShowMsg('补卡操作成功', sHint);
@@ -489,7 +457,7 @@ begin
   if not QueryDlg(nStr, sAsk) then Exit;
 
   nStr := SQLQuery.FieldByName('L_ID').AsString;
-  if LogoutBillCard(nCard, nStr) then
+  if LogoutBillCard(nCard) then
   begin
     InitFormData(FWhere);
     ShowMsg('注销操作成功', sHint);
