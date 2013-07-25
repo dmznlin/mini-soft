@@ -23,8 +23,11 @@ const
   cBC_ReaderCardIn            = $0052;
   cBC_MakeTruckIn             = $0053;
   cBC_MakeTruckOut            = $0055;
-  cBC_SaveTruckCard           = $0056;
-  cBC_LogoutBillCard          = $0057;
+  cBC_MakeTruckCall           = $0056;
+  cBC_MakeTruckResponse       = $0057;
+  cBC_SaveTruckCard           = $0060;
+  cBC_LogoutBillCard          = $0061;
+  cBC_LoadQueueTrucks         = $0062;
 
 type
   TBWWorkerInfo = record
@@ -68,6 +71,7 @@ resourcestring
 
   {*client function name*}
   sCLI_BusinessCommand        = 'CLI_BusinessCommand';  //业务指令
+  sCLI_RemoteQueue            = 'CLI_RemoteQueue';      //业务指令
 
 implementation
 

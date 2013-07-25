@@ -15,7 +15,7 @@ uses
   {Normal Module}
   UFrameLog, UFrameSysLog, UFormIncInfo, UFormBackupSQL, UFormRestoreSQL,
   UFormPassword, UFormMemo, UFrameArea, UFormArea, UFrameCard, UFormCard,
-  UFormForMenu;
+  UFormForMenu, UFrameQueryTruck, UFrameTruckDiapatch;
 
 procedure InitSystemObject;
 procedure RunSystemObject;

@@ -51,6 +51,11 @@ type
     function DoMakeTruckIn(var nData: string): Boolean;
     function DoMakeTruckOut(var nData: string): Boolean;
     //车辆进出厂
+    function DoSaveTruckCard(var nData: string): Boolean;
+    function DoLogoutBillCard(var nData: string): Boolean;
+    //磁卡处理
+    function LoadQueue(var nData: string): Boolean;
+    //读取队列
   public
     constructor Create; override;
     destructor destroy; override;
@@ -207,6 +212,10 @@ begin
    cBC_ReaderCardIn  : Result := DoReaderCardIn(nData);
    cBC_MakeTruckIn   : Result := DoMakeTruckIn(nData);
    cBC_MakeTruckOut  : Result := DoMakeTruckOut(nData);
+   cBC_SaveTruckCard : Result := DoSaveTruckCard(nData);
+   cBC_LogoutBillCard : Result := DoLogoutBillCard(nData);
+   cBC_MakeTruckResponse : Result := DoReaderCardIn(nData);
+   cBC_LoadQueueTrucks   : Result := LoadQueue(nData);
    else
     begin
       Result := False;
@@ -268,8 +277,13 @@ begin
   Result := False;
   FListA.Text := FIn.FData;
 
+  nTruck := FListA.Values['Card'];
+  if nTruck = '' then
+    nTruck := FIn.FData;
+  //only card
+
   nStr := 'Select T_Truck From %s Where T_Card=''%s''';
-  nStr := Format(nStr, [sTable_ZCTrucks, FListA.Values['Card']]);
+  nStr := Format(nStr, [sTable_ZCTrucks, nTruck]);
 
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
   begin
@@ -293,21 +307,34 @@ begin
     end;
 
     nPTruck := gTruckQueueManager.Trucks[nIdx];
-    if nPTruck.FCallNum >= cTruckMaxCalledNum then
+    if nPTruck.FCallNum < 1 then
+    begin
+      nData := Format('车辆[ %s ]未被叫到,需等候.', [nTruck]);
+      Exit;
+    end;
+
+    if nPTruck.FCallNum > cTruckMaxCalledNum then
     begin
       nData := Format('车辆[ %s ]已呼叫超时.', [nTruck]);
       Exit;
     end;
 
-    if nPTruck.FLine <> FListA.Values['Line'] then
+    nStr := FListA.Values['Line'];
+    if (nStr <> '') and (nPTruck.FLine <> nStr) then
     begin
       nData := Format('车辆[ %s ]需在[ %s ]仓装车.', [nTruck, nPTruck.FLine]);
       Exit;
     end;
 
-    nStr := '<call_truck><response><truck>%s</truck></response></call_truck>';
+    nStr := '<?xml version="1.0" encoding="gb2312"?>' +
+            '<call_truck_responese><call_truck_responese_row>' +
+            '<result>y</result><hint>ok</hint>' +
+            '<truck>%s</truck>' +
+            '</call_truck_responese_row></call_truck_responese>';
     nStr := Format(nStr, [nTruck]);
-    nStr := Char(cCall_Prefix_1) + Char(cCall_Prefix_2) + EncodeBase64(nStr);
+    nStr := Char(cCall_Prefix_1) + Char(cCall_Prefix_2) +
+            Char(cCMD_CallTruck) + EncodeBase64(nStr);
+    //combine data
 
     for nIdx:=1 to 2 do
     begin
@@ -319,6 +346,9 @@ begin
     //应答标记
     Result := True;
     FOut.FBase.FResult := True;
+
+    nStr := Format('向[ %s,%d ]发送叫车应答.', [nPTruck.FCallIP, nPTruck.FCallPort]);
+    WriteLog(nStr);
   finally
     gTruckQueueManager.SyncLock.Leave;
   end;
@@ -331,7 +361,7 @@ function THarareBusinessCommander.CardVerify(const nCard: string;
   var nData: string): Boolean;
 var nStr: string;
 begin
-  Result := True;
+  Result := False;
   nStr := 'Select C_Status,C_Freeze,C_TruckNo From %s Where C_Card=''%s''';
   nStr := Format(nStr, [sTable_Card, nCard]);
 
@@ -340,10 +370,8 @@ begin
   begin
     if Fields[0].AsString <> sFlag_CardUsed then
     begin
-      nData := '磁卡[ %s ]状态为[ %s ],无法进站.';
+      nData := '磁卡[ %s ]状态为[ %s ],无法使用.';
       nData := Format(nData, [nCard, CardStatusToStr(Fields[0].AsString)]);
-      
-      Result := False;
       Exit;
     end;
 
@@ -351,13 +379,15 @@ begin
     begin
       nData := '磁卡[ %s ]已被冻结,无法提货.';
       nData := Format(nData, [nCard]);
-      
-      Result := False;
       Exit;
     end;
 
+    Result := True;
     nData := Fields[2].AsString;
     //truck
+  end else
+  begin
+    nData := '该磁卡不存在或已无效.';
   end;
 end;
 
@@ -406,8 +436,9 @@ begin
 
       nStr := MakeSQLByStr([SF('T_Truck', nTruck),
               SF('T_Card', FIn.FData),
-              SF('T_TruckLog', nTID),
-              SF('T_Valid', sFlag_Yes)], sTable_ZCTrucks, '', True);
+              SF('T_TruckLog', nTID), SF('T_Valid', sFlag_Yes),
+              SF('T_InTime' ,sField_SQLServer_Now, sfVal)
+              ], sTable_ZCTrucks, '', True);
       nList.Add(nStr);
 
       for nIdx:=0 to nList.Count - 1 do
@@ -425,7 +456,6 @@ end;
 //Desc: 车辆出站
 function THarareBusinessCommander.DoMakeTruckOut(var nData: string): Boolean;
 var nStr,nTID,nTruck: string;
-    nIdx: Integer;
 begin
   Result := False;
   if not CardVerify(FIn.FData, nData) then Exit;
@@ -447,8 +477,8 @@ begin
     nStr := Fields[1].AsString;
     if nStr <> sFlag_TruckOut then
     begin
-      nStr := CardStatusToStr(nStr);
-      nData := Format('车辆[ %s ]下一状态为[ %s ].', [nTruck, nStr]);
+      nStr := TruckStatusToStr(nStr);
+      nData := Format('车辆[ %s ]下一状态为[ %s ],不能出站.', [nTruck, nStr]);
       Exit;
     end;
 
@@ -475,6 +505,112 @@ begin
   except
     FDBConn.FConn.RollbackTrans;
     raise;
+  end;
+end;
+
+//Desc: 办理磁卡
+function THarareBusinessCommander.DoSaveTruckCard(var nData: string): Boolean;
+var nStr: string;
+begin
+  Result := False;
+  FListA.Text := FIn.FData;
+
+  nStr := 'Select C_TruckNo From %s Where C_Card=''%s'' And C_Status=''%s''';
+  nStr := Format(nStr, [sTable_Card, FListA.Values['Card'], sFlag_CardUsed]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  if RecordCount > 0 then
+  begin
+    nStr := Fields[0].AsString;
+    if CompareText(nStr, FListA.Values['Truck']) <> 0 then
+    begin
+      nData := Format('车辆[ %s ]正在使用该卡,请先注销.', [nStr]);
+      Exit;
+    end;
+  end;
+
+  FDBConn.FConn.BeginTrans;
+  try
+    nStr := MakeSQLByStr([SF('C_TruckNo', FListA.Values['Truck']),
+            SF('C_Status', sFlag_CardUsed),
+            SF('C_Freeze', sFlag_No),
+            SF('C_Date' ,sField_SQLServer_Now, sfVal),
+            SF('C_Man', FIn.FBase.FFrom.FUser)
+            ], sTable_Card, SF('C_Card', FListA.Values['Card']), False);
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+
+    nStr := MakeSQLByStr([SF('T_Card', FListA.Values['Card'])
+            ],sTable_ZCTrucks, SF('T_Truck', FListA.Values['Truck']), False);
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+
+    FDBConn.FConn.CommitTrans;
+    //commit trans
+    Result := True;
+  except
+    FDBConn.FConn.RollbackTrans;
+    raise;
+  end;
+end;
+
+//Desc: 注销磁卡
+function THarareBusinessCommander.DoLogoutBillCard(var nData: string): Boolean;
+var nStr: string;
+begin
+  Result := False;
+  nStr := 'Select T_Truck From %s Where T_Card=''%s''';
+  nStr := Format(nStr, [sTable_ZCTrucks, FIn.FData]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  if RecordCount > 0 then
+  begin
+    nStr := '该磁卡有对应的车辆[ %s ]在站内,无法注销.';
+    nData := Format(nStr, [Fields[0].AsString]);
+    Exit;
+  end;
+
+  nStr := 'Update %s Set C_Status=''%s'' Where C_Card=''%s''';
+  nStr := Format(nStr, [sTable_Card, sFlag_CardInvalid, FIn.FData]);
+
+  gDBConnManager.WorkerExec(FDBConn, nStr);
+  Result := True;
+end;
+
+//Desc: 读取队列列表
+function THarareBusinessCommander.LoadQueue(var nData: string): Boolean;
+var nIdx: Integer;
+    nTruck: PTruckItem;
+begin
+  with gTruckQueueManager do
+  try
+    SyncLock.Enter;
+    FListA.Clear;
+    FListB.Clear;
+
+    for nIdx:=0 to Trucks.Count - 1 do
+    begin
+      nTruck := Trucks[nIdx];
+      with FListB do
+      begin
+        Values['Truck'] := nTruck.FTruck;
+        Values['Line'] := nTruck.FLine;
+        Values['LineName'] := nTruck.FLineName;
+
+        Values['IsVIP'] := nTruck.FIsVIP;
+        Values['CallNum'] := IntToStr(nTruck.FCallNum);
+        Values['InTime'] := DateTime2Str(nTruck.FInTime);
+
+        if nTruck.FAnswered then
+             Values['Answered'] := sFlag_Yes
+        else Values['Answered'] := sFlag_No;
+      end;
+
+      FListA.Add(PackerEncodeStr(FListB.Text));
+    end;
+
+    FOut.FData := FListA.Text;
+    Result := True;
+  finally
+    SyncLock.Leave;
   end;
 end;
 

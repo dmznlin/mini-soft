@@ -2,54 +2,54 @@ inherited fFormCard: TfFormCard
   Left = 409
   Top = 437
   Caption = #30913#21345
-  ClientHeight = 190
-  ClientWidth = 388
+  ClientHeight = 152
+  ClientWidth = 310
   Position = poMainFormCenter
   OnClose = FormClose
-  PixelsPerInch = 120
-  TextHeight = 15
+  PixelsPerInch = 96
+  TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 388
-    Height = 190
+    Width = 310
+    Height = 152
     inherited BtnOK: TButton
-      Left = 206
-      Top = 148
+      Left = 164
+      Top = 118
       Caption = #30830#23450
       TabOrder = 3
     end
     inherited BtnExit: TButton
-      Left = 293
-      Top = 148
+      Left = 234
+      Top = 118
       TabOrder = 4
     end
     object EditTruck: TcxTextEdit [2]
-      Left = 87
-      Top = 45
+      Left = 81
+      Top = 36
       ParentFont = False
       Properties.ReadOnly = True
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
-      Width = 152
+      Width = 121
     end
     object cxLabel1: TcxLabel [3]
-      Left = 29
-      Top = 70
+      Left = 23
+      Top = 59
       AutoSize = False
       ParentFont = False
       Properties.LineOptions.Alignment = cxllaBottom
       Properties.LineOptions.Visible = True
       Transparent = True
-      Height = 25
-      Width = 359
+      Height = 20
+      Width = 287
     end
     object EditCard: TcxTextEdit [4]
-      Left = 87
-      Top = 100
+      Left = 81
+      Top = 84
       ParentFont = False
       Properties.MaxLength = 15
       TabOrder = 2
       OnKeyPress = EditCardKeyPress
-      Width = 152
+      Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup

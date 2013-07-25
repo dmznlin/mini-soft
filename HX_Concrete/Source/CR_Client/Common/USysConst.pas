@@ -38,6 +38,7 @@ const
   cFI_FormArea          = $1020;                     //区域管理
   cFI_FormMakeCard      = $1021;                     //关联磁卡
   cFI_FormBusiness      = $1022;                     //业务窗体
+  cFI_FormCallTruck     = $1023;                     //呼叫车辆
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -73,6 +74,7 @@ type
     FIconFile   : string;                            //图标配置文件
     FUsesBackDB : Boolean;                           //使用备份库
 
+    FRemoteURL  : string;                            //远端地址
     FURL_MIT    : string;                            //中间件
     FSiteID     : string;                            //站点编号
     FSysDBType  : string;                            //DB类型(站点,总部)
@@ -166,10 +168,12 @@ begin
 
   AddMenuModuleItem('MAIN_B01', cFI_FrameTruckCard);
   AddMenuModuleItem('MAIN_B02', cFI_FrameArea);
+  AddMenuModuleItem('MAIN_B03', cFI_FrameTruckDispatch);
+  AddMenuModuleItem('MAIN_C01', cFI_FrameTruckQuery);
 
   AddMenuModuleItem('MAIN_D01', cFI_FormBusiness, mtForm);
   AddMenuModuleItem('MAIN_D02', cFI_FormBusiness, mtForm);
-  AddMenuModuleItem('MAIN_D03', cFI_FormBusiness, mtForm);
+  AddMenuModuleItem('MAIN_D03', cFI_FormCallTruck, mtForm);
   AddMenuModuleItem('MAIN_D04', cFI_FormBusiness, mtForm);
 end;
 

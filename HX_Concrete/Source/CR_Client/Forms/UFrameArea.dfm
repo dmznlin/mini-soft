@@ -18,6 +18,18 @@ inherited fFrameArea: TfFrameArea
     Width = 768
     Height = 173
     Align = alBottom
+    inherited cxView1: TcxGridDBTableView
+      DataController.DataSource = nil
+    end
+    object cxView2: TcxGridTableView [1]
+      NavigatorButtons.ConfirmDelete = False
+      DataController.Summary.DefaultGroupSummaryItems = <>
+      DataController.Summary.FooterSummaryItems = <>
+      DataController.Summary.SummaryGroups = <>
+    end
+    object cxLevel2: TcxGridLevel
+      GridView = cxView2
+    end
   end
   inherited dxLayout1: TdxLayoutControl
     Width = 768
@@ -36,6 +48,7 @@ inherited fFrameArea: TfFrameArea
       Font.Height = -13
       Font.Name = 'MS Sans Serif'
       Font.Style = []
+      OnDblClick = Chart1DblClick
       Items = {
         564552312E30410000010000000000FFFFFF1F0100FFFF000000010000000000
         FFFFFF1F0100FFFF000000020000000000FFFFFF1F0100FFFF00000000000000

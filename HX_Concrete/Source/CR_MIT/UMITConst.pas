@@ -36,6 +36,7 @@ type
     FLocalIP    : string;                            //本机IP
     FLocalMAC   : string;                            //本机MAC
     FLocalName  : string;                            //本机名称
+    F02NReader  : Integer;                           //现场读卡器
     F2ClientUDP : Integer;                           //对客户端UDP
   end;
   //系统参数
@@ -122,6 +123,8 @@ begin
 
         FLocalMAC   := MakeActionID_MAC;
         GetLocalIPConfig(FLocalName, FLocalIP);
+
+        F02NReader := ReadInteger('System', '02NReader', 1234);
         F2ClientUDP := ReadInteger('System', 'ClientUDPPort', 8050);
       end else
       begin

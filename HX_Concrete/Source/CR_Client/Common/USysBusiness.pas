@@ -10,7 +10,7 @@ uses
   Windows, Controls, Classes, SysUtils, UBusinessWorker, UBusinessConst,
   UBusinessPacker, UFormBase, ULibFun, USysConst;
 
-function GetTruckCard: string;
+function GetTruckCard(const nTruck: string): string;
 //桌面读卡
 function SetTruckCard(const nTruck: string): Boolean;
 function SaveTruckCard(const nTruck,nCard: string): Boolean;
@@ -27,17 +27,33 @@ function MakeTruckResponse(const nCard: string): Boolean;
 
 implementation
 
+//Date: 2013-07-13
+//Parm: 数据;指令
+//Desc: 在MIT上执行nCMD指令
+function DoMITBusinessCMD(const nData: string; const nCMD: Integer): Boolean;
+var nIn: TWorkerBusinessCommand;
+    nOut: TWorkerBusinessCommand;
+    nWorker: TBusinessWorkerBase;
+begin
+  nWorker := nil;
+  try
+    nIn.FCommand := nCmd;
+    nIn.FData := nData;
+
+    nWorker := gBusinessWorkerManager.LockWorker(sCLI_BusinessCommand);
+    Result := nWorker.WorkActive(@nIn, @nOut);
+  finally
+    gBusinessWorkerManager.RelaseWorkder(nWorker);
+  end;
+end;
+
 //Date: 2013-07-08
 //Parm: 车牌号;磁卡号
 //Desc: 为nTruck绑定磁卡nCard
 function SaveTruckCard(const nTruck,nCard: string): Boolean;
 var nList: TStrings;
-    nIn: TWorkerBusinessCommand;
-    nOut: TWorkerBusinessCommand;
-    nWorker: TBusinessWorkerBase;
 begin
   nList := nil;
-  nWorker := nil;
   try
     nList := TStringList.Create;
     with nList do
@@ -46,35 +62,18 @@ begin
       Values['Truck'] := nTruck;
     end;
 
-    nIn.FCommand := cBC_SaveTruckCard;
-    nIn.FData := PackerEncodeStr(nList.Text);
-
-    nWorker := gBusinessWorkerManager.LockWorker(sCLI_BusinessCommand);
-    Result := nWorker.WorkActive(@nIn, @nOut);
+    Result := DoMITBusinessCMD(nList.Text, cBC_SaveTruckCard);
   finally
     nList.Free;
-    gBusinessWorkerManager.RelaseWorkder(nWorker);
   end;
 end;
 
 //Date: 2013-7-8
-//Parm: 磁卡号;交货单
+//Parm: 磁卡号
 //Desc: 注销指定磁卡号
 function LogoutBillCard(const nCard: string): Boolean;
-var nIn: TWorkerBusinessCommand;
-    nOut: TWorkerBusinessCommand;
-    nWorker: TBusinessWorkerBase;
 begin
-  nWorker := nil;
-  try
-    nIn.FCommand := cBC_LogoutBillCard;
-    nIn.FData := nCard;
-
-    nWorker := gBusinessWorkerManager.LockWorker(sCLI_BusinessCommand);
-    Result := nWorker.WorkActive(@nIn, @nOut);
-  finally
-    gBusinessWorkerManager.RelaseWorkder(nWorker);
-  end;
+  Result := DoMITBusinessCMD(nCard, cBC_LogoutBillCard);
 end;
 
 //Date: 2013-07-10
@@ -93,11 +92,11 @@ end;
 
 //Date: 2013-07-10
 //Desc: 弹窗,桌面读卡
-function GetTruckCard: string;
+function GetTruckCard(const nTruck: string): string;
 var nP: TFormCommandParam;
 begin
-  nP.FCommand := cCmd_AddData;
-  nP.FParamA := '业务';
+  nP.FCommand := cCmd_EditData;
+  nP.FParamA := nTruck;
   nP.FParamB := '请刷磁卡:';
 
   CreateBaseFormItem(cFI_FormMakeCard, '', @nP);
@@ -111,21 +110,21 @@ end;
 //Desc: 车辆进站
 function MakeTruckIn(const nCard: string): Boolean;
 begin
-
+  Result := DoMITBusinessCMD(nCard, cBC_MakeTruckIn);
 end;
 
 //Date: 2013-07-10
 //Desc: 车辆出站
 function MakeTruckOut(const nCard: string): Boolean;
 begin
-
+  Result := DoMITBusinessCMD(nCard, cBC_MakeTruckOut);
 end;
 
 //Date: 2013-07-10
 //Desc: 车辆现场刷卡应答
 function MakeTruckResponse(const nCard: string): Boolean;
 begin
-
+  Result := DoMITBusinessCMD(nCard, cBC_MakeTruckResponse);
 end;
 
 end.

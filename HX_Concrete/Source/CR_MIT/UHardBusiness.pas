@@ -9,8 +9,8 @@ interface
 
 uses
   Windows, Classes, Controls, SysUtils, IdGlobal, IdSocketHandle, IdUDPServer,
-  UMgrDBConn, UMgrHardHelper, U02NReader,
-  UParamManager, UBusinessWorker, UBusinessConst, UBusinessPacker;
+  UMgrDBConn, UMgrHardHelper, U02NReader, UParamManager, UBusinessWorker,
+  UBusinessConst, UBusinessPacker, UMgrQueue, UMgrRemoteVoice;
 
 procedure WhenReaderCardArrived(const nReader: THHReaderItem);
 //有新卡号到达读头
@@ -23,7 +23,7 @@ procedure When2ClientUDPRead(AThread: TIdUDPListenerThread; AData: TIdBytes;
 implementation
 
 uses
-  ULibFun, USysDB, USysLoger;
+  ULibFun, NativeXml, UBase64, UFormCtrl, USysDB, USysLoger;
 
 //------------------------------------------------------------------------------
 procedure WriteHardHelperLog(const nEvent: string);
@@ -205,12 +205,167 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+procedure WriteUDPLog(const nEvent: string);
+begin
+  gSysLoger.AddLog(TIdUDPServer, '客户端UDP服务', nEvent);
+end;
+
+//Date: 2013-07-23
+//Parm: 车牌号;操作员
+//Desc: 将nTruck出队
+procedure TruckOutQueue(const nTruck: string; const nUser: string);
+var nStr: string;
+    nList: TStrings;
+begin
+  nList := TStringList.Create;
+  try
+    nStr := 'Delete From %s Where T_Truck=''%s''';
+    nStr := Format(nStr, [sTable_ZCTrucks, nTruck]);
+    nList.Text := nStr;
+
+    nStr := 'T_Truck=''%s'' And T_NextStatus<>''''';
+    nStr := Format(nStr, [nTruck]);
+
+    nStr := MakeSQLByStr([SF('T_Status', sFlag_TruckQOut),
+            SF('T_NextStatus', ''),
+            SF('T_QueueOut', sField_SQLServer_Now, sfVal),
+            SF('T_QOutMan', nUser)], sTable_TruckLog, nStr, False);
+    nList.Add(nStr);
+
+    gDBConnManager.ExecSQLs(gParamManager.ActiveParam.FDB.FID, nList, True);
+  finally
+    nList.Free;
+  end;
+end;
+
+//Date: 2013-07-23
+//Parm: 协议数据
+//Desc: 执行叫车动作
+procedure CallTruck(const nXMLData: string; nPeer: TIdSocketHandle);
+var nStr: string;
+    nIdx: Integer;
+    nTruck,nTmp: PTruckItem;
+
+    nXML: TNativeXml;
+    nNode: TXmlNode;
+begin
+  nStr := '收到[ %s ]叫车指令.';
+  WriteUDPLog(Format(nStr, [nPeer.PeerIP]));
+  //loged
+
+  nXML := nil;
+  try
+    nXML := TNativeXml.Create;
+    nXML.ReadFromString(nXMLData);
+
+    nNode := nXML.Root.FindNode('call_truck_row');
+    if not Assigned(nNode) then
+    begin
+      WriteUDPLog('XML数据错误.');
+      Exit;
+    end;
+
+    gTruckQueueManager.SyncLock.Enter;
+    try
+      nTruck := nil;
+      nStr := nNode.NodeByName('lineid').ValueAsString;
+
+      for nIdx:=0 to gTruckQueueManager.Trucks.Count - 1 do
+      begin
+        nTmp := gTruckQueueManager.Trucks[nIdx];
+        if nTmp.FLine = '' then Break;
+
+        if CompareText(nTmp.FLine, nStr) = 0 then
+        begin
+          nTruck := nTmp;
+          Break;
+        end;
+      end;
+
+      if Assigned(nTruck) then
+      begin
+        nTruck.FCallNum := nTruck.FCallNum + 1;
+        if nTruck.FCallNum > cTruckMaxCalledNum then
+        begin
+          nStr := nNode.NodeByName('operator').ValueAsString;
+          TruckOutQueue(nTruck.FTruck, nStr);
+
+          gTruckQueueManager.TruckOutQueue(nTruck, False);
+          nTruck := nil;
+        end;
+      end;
+
+      if not Assigned(nTruck) then
+      begin
+        for nIdx:=0 to gTruckQueueManager.Trucks.Count - 1 do
+        begin
+          nTmp := gTruckQueueManager.Trucks[nIdx];
+          if nTmp.FLine <> '' then Break;
+          nTruck := nTmp;
+          
+          nTruck.FCallNum := nTruck.FCallNum + 1;
+          gTruckQueueManager.QueueChanged := GetTickCount;
+          Break;
+        end;
+      end;
+
+      if Assigned(nTruck) then
+      begin
+        nTruck.FLine := nNode.NodeByName('lineId').ValueAsString;
+        nTruck.FLineName := nNode.NodeByName('linename').ValueAsString;
+        nTruck.FLineName := SysUtils.StringReplace(nTruck.FLineName, '#', '号', [rfReplaceAll]);
+
+        nTruck.FTaskID := nNode.NodeByName('joid').ValueAsString; 
+        nTruck.FCallIP := nNode.NodeByName('ip').ValueAsString;
+        nTruck.FCallPort := nNode.NodeByName('port').ValueAsInteger;
+
+        nStr := nTruck.FTruck + '去' + nTruck.FLineName;
+        gVoiceHelper.PlayVoice(#9 + nStr);
+        //voice truck
+
+        nStr := 'T_Truck=''%s'' And T_NextStatus<>''''';
+        nStr := Format(nStr, [nTruck.FTruck]);
+
+        nStr := MakeSQLByStr([SF('T_Line', nTruck.FLine),
+                SF('T_LineName', nTruck.FLineName),
+                SF('T_TaskID', nTruck.FTaskID)], sTable_TruckLog, nStr, False);
+        gDBConnManager.ExecSQL(gParamManager.ActiveParam.FDB.FID, nStr);
+      end;
+    finally
+      gTruckQueueManager.SyncLock.Leave;
+    end;
+  finally
+    nXML.Free;
+  end;
+end;
+
 //Date: 2013-07-08
 //Desc: 客户端发送UDP数据包
 procedure When2ClientUDPRead(AThread: TIdUDPListenerThread; AData: TIdBytes;
   ABinding: TIdSocketHandle);
+var nStr: string;
 begin
+  nStr := BytesToString(AData);
+  if Length(nStr) < 3 then Exit;
 
+  if (nStr[1] <> Char(cCall_Prefix_1)) or (nStr[2] <> Char(cCall_Prefix_2)) then
+  begin
+    WriteUDPLog('接收到无效数据包,已丢弃.');
+    Exit;
+  end;
+
+  try
+    if nStr[3] = Char(cCMD_CallTruck) then
+    begin
+      System.Delete(nStr, 1, 3);
+      CallTruck(DecodeBase64(nStr), ABinding);
+    end; 
+  except
+    on E:Exception do
+    begin
+      WriteUDPLog(E.Message);
+    end;
+  end;
 end;
 
 end.

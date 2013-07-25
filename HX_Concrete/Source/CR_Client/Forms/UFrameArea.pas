@@ -8,21 +8,25 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  IniFiles, UDataModule, UFormBase, UFrameNormal, cxGraphics, cxControls,
-  cxLookAndFeels, cxLookAndFeelPainters, cxStyles, dxSkinsCore,
-  dxSkinsDefaultPainters, cxCustomData, cxFilter, cxData, cxDataStorage,
-  cxEdit, DB, cxDBData, cxContainer, dxLayoutControl, dxorgchr, ADODB,
-  cxLabel, UBitmapPanel, cxSplitter, cxGridLevel, cxClasses,
-  cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid, ComCtrls, ToolWin;
+  UBusinessConst, UBusinessWorker, UBusinessPacker, IniFiles, UFormBase,
+  UFrameNormal, cxGraphics, cxControls, cxLookAndFeels,
+  cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinsDefaultPainters,
+  cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit, DB, cxDBData,
+  cxContainer, dxLayoutControl, dxorgchr, ADODB, cxLabel, UBitmapPanel,
+  cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
+  cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
+  ComCtrls, ToolWin;
 
 type
   TfFrameArea = class(TfFrameNormal)
     Chart1: TdxOrgChart;
     dxLayout1Item1: TdxLayoutItem;
+    cxLevel2: TcxGridLevel;
+    cxView2: TcxGridTableView;
     procedure BtnAddClick(Sender: TObject);
     procedure BtnEditClick(Sender: TObject);
     procedure BtnDelClick(Sender: TObject);
+    procedure Chart1DblClick(Sender: TObject);
   private
     { Private declarations }
     FAreaItems: TList;
@@ -52,7 +56,8 @@ implementation
 {$R *.dfm}
 
 uses
-  UMgrControl, ULibFun, USysDB, USysConst;
+  UMgrControl, ULibFun, UFormWait, USysDataDict, UDataModule, USysGrid, USysDB,
+  USysConst;
 
 type
   PAreaItem = ^TAreaItem;
@@ -63,6 +68,140 @@ type
     FParent: string;
   end;
 
+  PTruckItem = ^TTruckItem;
+  TTruckItem = record
+    FIndex      : Integer;
+    FTruck      : string;    
+    FLine       : string;    
+    FLineName   : string;
+    FIsVIP      : string;    
+    FInTime     : TDateTime;
+
+    FCallNum    : Integer;
+    FAnswered   : string;   
+  end;
+
+  TTruckDataSource = class(TcxCustomDataSource)
+  private
+    FTrucks: TList;
+    FListA: TStrings;
+    FListB: TStrings;
+  protected
+    procedure ClearTrucks(const nFree: Boolean);
+    function GetValue(ARecordHandle: TcxDataRecordHandle;
+      AItemHandle: TcxDataItemHandle): Variant; override;
+    function GetRecordCount: Integer; override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure LoadTrucks(const nSrvURL: string);
+  end;
+
+var
+  gTruckData: TTruckDataSource = nil;
+  //全局使用
+
+constructor TTruckDataSource.Create;
+begin
+  inherited;
+  FTrucks := TList.Create;
+  FListA := TStringList.Create;
+  FListB := TStringList.Create;
+end;
+
+destructor TTruckDataSource.Destroy;
+begin
+  ClearTrucks(True);
+  FListA.Free;
+  FListB.Free;
+  inherited;
+end;
+
+procedure TTruckDataSource.ClearTrucks(const nFree: Boolean);
+var nIdx: Integer;
+begin
+  for nIdx:=FTrucks.Count - 1 downto 0 do
+  begin
+    Dispose(PTruckItem(FTrucks[nIdx]));
+    FTrucks.Delete(nIdx);
+  end;
+
+  if nFree then
+    FreeAndNil(FTrucks);
+  //xxxxx
+end;
+
+function TTruckDataSource.GetRecordCount: Integer;
+begin
+  Result := FTrucks.Count;
+end;
+
+function TTruckDataSource.GetValue(ARecordHandle: TcxDataRecordHandle;
+  AItemHandle: TcxDataItemHandle): Variant;
+var nColumn: Integer;
+    nItem: PTruckItem;
+begin
+  nColumn := GetDefaultItemID(Integer(AItemHandle));
+  nItem := FTrucks[Integer(ARecordHandle)];
+
+  case nColumn of
+    0: Result := nItem.FIndex;
+    1: Result := nItem.FTruck;
+    //2: Result := nItem.FLine;
+    2: Result := nItem.FLineName;
+    3: Result := nItem.FIsVIP;
+    4: Result := nItem.FCallNum;
+    5: Result := nItem.FAnswered;
+    6: Result := nItem.FInTime;
+  end;
+end;
+
+procedure TTruckDataSource.LoadTrucks(const nSrvURL: string);
+var nIdx: Integer;
+    nItem: PTruckItem;
+    nIn: TWorkerBusinessCommand;
+    nOut: TWorkerBusinessCommand;
+    nWorker: TBusinessWorkerBase;
+begin
+  nWorker := nil;
+  try
+    gSysParam.FRemoteURL := nSrvURL;
+    nIn.FCommand := cBC_LoadQueueTrucks;
+    
+    nWorker := gBusinessWorkerManager.LockWorker(sCLI_RemoteQueue);
+    if not nWorker.WorkActive(@nIn, @nOut) then Exit;
+  finally
+    gBusinessWorkerManager.RelaseWorkder(nWorker);
+  end;
+
+  ClearTrucks(False);
+  FListA.Text := nOut.FData;
+
+  for nIdx:=0 to FListA.Count - 1 do
+  begin
+    FListB.Text := PackerDecodeStr(FListA[nIdx]);
+    New(nItem);
+    FTrucks.Add(nItem);
+
+    with FListB do
+    begin
+      nItem.FIndex := nIdx + 1;
+      nItem.FTruck := Values['Truck'];
+      nItem.FLine := Values['Line'];
+      nItem.FLineName := Values['LineName'];   
+
+      nItem.FCallNum := StrToInt(Values['CallNum']);
+      nItem.FIsVIP := Values['IsVIP'];
+      nItem.FAnswered := Values['Answered'];
+      nItem.FInTime := Str2DateTime(Values['InTime']);
+    end;
+  end;
+
+  DataChanged;
+  //apply data
+end;
+
+//------------------------------------------------------------------------------
 class function TfFrameArea.FrameID: integer;
 begin
   Result := cFI_FrameArea;
@@ -84,14 +223,24 @@ begin
       ToolBar1.Buttons[nInt].Enabled := False;
     ShowMsg('无效的区域数据库', sHint);
   end;
+
+  cxGrid1.ActiveLevel := cxLevel2;
+  gSysEntityManager.BuildViewColumn(cxView2, PopedomItem);
+  InitTableView(Name, cxView2, nIni);
+
+  if not Assigned(gTruckData) then
+    gTruckData := TTruckDataSource.Create;
+  cxView2.DataController.CustomDataSource := gTruckData;
 end;
 
 procedure TfFrameArea.OnSaveGridConfig(const nIni: TIniFile);
 begin
   ClearItemList(True);
   FreeAndNil(FExpandList);
-  
+  FreeAndNil(gTruckData);
+
   inherited;
+  SaveUserDefineTableView(Name, cxView2, nIni);
   nIni.WriteInteger(Name, 'GridHeight', cxGrid1.Height);
 end;
 
@@ -342,6 +491,24 @@ begin
   nStr := Format('Delete From %s Where A_ID In (%s)', [sTable_Area, nStr]);
   FDM.ExecuteSQL(nStr);
   InitFormData();
+end;
+
+//Desc: 刷新
+procedure TfFrameArea.Chart1DblClick(Sender: TObject);
+var nStr: String;
+begin
+  if Assigned(Chart1.Selected) and Assigned(Chart1.Selected.Data) and
+     (not Chart1.Selected.HasChildren) then
+  try
+    nStr := PAreaItem(Chart1.Selected.Data).FMIT;
+    if nStr <> '' then
+    begin
+      ShowWaitForm(ParentForm, '读取队列');
+      gTruckData.LoadTrucks(nStr);
+    end;
+  finally
+    CloseWaitForm;
+  end;
 end;
 
 initialization

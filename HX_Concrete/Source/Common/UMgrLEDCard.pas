@@ -427,7 +427,10 @@ begin
 
   with FNowItem^, gTruckQueueManager do
   try
+    nL := 0;
+    nI := 0;
     nIdx := 0;
+
     while nIdx < Trucks.Count do
     begin
       if not Assigned(nBmp) then
@@ -460,7 +463,7 @@ begin
           //row is enough to fill truck
 
           nTruck := Trucks[nIdx];
-          LeftDrawText(nTruck.FTruck);
+          LeftDrawText(IntToStr(nIdx+1) + '.' +nTruck.FTruck);
           Inc(nIdx); Inc(i);
         end;
 
