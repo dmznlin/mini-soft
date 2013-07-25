@@ -114,6 +114,8 @@ procedure TfFrameCard.OnCreateFrame;
 begin
   inherited;
   FWhereNo := '';
+  FWhere := '1=1';
+  
   FQueryNo := True;
   FQueryHas := True;
   InitDateRange(Name, FStart, FEnd);
@@ -171,7 +173,8 @@ begin
   end;
 
   if not FQueryNo then Exit;
-  nStr := 'Select * From $TR Where ENNAME Not In (Select C_TruckNo From $BC)';
+  nStr := 'Select * From $TR Where ENNAME Not In (' +
+          'Select IsNull(C_TruckNo,'''') From $BC)';
 
   if FWhereNo <> '' then
     nStr := nStr + ' And (' + FWhereNo + ')';
@@ -192,7 +195,7 @@ end;
 //Desc: 刷新
 procedure TfFrameCard.BtnRefreshClick(Sender: TObject);
 begin
-  FWhere := '';
+  FWhere := '1=1';
   FWhereNo := '';
   FQueryNo := True;
   FQueryHas := True;
@@ -279,6 +282,7 @@ begin
   if ShowDateFilterForm(FStart, FEnd) then
   begin
     cxGrid1.ActiveLevel := cxLevel1;
+    FWhere := '';
     InitFormData(FWhere);
   end;
 end;
@@ -439,7 +443,7 @@ end;
 procedure TfFrameCard.N11Click(Sender: TObject);
 var nTruck: string;
 begin
-  nTruck := SQLQuery.FieldByName('L_Truck').AsString;
+  nTruck := SQLQuery.FieldByName('C_TruckNo').AsString;
 
   if SetTruckCard(nTruck) then
   begin
@@ -456,7 +460,6 @@ begin
   nStr := Format('确定要对卡[ %s ]执行销卡操作吗?', [nCard]);
   if not QueryDlg(nStr, sAsk) then Exit;
 
-  nStr := SQLQuery.FieldByName('L_ID').AsString;
   if LogoutBillCard(nCard) then
   begin
     InitFormData(FWhere);

@@ -82,8 +82,8 @@ begin
     InitFormData;
     ActionComPort(False);
 
-    FParam.FCommand := cCmd_ModalResult;
     FParam.FParamA := ShowModal;
+    FParam.FCommand := cCmd_ModalResult;
     FParam.FParamB := EditCard.Text;
   finally
     Free;

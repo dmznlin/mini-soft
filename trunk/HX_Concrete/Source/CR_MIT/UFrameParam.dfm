@@ -6,7 +6,7 @@ inherited fFrameParam: TfFrameParam
     Top = 0
     Width = 573
     Height = 386
-    ActivePage = TabSheet4
+    ActivePage = TabSheet1
     Align = alClient
     MultiLine = True
     TabOrder = 0
@@ -146,7 +146,6 @@ inherited fFrameParam: TfFrameParam
           Height = 155
           OnClickCheck = ListPackClickCheck
           Anchors = [akLeft, akTop, akBottom]
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 20
           Items.Strings = (
             'aa'
@@ -161,7 +160,6 @@ inherited fFrameParam: TfFrameParam
           Top = 114
           Width = 115
           Height = 20
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 12
           TabOrder = 2
           OnChange = EditPackChange
@@ -171,7 +169,6 @@ inherited fFrameParam: TfFrameParam
           Top = 114
           Width = 115
           Height = 20
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 12
           TabOrder = 3
           OnChange = EditPackChange
@@ -184,7 +181,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 54
           EditLabel.Height = 12
           EditLabel.Caption = 'Param ID:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 1
           OnChange = EditPackChange
         end
@@ -260,7 +256,6 @@ inherited fFrameParam: TfFrameParam
           OnClickCheck = ListPackClickCheck
           Anchors = [akLeft, akTop, akBottom]
           Constraints.MinHeight = 255
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 20
           Items.Strings = (
             'aa'
@@ -279,7 +274,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 54
           EditLabel.Height = 12
           EditLabel.Caption = #21442#25968#26631#35782':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 1
           OnChange = EditDBChange
         end
@@ -292,7 +286,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 66
           EditLabel.Height = 12
           EditLabel.Caption = #26381#21153#22120#22320#22336':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 2
           OnChange = EditDBChange
         end
@@ -305,7 +298,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 54
           EditLabel.Height = 12
           EditLabel.Caption = #26381#21153#31471#21475':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 3
           OnChange = EditDBChange
         end
@@ -318,7 +310,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 42
           EditLabel.Height = 12
           EditLabel.Caption = #25968#25454#24211':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 4
           OnChange = EditDBChange
         end
@@ -331,7 +322,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 42
           EditLabel.Height = 12
           EditLabel.Caption = #29992#25143#21517':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 5
           OnChange = EditDBChange
         end
@@ -344,7 +334,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 54
           EditLabel.Height = 12
           EditLabel.Caption = #29992#25143#23494#30721':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           PasswordChar = '*'
           TabOrder = 6
           OnChange = EditDBChange
@@ -358,7 +347,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 78
           EditLabel.Height = 12
           EditLabel.Caption = #24037#20316#23545#35937#20010#25968':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 7
           OnChange = EditDBChange
         end
@@ -368,7 +356,6 @@ inherited fFrameParam: TfFrameParam
           Width = 325
           Height = 70
           Constraints.MinHeight = 50
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ScrollBars = ssVertical
           TabOrder = 8
           OnChange = EditDBChange
@@ -452,7 +439,6 @@ inherited fFrameParam: TfFrameParam
           OnClickCheck = ListPackClickCheck
           Anchors = [akLeft, akTop, akBottom]
           Constraints.MinHeight = 255
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 20
           Items.Strings = (
             'aa'
@@ -471,7 +457,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 54
           EditLabel.Height = 12
           EditLabel.Caption = #21442#25968#26631#35782':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 1
           OnChange = EditPerformChange
         end
@@ -484,7 +469,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 54
           EditLabel.Height = 12
           EditLabel.Caption = 'TCP Port:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 3
           OnChange = EditPerformChange
         end
@@ -497,7 +481,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 60
           EditLabel.Height = 12
           EditLabel.Caption = 'Http Port:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 4
           OnChange = EditPerformChange
         end
@@ -510,7 +493,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 90
           EditLabel.Height = 12
           EditLabel.Caption = 'Conn Pool Size:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 5
           OnChange = EditPerformChange
         end
@@ -523,7 +505,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 114
           EditLabel.Height = 12
           EditLabel.Caption = 'Business Pool Size:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 6
           OnChange = EditPerformChange
         end
@@ -536,7 +517,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 84
           EditLabel.Height = 12
           EditLabel.Caption = 'SAP Pool Size:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 9
           OnChange = EditPerformChange
         end
@@ -545,7 +525,6 @@ inherited fFrameParam: TfFrameParam
           Top = 196
           Width = 115
           Height = 20
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 12
           TabOrder = 7
           OnChange = EditPerformChange
@@ -559,7 +538,6 @@ inherited fFrameParam: TfFrameParam
           Top = 196
           Width = 115
           Height = 20
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           ItemHeight = 12
           TabOrder = 8
           OnChange = EditPerformChange
@@ -577,7 +555,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 102
           EditLabel.Height = 12
           EditLabel.Caption = 'Max Record Count:'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 10
           OnChange = EditPerformChange
         end
@@ -590,7 +567,6 @@ inherited fFrameParam: TfFrameParam
           EditLabel.Width = 78
           EditLabel.Height = 12
           EditLabel.Caption = #23432#25252#21047#26032#38388#38548':'
-          ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
           TabOrder = 2
           OnChange = EditPerformChange
         end

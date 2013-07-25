@@ -38,6 +38,13 @@ type
     class function FunctionName: string; override;
   end;
 
+  TClientQueueStatus = class(TClient2MITWorker)
+  public
+    function GetFixedServiceURL: string; override;
+    function GetFlagStr(const nFlag: Integer): string; override;
+    class function FunctionName: string; override;
+  end;
+
 resourcestring
   sParam_NoHintOnError     = '##';
 
@@ -228,6 +235,28 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+class function TClientQueueStatus.FunctionName: string;
+begin
+  Result := sCLI_RemoteQueue;
+end;
+
+function TClientQueueStatus.GetFixedServiceURL: string;
+begin
+  Result := gSysParam.FRemoteURL;
+end;
+
+function TClientQueueStatus.GetFlagStr(const nFlag: Integer): string;
+begin
+  Result := inherited GetFlagStr(nFlag);
+
+  case nFlag of
+   cWorker_GetPackerName : Result := sBus_BusinessCommand;
+   cWorker_GetMITName    : Result := sBus_BusinessCommand;
+  end;
+end;
+
 initialization
   gBusinessWorkerManager.RegisteWorker(TClientBusinessCommand);
+  gBusinessWorkerManager.RegisteWorker(TClientQueueStatus);
 end.

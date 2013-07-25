@@ -87,6 +87,9 @@ ResourceString
   sFlag_TruckQOut     = 'T';                         //出队车辆
   //Q=Queue
 
+  sFlag_LGTruckQueue  = 'TruckQueue';                //车辆队列
+  //LG=log group
+  
   sFlag_CardIdle      = 'I';                         //空闲卡
   sFlag_CardUsed      = 'U';                         //使用中
   sFlag_CardLoss      = 'L';                         //挂失卡
@@ -305,7 +308,7 @@ ResourceString
   sSQL_NewZCTrucks = 'Create Table $Table(R_ID $Inc, T_Truck varChar(15),' +
        'T_Card varChar(16), T_ConNo varChar(20), T_ConName varChar(80), ' +
        'T_ConType Char(1), T_TaskID varChar(32), T_Line varChar(15), ' +
-       'T_TruckLog varChar(15), T_VIP Char(1), T_Valid Char(1))';
+       'T_TruckLog varChar(15), T_Valid Char(1), T_VIP Char(1), T_InTime DateTime)';
   {-----------------------------------------------------------------------------
    待装车队列: ZCTrucks
    *.R_ID: 记录号
@@ -317,8 +320,9 @@ ResourceString
    *.T_TaskID: 任务单
    *.T_Line: 所在道
    *.T_TruckLog: 行车记录号
-   *.T_VIP: 特权
    *.T_Valid: 是否有效
+   *.T_VIP: 特权      
+   *.T_InTime: 进队时间
   -----------------------------------------------------------------------------}
   
 function CardStatusToStr(const nStatus: string): string;

@@ -14,9 +14,12 @@ uses
 const
   cTruckMaxCalledNum = 2;
   //单车最多呼叫次数
-  cCall_Prefix_1     = $1C;
+  cCall_Prefix_1     = $2A;
   cCall_Prefix_2     = $2B;
   //呼叫协议前缀
+  cCMD_CallTruck     = 1;    //叫车
+  cCMD_PrintBill     = 2;    //打印
+  cCMD_HeavyTruck    = 3;    //重装返料
 
 type
   PLineItem = ^TLineItem;
@@ -41,8 +44,10 @@ type
     FConNo      : string;      //物料号
     FConName    : string;      //品种名
     FLine       : string;      //装车线
+    FLineName   : string;
     FTaskID     : string;      //任务单
     FIsVIP      : string;      //特权车
+    FInTime     : TDateTime;   //进队时间
 
     FCallNum    : Byte;        //呼叫次数
     FCallIP     : string;
@@ -73,8 +78,6 @@ type
   protected
     procedure Execute; override;
     //执行线程
-    procedure ExecuteSQL(const nList: TStrings);
-    //执行SQL语句
     procedure LoadQueueParam;
     //载入排队参数
     procedure LoadLines;
@@ -124,8 +127,11 @@ type
     procedure StartQueue(const nDB: string);
     procedure StopQueue;
     //启停队列
-    function TruckInQueue(const nTruck: string; const nLocked: Boolean): Integer;
+    function TruckInQueue(const nTruck: string; nLocked: Boolean): Integer;
     //车辆检索
+    procedure TruckOutQueue(const nTruck: string; nLocked: Boolean); overload;
+    procedure TruckOutQueue(const nTruck: PTruckItem; nLocked: Boolean); overload;
+    //车辆出队
     function GetVoiceTruck(const nSeparator: string;
      const nLocked: Boolean): string;
     //语音车辆
@@ -133,8 +139,8 @@ type
     //刷新队列
     property Lines: TList read FLines;
     property Trucks: TList read FTrucks;
-    property QueueChanged: Int64 read FQueueChanged;
     property SyncLock: TCriticalSection read FSyncLock;
+    property QueueChanged: Int64 read FQueueChanged write FQueueChanged;
     //属性相关
   end;
 
@@ -242,7 +248,7 @@ end;
 //Parm: 车牌号;是否锁定
 //Desc: 检索nTruck在队列中的位置索引
 function TTruckQueueManager.TruckInQueue(const nTruck: string;
-  const nLocked: Boolean): Integer;
+  nLocked: Boolean): Integer;
 var nIdx: Integer;
 begin
   if nLocked then SyncLock.Enter;
@@ -260,24 +266,61 @@ begin
   end;
 end;
 
+//Date: 2013-07-23
+//Parm: 车牌号;同步锁
+//Desc: 车辆出队
+procedure TTruckQueueManager.TruckOutQueue(const nTruck: string;
+ nLocked: Boolean);
+var nIdx: Integer;
+begin
+  if nLocked then FSyncLock.Enter;
+  try
+    nIdx := TruckInQueue(nTruck, False);
+    FreeTruck(nil, nIdx);
+    FQueueChanged := GetTickCount;
+  finally
+    if nLocked then FSyncLock.Leave;
+  end;   
+end;
+
+//Date: 2013-07-23
+//Parm: 车辆;同步锁
+//Desc: 车辆出队
+procedure TTruckQueueManager.TruckOutQueue(const nTruck: PTruckItem;
+ nLocked: Boolean);
+begin
+  if nLocked then FSyncLock.Enter;
+  try
+    FreeTruck(nTruck);
+    FQueueChanged := GetTickCount;
+  finally
+    if nLocked then FSyncLock.Leave;
+  end;
+end;
+
 //Date: 2012-8-24
 //Parm: 分隔符;是否锁定
 //Desc: 获取语音播发的车辆列表
 function TTruckQueueManager.GetVoiceTruck(const nSeparator: string;
   const nLocked: Boolean): string;
-var i,nIdx: Integer;
+var nIdx: Integer;
     nTruck: PTruckItem;
 begin
   if nLocked then SyncLock.Enter;
   try
     Result := '';
-
-    i := Length(Result);
-    if i > 0 then
+    for nIdx:=0 to FTrucks.Count - 1 do
     begin
-      nIdx := Length(nSeparator);
-      Result := Copy(Result, 1, i - nIdx);
+      nTruck := FTrucks[nIdx];
+      if (nTruck.FCallNum > 0) and (nTruck.FCallNum <= cTruckMaxCalledNum) then
+        Result := Result + nTruck.FTruck + '去' + nTruck.FLineName + nSeparator;
+      //xxxxx
     end;
+
+    nIdx := Length(Result);
+    if nIdx > 0 then
+      Result := Copy(Result, 1, nIdx - Length(nSeparator));
+    //last separator is invalid
   finally
     if nLocked then SyncLock.Leave;
   end;
@@ -367,17 +410,6 @@ begin
     begin
       WriteLog(E.Message);
     end;
-  end;
-end;
-
-//Desc: 执行SQL语句
-procedure TTruckQueueDBReader.ExecuteSQL(const nList: TStrings);
-var nIdx: Integer;
-begin
-  for nIdx:=nList.Count - 1 downto 0 do
-  begin
-    gDBConnManager.WorkerExec(FDBConn, nList[nIdx]);
-    nList.Delete(nIdx);
   end;
 end;
 
@@ -609,17 +641,21 @@ begin
   Result := nTruck.FLine <> '';
 end;
 
+//Desc: VIP车辆
+function Filter_TruckIsVIP(const nTruck: PTruckItem): Boolean;
+begin
+  Result := nTruck.FIsVIP = sFlag_Yes;
+end;
+
 //Desc: Desc: 载入装车队列
 procedure TTruckQueueDBReader.LoadTrucks;
 var nStr: string;
-    i,j,nIdx,nPos: Integer;
-    nTruck,nTmp: PTruckItem;
+    nIdx: Integer;
 begin
   nStr := 'Select zt.* From %s zt ' +
-          ' Left Join %s tl on tl.T_ID=zt.T_TruckLog ' +
           'Where IsNull(T_Valid,''%s'')<>''%s'' ' +
           'Order By T_InTime ASC';
-  nStr := Format(nStr, [sTable_ZCTrucks, sTable_TruckLog, sFlag_Yes, sFlag_No]);
+  nStr := Format(nStr, [sTable_ZCTrucks, sFlag_Yes, sFlag_No]);
 
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
   if RecordCount > 0 then
@@ -640,7 +676,8 @@ begin
         FLine       := FieldByName('T_Line').AsString;
         FTaskID     := FieldByName('T_TaskID').AsString;
         FIsVIP      := FieldByName('T_VIP').AsString;
-
+        FInTime     := FieldByName('T_InTime').AsDateTime;
+        
         FCallNum    := 0;
         FCallIP     := '';
         FCallPort   := 0;
@@ -659,6 +696,9 @@ begin
   nIdx := 0;
   MakeTruckIn(nIdx, @Filter_LineIsNotNull);
   //装车线不为空优先
+
+  MakeTruckIn(nIdx, @Filter_TruckIsVIP);
+  //VIP车辆优先
 
   MakeTruckIn(nIdx, @Filter_LineIsNull);
   //正常车辆进队

@@ -369,12 +369,19 @@ procedure T02NReader.GetACard(const nIP, nCard: string);
 var nIdx,nInt: Integer;
     nPCard: PReaderCard;
 begin
+  WriteLog(Format('收到来自[ %s ]的卡片[ %s ].', [nIP, nCard]));
+  //loged
+
   FSyncLock.Enter;
   try
     if nIP <> '' then
     begin
       nInt := GetReader('', nIP);
-      if nInt < 0 then Exit;
+      if nInt < 0 then
+      begin
+        WriteLog(Format('读头[ %s ]无效.', [nIP]));
+        Exit;
+      end;
     end else nInt := -1;
              
     nPCard := nil;

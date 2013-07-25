@@ -125,9 +125,9 @@ Locale=2052
 CodePage=936
 [Version Info Keys]
 CompanyName=RunSoft工作室
-FileDescription=SAP中间件
+FileDescription=MIT中间件
 FileVersion=2.0.1.0
-InternalName=SAP_MIT
+InternalName=Bus_MIT
 LegalCopyright=GPL公共许可
 LegalTrademarks=
 OriginalFilename=

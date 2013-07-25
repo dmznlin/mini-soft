@@ -451,7 +451,7 @@ begin
         FClient.Connect;
       end;
     except
-      WriteLog('连接硬件辅助服务失败.');
+      WriteLog(Format('连接[ %s:%d ]硬件服务失败.', [FClient.Host, FClient.Port]));
       FClient.Disconnect;
       Continue;
     end;

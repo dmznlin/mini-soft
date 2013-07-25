@@ -262,15 +262,15 @@ begin
     //led display
 
     gHardwareHelper.OnProce := WhenReaderCardArrived;
-    //gHardwareHelper.StartRead;
+    gHardwareHelper.StartRead;
     //long reader
 
     g02NReader.OnCardIn := WhenReaderCardIn;
     g02NReader.OnCardOut := nil;
-    g02NReader.StartReader;
+    g02NReader.StartReader(gSysParam.F02NReader);
     //near reader
 
-    //gVoiceHelper.StartVoice;
+    gVoiceHelper.StartVoice;
     //voice
   end;
 end;

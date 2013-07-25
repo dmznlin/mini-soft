@@ -1,4 +1,4 @@
-{$DEFINE debug}
+{.$DEFINE debug}
 //µ÷ÊÔÄ£Ê½
 
 {.$DEFINE ClientMon}
