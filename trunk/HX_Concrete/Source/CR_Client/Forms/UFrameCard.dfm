@@ -99,6 +99,7 @@ inherited fFrameCard: TfFrameCard
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
       TabOrder = 1
+      OnKeyPress = OnCtrlKeyPress
       Width = 121
     end
     object cxTextEdit3: TcxTextEdit [5]
