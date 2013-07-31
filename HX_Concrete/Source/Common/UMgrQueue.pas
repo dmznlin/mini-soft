@@ -349,7 +349,7 @@ begin
   end;
 
   FWaiter := TWaitObject.Create;
-  FWaiter.Interval := 20 * 1000;
+  FWaiter.Interval := 7 * 1000;
 end;
 
 destructor TTruckQueueDBReader.Destroy;

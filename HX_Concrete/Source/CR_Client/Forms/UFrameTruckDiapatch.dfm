@@ -19,8 +19,22 @@ inherited fFrameTruckDispatch: TfFrameTruckDispatch
   inherited cxGrid1: TcxGrid
     Top = 202
     Width = 743
+    RootLevelOptions.DetailTabsPosition = dtpTop
     inherited cxView1: TcxGridDBTableView
       PopupMenu = PopupMenu1
+    end
+    object cxView2: TcxGridTableView [1]
+      NavigatorButtons.ConfirmDelete = False
+      DataController.Summary.DefaultGroupSummaryItems = <>
+      DataController.Summary.FooterSummaryItems = <>
+      DataController.Summary.SummaryGroups = <>
+    end
+    inherited cxLevel1: TcxGridLevel
+      Caption = #36710#36742#21015#34920
+    end
+    object cxLevel2: TcxGridLevel
+      Caption = #35843#24230#38431#21015
+      GridView = cxView2
     end
   end
   inherited dxLayout1: TdxLayoutControl
@@ -28,7 +42,7 @@ inherited fFrameTruckDispatch: TfFrameTruckDispatch
     Height = 135
     object cxTextEdit1: TcxTextEdit [0]
       Left = 81
-      Top = 91
+      Top = 93
       Hint = 'T.T_Truck'
       ParentFont = False
       TabOrder = 1
@@ -50,7 +64,7 @@ inherited fFrameTruckDispatch: TfFrameTruckDispatch
     end
     object cxTextEdit2: TcxTextEdit [2]
       Left = 234
-      Top = 91
+      Top = 93
       Hint = 'T.T_Line'
       ParentFont = False
       TabOrder = 2
@@ -58,7 +72,7 @@ inherited fFrameTruckDispatch: TfFrameTruckDispatch
     end
     object cxTextEdit3: TcxTextEdit [3]
       Left = 397
-      Top = 91
+      Top = 93
       Hint = 'T.T_InTime'
       ParentFont = False
       TabOrder = 3

@@ -8,7 +8,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  UFrameNormal, cxGraphics, cxControls, cxLookAndFeels,
+  IniFiles, UFrameNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinsDefaultPainters,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit, DB, cxDBData,
   cxContainer, Menus, dxLayoutControl, cxMaskEdit, cxButtonEdit,
@@ -34,6 +34,8 @@ type
     N7: TMenuItem;
     N5: TMenuItem;
     N4: TMenuItem;
+    cxLevel2: TcxGridLevel;
+    cxView2: TcxGridTableView;
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure N1Click(Sender: TObject);
@@ -50,6 +52,8 @@ type
     //车辆插队
   public
     { Public declarations }
+    procedure OnLoadGridConfig(const nIni: TIniFile); override;
+    procedure OnSaveGridConfig(const nIni: TIniFile); override;
     class function FrameID: integer; override;
   end;
 
@@ -57,8 +61,12 @@ implementation
 
 {$R *.dfm}
 uses
-  ULibFun, UMgrControl, USysConst, USysDB, UDataModule, USysPopedom,
-  UFormInputbox;
+  ULibFun, UMgrControl, UDataModule, UFormInputbox, USysPopedom, USysConst,
+  USysDB, USysGrid, USysBusiness, USysDataDict;
+
+var
+  gTruckData: TTruckDataSource = nil;
+  //全局使用
 
 class function TfFrameTruckDispatch.FrameID: integer;
 begin
@@ -76,6 +84,27 @@ begin
   N5.Enabled := BtnEdit.Enabled;
 end;
 
+procedure TfFrameTruckDispatch.OnLoadGridConfig(const nIni: TIniFile);
+begin
+  inherited;
+  cxGrid1.ActiveLevel := cxLevel1;
+  gSysEntityManager.BuildViewColumn(cxView2, 'MAIN_B02');
+  InitTableView(Name, cxView2, nIni);
+
+  if not Assigned(gTruckData) then
+    gTruckData := TTruckDataSource.Create;
+  cxView2.DataController.CustomDataSource := gTruckData;
+end;
+
+procedure TfFrameTruckDispatch.OnSaveGridConfig(const nIni: TIniFile);
+begin
+  inherited;
+  cxView2.DataController.CustomDataSource := nil;
+  FreeAndNil(gTruckData);
+  SaveUserDefineTableView(Name, cxView2, nIni);
+end;
+
+//------------------------------------------------------------------------------
 function TfFrameTruckDispatch.InitFormDataSQL(const nWhere: string): string;
 begin
   Result := 'Select * From $ZC zc ';
@@ -87,6 +116,9 @@ begin
 
   Result := MacroValue(Result, [MI('$ZC', sTable_ZCTrucks)]);
   //xxxxx
+
+  gTruckData.LoadTrucks(gSysParam.FURL_MIT);
+  //truck queue
 end;
 
 //Desc: 执行查询
