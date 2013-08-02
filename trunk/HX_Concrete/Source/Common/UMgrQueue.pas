@@ -620,7 +620,8 @@ begin
       end else //不在队列则添加
       begin
         nTruck := FTrucks[nStart];
-        FTrucks[nIdx] := FTrucks[nPos];
+        FTrucks[nStart] := FTrucks[nPos];
+        PTruckItem(FTrucks[nStart])^ := FTruckPool[nIdx];
 
         FTrucks[nPos] := nTruck;
         Inc(nStart);
@@ -632,7 +633,7 @@ end;
 //Desc: 装车线为空回调
 function Filter_LineIsNull(const nTruck: PTruckItem): Boolean;
 begin
-  Result := nTruck.FLine = '';
+  Result := (nTruck.FLine = '') and (nTruck.FIsVIP <> sFlag_Yes);
 end;
 
 //Desc: 装车线不为空回调

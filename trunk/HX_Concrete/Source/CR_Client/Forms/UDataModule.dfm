@@ -51,7 +51,7 @@ object FDM: TFDM
     StyleFocused.Color = clInfoBk
     Left = 24
     Top = 128
-    PixelsPerInch = 120
+    PixelsPerInch = 96
   end
   object dxLayout1: TdxLayoutLookAndFeelList
     Left = 76

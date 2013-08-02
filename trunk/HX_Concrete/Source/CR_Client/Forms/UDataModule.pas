@@ -12,9 +12,7 @@ uses
   dxPrnPg, ULibFun, dxWrap, dxPrnDev, dxPSCompsProvider, dxPSFillPatterns,
   dxPSEdgePatterns, cxLookAndFeels, dxPSCore, dxPScxCommon, dxPScxGrid6Lnk,
   XPMan, dxLayoutLookAndFeels, cxEdit, ImgList, Controls, cxGraphics, DB,
-  ADODB, dxBkgnd, dxPSPDFExportCore, dxPSPDFExport, cxDrawTextUtils,
-  dxPSPrVwStd, dxPScxEditorProducers, dxPScxExtEditorProducers,
-  dxPScxPageControlProducer;
+  ADODB, dxBkgnd;
 
 type
   TFDM = class(TDataModule)
@@ -708,7 +706,7 @@ begin
     begin
       Inc(nStep);
       nException := E.Message;
-      WriteLog(E.ClassName);
+      WriteLog(nException);
     end;
   end;
 
@@ -759,7 +757,7 @@ begin
     begin
       Inc(nStep);
       nException := E.Message;
-      WriteLog(E.ClassName);
+      WriteLog(nException);
     end;
   end;
 
@@ -810,7 +808,7 @@ begin
     begin
       Inc(nStep);
       nException := E.Message;
-      WriteLog(E.ClassName);
+      WriteLog(nException);
     end;
   end;
 
@@ -872,7 +870,7 @@ begin
     begin
       Inc(nStep);
       nException := E.Message;
-      WriteLog(E.ClassName);
+      WriteLog(nException);
     end;
   end;
 

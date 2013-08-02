@@ -232,7 +232,7 @@ begin
             SF('T_QOutMan', nUser)], sTable_TruckLog, nStr, False);
     nList.Add(nStr);
 
-    gDBConnManager.ExecSQLs(gParamManager.ActiveParam.FDB.FID, nList, True);
+    gDBConnManager.ExecSQLs(nList, True, gParamManager.ActiveParam.FDB.FID);
   finally
     nList.Free;
   end;

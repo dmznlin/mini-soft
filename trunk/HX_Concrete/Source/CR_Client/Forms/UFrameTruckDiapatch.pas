@@ -161,10 +161,10 @@ begin
 
     if nFirst then
     begin
-      nStr := 'Select Min(T_InTime),%s As T_Now From %s Where T_Truck=''%s''';
+      nStr := 'Select Min(T_InTime),%s As T_Now From %s';
     end else
     begin
-      nStr := 'Select Max(T_InTime),%s As T_Now From %s Where T_Truck=''%s''';
+      nStr := 'Select Max(T_InTime),%s As T_Now From %s';
     end;
 
     nStr := Format(nStr, [sField_SQLServer_Now, sTable_ZCTrucks, nTruck]);
