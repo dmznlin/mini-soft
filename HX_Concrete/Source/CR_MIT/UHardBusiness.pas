@@ -273,7 +273,7 @@ begin
       for nIdx:=0 to gTruckQueueManager.Trucks.Count - 1 do
       begin
         nTmp := gTruckQueueManager.Trucks[nIdx];
-        if nTmp.FLine = '' then Break;
+        if nTmp.FLine = '' then Continue;
 
         if CompareText(nTmp.FLine, nStr) = 0 then
         begin
@@ -300,7 +300,7 @@ begin
         for nIdx:=0 to gTruckQueueManager.Trucks.Count - 1 do
         begin
           nTmp := gTruckQueueManager.Trucks[nIdx];
-          if nTmp.FLine <> '' then Break;
+          if nTmp.FLine <> '' then Continue;
           nTruck := nTmp;
           
           nTruck.FCallNum := nTruck.FCallNum + 1;
@@ -312,8 +312,8 @@ begin
       if Assigned(nTruck) then
       begin
         nTruck.FLine := nNode.NodeByName('lineId').ValueAsString;
-        nTruck.FLineName := nNode.NodeByName('linename').ValueAsString;
-        nTruck.FLineName := SysUtils.StringReplace(nTruck.FLineName, '#', 'ºÅ', [rfReplaceAll]);
+        nStr := nNode.NodeByName('linename').ValueAsString;
+        nTruck.FLineName := SysUtils.StringReplace(nStr, '#', 'ºÅ', [rfReplaceAll]);
 
         nTruck.FTaskID := nNode.NodeByName('joid').ValueAsString; 
         nTruck.FCallIP := nNode.NodeByName('ip').ValueAsString;
@@ -326,10 +326,15 @@ begin
         nStr := 'T_Truck=''%s'' And T_NextStatus<>''''';
         nStr := Format(nStr, [nTruck.FTruck]);
 
-        nStr := MakeSQLByStr([SF('T_Line', nTruck.FLine),
+        nStr := MakeSQLByStr([SF('T_Status', sFlag_TruckQIn),
+                SF('T_NextStatus', sFlag_TruckOut),
+                SF('T_Line', nTruck.FLine),
                 SF('T_LineName', nTruck.FLineName),
-                SF('T_TaskID', nTruck.FTaskID)], sTable_TruckLog, nStr, False);
-        gDBConnManager.ExecSQL(gParamManager.ActiveParam.FDB.FID, nStr);
+                SF('T_TaskID', nTruck.FTaskID),
+                SF('T_QueueIn', sField_SQLServer_Now, sfVal),
+                SF('T_QInMan', nNode.NodeByName('operator').ValueAsString)
+                ], sTable_TruckLog, nStr, False);
+        gDBConnManager.ExecSQL(nStr, gParamManager.ActiveParam.FDB.FID);
       end;
     finally
       gTruckQueueManager.SyncLock.Leave;

@@ -107,14 +107,16 @@ end;
 //------------------------------------------------------------------------------
 function TfFrameTruckDispatch.InitFormDataSQL(const nWhere: string): string;
 begin
-  Result := 'Select * From $ZC zc ';
+  Result := 'Select zc.*,tk.NetWeight From $ZC zc ' +
+            ' Left Join $TK tk on tk.ENNAME=zc.T_Truck ';
   //xxxxx
 
   if nWhere <> '' then
     Result := Result + ' Where (' + nWhere + ')';
   //xxxx
 
-  Result := MacroValue(Result, [MI('$ZC', sTable_ZCTrucks)]);
+  Result := MacroValue(Result, [MI('$ZC', sTable_ZCTrucks),
+            MI('$TK', sTable_Truck)]);
   //xxxxx
 
   gTruckData.LoadTrucks(gSysParam.FURL_MIT);
