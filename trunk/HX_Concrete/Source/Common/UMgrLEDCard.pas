@@ -379,6 +379,10 @@ begin
                    [rfReplaceAll, rfIgnoreCase]);
     //time item
 
+    FFootFormat := StringReplace(FFootFormat, 'wk', Date2Week(),
+                   [rfReplaceAll, rfIgnoreCase]);
+    //week item
+
     FFootFormat := StringReplace(FFootFormat, 'tk', nStr,
                    [rfReplaceAll, rfIgnoreCase]);
     //truck item

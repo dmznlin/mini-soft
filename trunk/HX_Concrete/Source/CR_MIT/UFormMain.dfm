@@ -1324,11 +1324,12 @@ object fFormMain: TfFormMain
     Top = 100
     Width = 567
     Height = 285
-    ActivePage = SheetHard
+    ActivePage = SheetSummary
     Align = alClient
     Style = tsFlatButtons
     TabOrder = 1
     OnChange = wPageChange
+    OnChanging = wPageChanging
     object SheetSummary: TTabSheet
       Caption = #20449#24687#25688#35201
     end

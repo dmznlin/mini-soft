@@ -1355,38 +1355,24 @@ object fMainForm: TfMainForm
     Height = 252
     Align = alLeft
     ActiveGroupIndex = 0
-    DragCopyCursor = -1119
-    DragCursor = -1120
-    DragDropFlags = [fAllowDragLink, fAllowDropLink, fAllowDragGroup, fAllowDropGroup]
-    HotTrackedGroupCursor = crDefault
-    HotTrackedLinkCursor = -1118
-    LargeImages = FDM.ImageMid
-    SmallImages = FDM.Imagesmall
+    TabOrder = 3
     View = 10
+    OptionsImage.LargeImages = FDM.ImageMid
+    OptionsImage.SmallImages = FDM.Imagesmall
     object BarGroup1: TdxNavBarGroup
       Caption = #24120#29992#21151#33021
       LargeImageIndex = 0
-      LinksUseSmallImages = True
       SelectedLinkIndex = -1
-      ShowAsIconView = False
-      ShowControl = False
       TopVisibleLinkIndex = 0
-      UseControl = False
       UseSmallImages = False
-      Visible = True
       Links = <>
     end
     object BarGroup2: TdxNavBarGroup
       Caption = #26368#36817#20351#29992
       LargeImageIndex = 1
-      LinksUseSmallImages = True
       SelectedLinkIndex = -1
-      ShowAsIconView = False
-      ShowControl = False
       TopVisibleLinkIndex = 0
-      UseControl = False
       UseSmallImages = False
-      Visible = True
       Links = <>
     end
   end

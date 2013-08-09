@@ -31,6 +31,7 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure wPageChange(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
+    procedure wPageChanging(Sender: TObject; var AllowChange: Boolean);
   private
     { Private declarations }
     FTrayIcon: TTrayIcon;
@@ -54,7 +55,8 @@ implementation
 {$R *.dfm}
 
 uses
-  IniFiles, ULibFun, UFormWait, UFrameBase, USysModule, UROModule, UMITConst;
+  IniFiles, ULibFun, UFormWait, UFormInputbox, UFrameBase, USysModule,
+  UROModule, UMITConst;
 
 //------------------------------------------------------------------------------
 //Date: 2007-10-15
@@ -199,9 +201,22 @@ begin
   if Assigned(FTrayIcon) then FTrayIcon.Restore;
 end;
 
+procedure TfFormMain.wPageChanging(Sender: TObject; var AllowChange: Boolean);
+begin
+
+end;
+
 //Desc: 动态载入面板
 procedure TfFormMain.wPageChange(Sender: TObject);
+var nStr: string;
 begin
+  if (wPage.ActivePage = SheetParam) and (not
+     ShowInputBox('请输入管理员密码:', '设置', nStr) or (nStr <> 'admin')) then
+  begin
+    wPage.ActivePage := SheetSummary;
+    Exit;
+  end; //setup need pwd
+
   if wPage.ActivePage = SheetRunLog then
     CreateBaseFrameItem(cFI_FrameRunlog, SheetRunLog);
   if wPage.ActivePage = SheetParam then

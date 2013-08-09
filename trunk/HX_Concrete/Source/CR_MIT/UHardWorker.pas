@@ -403,7 +403,7 @@ begin
 
   nList := TStringList.Create;
   try
-    nStr := 'Select zt.T_TruckLog,tl.T_Status From %s zt ' +
+    nStr := 'Select zt.T_TruckLog,tl.T_Status,T_Valid From %s zt ' +
             ' Left Join %s tl On tl.T_ID = zt.T_TruckLog ' +
             'Where zt.T_Card=''%s''';
     nStr := Format(nStr, [sTable_ZCTrucks, sTable_TruckLog, FIn.FData]);
@@ -411,8 +411,8 @@ begin
     with gDBConnManager.WorkerQuery(FDBConn, nStr) do
     if RecordCount > 0 then
     begin
-      if Fields[1].AsString = sFlag_TruckIn then
-        Exit;
+      if (Fields[1].AsString = sFlag_TruckIn) and
+         (Fields[2].AsString = sFlag_Yes) then Exit;
       //新进站状态,允许多次刷卡
 
       nStr := 'Delete From %s Where T_TruckLog=''%s''';
@@ -420,7 +420,7 @@ begin
       nList.Add(nStr);
 
       nStr := 'Delete From %s Where T_ID=''%s''';
-      nStr := Format(nStr, [sTable_ZCTrucks, Fields[0].AsString]);
+      nStr := Format(nStr, [sTable_TruckLog, Fields[0].AsString]);
       nList.Add(nStr);
     end;
 

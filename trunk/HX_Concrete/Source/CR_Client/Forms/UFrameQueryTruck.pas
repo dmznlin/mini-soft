@@ -89,7 +89,8 @@ function TfFrameTruckQuery.InitFormDataSQL(const nWhere: string): string;
 begin
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := 'Select tl.* From $TL tl ';
+  Result := 'Select tl.*,Product,RealCustomer From $TL tl ' +
+            ' Left join $TK tk On tk.JOID=tl.T_TaskID ';
   //xxxxx
 
   if FFilteDate then
@@ -104,6 +105,7 @@ begin
   //xxxxx
 
   Result := MacroValue(Result, [MI('$TL', sTable_TruckLog),
+            MI('$TK', 'JO'),
             MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
   //xxxxx
 end;
