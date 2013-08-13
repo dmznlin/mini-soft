@@ -322,7 +322,7 @@ begin
     nStr := FListA.Values['Line'];
     if (nStr <> '') and (nPTruck.FLine <> nStr) then
     begin
-      nData := Format('车辆[ %s ]需在[ %s ]仓装车.', [nTruck, nPTruck.FLine]);
+      nData := Format('车辆[ %s ]需在[ %s ]装料.', [nTruck, nPTruck.FLineName]);
       Exit;
     end;
 
@@ -330,8 +330,9 @@ begin
             '<call_truck_responese><call_truck_responese_row>' +
             '<result>y</result><hint>ok</hint>' +
             '<truck>%s</truck>' +
+            '<lineId>%s</lineId>' +
             '</call_truck_responese_row></call_truck_responese>';
-    nStr := Format(nStr, [nTruck]);
+    nStr := Format(nStr, [nTruck, nPTruck.FLine]);
     nStr := Char(cCall_Prefix_1) + Char(cCall_Prefix_2) +
             Char(cCMD_CallTruck) + EncodeBase64(nStr);
     //combine data
