@@ -66,8 +66,8 @@ XML描述:
 DB业务: 事务处理
  1.Select TruckLog: 获取TruckLog行车记录truckid.
  2.Delete From ZCTrucks where T_Truck='truckno';
- 3.Update TruckLog Set T_Status='O',T_NextStauts='',T_OutTime=getDate(),
-   T_OutMan='user' where T_ID=truckid
+ 3.Update TruckLog Set T_Status='O',T_NextStauts='',T_QueueOut=getDate(),
+   T_QOutMan='user' where T_ID=truckid
 
 //------------------------------------------------------------------------------
 发起: RMX -> Con_MIT

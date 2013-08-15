@@ -330,9 +330,12 @@ begin
             '<call_truck_responese><call_truck_responese_row>' +
             '<result>y</result><hint>ok</hint>' +
             '<truck>%s</truck>' +
+            '<joid>%s</joid>' +
             '<lineId>%s</lineId>' +
+            '<seq>%s</seq>' +
             '</call_truck_responese_row></call_truck_responese>';
-    nStr := Format(nStr, [nTruck, nPTruck.FLine]);
+    nStr := Format(nStr, [nTruck, nPTruck.FTaskID,
+            nPTruck.FLine, nPTruck.FTruckSeq]);
     nStr := Char(cCall_Prefix_1) + Char(cCall_Prefix_2) +
             Char(cCMD_CallTruck) + EncodeBase64(nStr);
     //combine data
@@ -462,10 +465,9 @@ begin
   if not CardVerify(FIn.FData, nData) then Exit;
   nTruck := nData;
 
-  nStr := 'Select zt.T_TruckLog,tl.T_NextStatus From %s zt ' +
-          ' Left Join %s tl On tl.T_ID = zt.T_TruckLog ' +
-          'Where zt.T_Card=''%s''';
-  nStr := Format(nStr, [sTable_ZCTrucks, sTable_TruckLog, FIn.FData]);
+  nStr := 'Select Top 1 T_ID,T_NextStatus From %s ' +
+          'Where T_Truck=''%s'' Order By R_ID DESC';
+  nStr := Format(nStr, [sTable_TruckLog, nTruck]);
 
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
   begin
@@ -476,7 +478,7 @@ begin
     end;
 
     nStr := Fields[1].AsString;
-    if nStr <> sFlag_TruckOut then
+    if (nStr <> '') and (nStr <> sFlag_TruckOut) then
     begin
       nStr := TruckStatusToStr(nStr);
       nData := Format('车辆[ %s ]下一状态为[ %s ],不能出站.', [nTruck, nStr]);

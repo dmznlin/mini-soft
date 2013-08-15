@@ -89,7 +89,8 @@ function TfFrameTruckQuery.InitFormDataSQL(const nWhere: string): string;
 begin
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := 'Select tl.*,Product,RealCustomer From $TL tl ' +
+  Result := 'Select tl.*,DateDiff(Minute,T_QueueOut,T_OutTime) as T_DateDiff,' +
+            'Product,RealCustomer From $TL tl ' +
             ' Left join $TK tk On tk.JOID=tl.T_TaskID ';
   //xxxxx
 
