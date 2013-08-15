@@ -41,6 +41,7 @@ type
   TTruckItem = record
     FEnable     : Boolean;
     FTruck      : string;      //车牌号
+    FTruckSeq   : string;      //序号
     FConNo      : string;      //物料号
     FConName    : string;      //品种名
     FLine       : string;      //装车线

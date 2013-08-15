@@ -287,7 +287,8 @@ begin
         nTruck.FCallNum := nTruck.FCallNum + 1;
         if nTruck.FCallNum > cTruckMaxCalledNum then
         begin
-          nStr := nNode.NodeByName('operator').ValueAsString;
+          //nStr := nNode.NodeByName('operator').ValueAsString;
+          nStr := 'System';
           TruckOutQueue(nTruck.FTruck, nStr);
 
           gTruckQueueManager.TruckOutQueue(nTruck, False);
@@ -315,6 +316,7 @@ begin
         nStr := nNode.NodeByName('linename').ValueAsString;
         nTruck.FLineName := SysUtils.StringReplace(nStr, '#', 'ºÅ', [rfReplaceAll]);
 
+        nTruck.FTruckSeq := nNode.NodeByName('seq').ValueAsString;
         nTruck.FTaskID := nNode.NodeByName('joid').ValueAsString; 
         nTruck.FCallIP := nNode.NodeByName('ip').ValueAsString;
         nTruck.FCallPort := nNode.NodeByName('port').ValueAsInteger;
