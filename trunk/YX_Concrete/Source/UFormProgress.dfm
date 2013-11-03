@@ -1,0 +1,19 @@
+object fFormProgress: TfFormProgress
+  Left = 710
+  Top = 553
+  BorderStyle = bsNone
+  Caption = 'fFormProgress'
+  ClientHeight = 50
+  ClientWidth = 250
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -15
+  Font.Name = #23435#20307
+  Font.Style = []
+  FormStyle = fsStayOnTop
+  OldCreateOrder = False
+  Position = poScreenCenter
+  PixelsPerInch = 120
+  TextHeight = 15
+end
