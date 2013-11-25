@@ -73,7 +73,7 @@ inherited fFormJSItem: TfFormJSItem
     object EditNum: TcxTextEdit [6]
       Left = 266
       Top = 111
-      Hint = 'E.L_DaiShu'
+      Hint = 'T.L_DaiShu'
       HelpType = htKeyword
       HelpKeyword = 'I'
       ParentFont = False

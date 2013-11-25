@@ -2,11 +2,13 @@ program YX_Guard;
 
 uses
   FastMM4,
+  Windows,
   Forms,
   UFormMain in 'UFormMain.pas' {fFormMain},
   USysConst in 'USysConst.pas',
   UFormProgress in 'UFormProgress.pas' {fFormProgress},
-  UFormPeiBi in 'UFormPeiBi.pas' {fFormPeiBi};
+  UFormPeiBi in 'UFormPeiBi.pas' {fFormPeiBi},
+  UFormRwd in 'UFormRwd.pas' {fFormRwd};
 
 {$R *.res}
 

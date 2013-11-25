@@ -30,7 +30,8 @@ procedure BackupData(const nID,nTable: string);
 procedure CombinePeibiData;
 procedure CombineProductData;
 //合并数据
-procedure RenameTable(const nID: string; const nTables: array of TMacroItem);
+procedure RenameTable(const nID: string; const nTables: array of TMacroItem;
+ const nRaiseE: Boolean = False);
 //表重命名
 
 resourcestring
@@ -56,6 +57,9 @@ resourcestring
 
   sTable_Product      = 'product';                   //生产表
   sTable_Peibi        = 'peibi';                     //配比表
+  sTable_Rwd          = 'RwdMeg';                    //任务单表
+  sTable_RwdPB        = 'PBMeg';                     //任务单配比
+  sTable_RwdPBName    = 'JC_PBChangeMeg';            //配比字段名
 
 implementation
 
@@ -241,10 +245,26 @@ begin
         nTables[1].FMacro := sTable_Peibi + '_b';
         nTables[1].FValue := sTable_Peibi;
         RenameTable(sSCCtrl, nTables);
+
+        //----------------------------------------------------------------------
+        if nList.IndexOf(sTable_RwdPB + '_t') < 0 then
+        begin
+          //SetLength(nTables, 2);
+          //xxxxx
+          
+          nTables[0].FMacro := sTable_RwdPB;
+          nTables[0].FValue := sTable_RwdPB + '_t';
+          nTables[1].FMacro := sTable_RwdPB + '_b';
+          nTables[1].FValue := sTable_RwdPB;
+          RenameTable(sSCCtrl, nTables);
+        end;
       end;
 
       gDBConnManager.ReleaseConnection(nWorker);
       nWorker := nil;
+      
+      WriteLog('SCCtrl耗时: ' + IntToStr(GetTickCount - nInit));
+      nInit := GetTickCount;
 
       ShowProgressForm('备份生产数据');
       nWorker := gDBConnManager.GetConnection(sSCData, nInt);
@@ -286,12 +306,14 @@ begin
         nTables[1].FValue := sTable_Product;
         RenameTable(sSCData, nTables);
       end; 
-
+      {
       nInit := GetTickCount - nInit;
       if nInit < 500 then
         Sleep(500 - nInit);
       //xxxxx
+      }
 
+      WriteLog('SCData耗时: ' + IntToStr(GetTickCount - nInit));      
       gLastBackup := GetTickCount;
       ShowMsg('备份成功', sHint);
     finally
@@ -341,23 +363,40 @@ begin
           nWorker.FConn.Connected := True;
         nWorker.FConn.GetTableNames(nList);
 
+        nInt := 0;
+        SetLength(nTables, nInt);
+
         if nList.IndexOf(sTable_Peibi + '_t') >= 0 then
         begin
-          SetLength(nTables, 2);
-          nTables[0].FMacro := sTable_Peibi;
-          nTables[0].FValue := sTable_Peibi + '_b';
-          nTables[1].FMacro := sTable_Peibi + '_t';
-          nTables[1].FValue := sTable_Peibi;
+          Inc(nInt, 2);
+          SetLength(nTables, nInt);
 
-          RenameTable(sSCCtrl, nTables);
+          nTables[nInt-2].FMacro := sTable_Peibi;
+          nTables[nInt-2].FValue := sTable_Peibi + '_b';
+          nTables[nInt-1].FMacro := sTable_Peibi + '_t';
+          nTables[nInt-1].FValue := sTable_Peibi;
         end;
 
+        if nList.IndexOf(sTable_RwdPB + '_t') >= 0 then
+        begin
+          Inc(nInt, 2);
+          SetLength(nTables, nInt);
+
+          nTables[nInt-2].FMacro := sTable_RwdPB;
+          nTables[nInt-2].FValue := sTable_RwdPB + '_b';
+          nTables[nInt-1].FMacro := sTable_RwdPB + '_t';
+          nTables[nInt-1].FValue := sTable_RwdPB;
+        end;
+
+        if Length(nTables) > 0 then
+          RenameTable(sSCCtrl, nTables, True);
         nIni.WriteInteger('System', 'SCCtrl', 0);
       end;
 
       gDBConnManager.ReleaseConnection(nWorker);
       nWorker := nil;
-
+      WriteLog('SCCtrl耗时: ' + IntToStr(GetTickCount - nInit));
+                     
       ShowProgressForm('恢复生产数据');
       nWorker := gDBConnManager.GetConnection(sSCData, nInt);
 
@@ -375,17 +414,17 @@ begin
           nTables[1].FMacro := sTable_Product + '_t';
           nTables[1].FValue := sTable_Product;
 
-          RenameTable(sSCData, nTables);
+          RenameTable(sSCData, nTables, True);
         end;
 
         nIni.WriteInteger('System', 'SCData', 0);
       end; 
-
+      {
       nInit := GetTickCount - nInit;
       if nInit < 500 then
         Sleep(500 - nInit);
       //xxxxx
-
+      }
       gLastRestore := GetTickCount;
       ShowMsg('恢复成功', sHint);
     finally
@@ -459,6 +498,10 @@ begin
     AddBackupField(sSCCtrl, sTable_Peibi, nFullBackup);
     BackupData(sSCCtrl, sTable_Peibi);
 
+    ShowProgressForm('备份任务单');
+    AddBackupField(sSCCtrl, sTable_RwdPB, nFullBackup);
+    BackupData(sSCCtrl, sTable_RwdPB);
+
     nInit := GetTickCount - nInit;
     if nInit < 500 then
       Sleep(500 - nInit);
@@ -482,106 +525,114 @@ var nStr: string;
     nDS: TDataset;
     nWorker: PDBWorker;
 begin
-  nWorker := nil;
-  nList := nil;
   try
-    nStr := Format('Select * From %s Where 1<>1', [nTable]);
-    nDS := gDBConnManager.SQLQuery(nStr, nWorker, nID);
+    nWorker := nil;
+    nList := nil;
+    try
+      nStr := Format('Select * From %s Where 1<>1', [nTable]);
+      nDS := gDBConnManager.SQLQuery(nStr, nWorker, nID);
 
-    for nIdx:=nDS.FieldCount - 1 downto 0 do
-      if CompareStr('B_Backup', nDS.Fields[nIdx].FieldName) = 0 then Break;
-    //xxxxx
+      for nIdx:=nDS.FieldCount - 1 downto 0 do
+        if CompareStr('B_Backup', nDS.Fields[nIdx].FieldName) = 0 then Break;
+      //xxxxx
 
-    if nIdx < 0 then
-    begin
-      if nTable = sTable_Product then
+      if nIdx < 0 then
       begin
-        nStr := 'Alter Table %s Add Column B_Backup Char(1) Default "N",' +
-                'B_Modify Char(1) Default "N",B_ID Counter';
-        nStr := Format(nStr, [nTable]);
-        gDBConnManager.WorkerExec(nWorker, nStr);
+        if nTable = sTable_Product then
+        begin
+          nStr := 'Alter Table %s Add Column B_Backup Char(1) Default "N",' +
+                  'B_Modify Char(1) Default "N",B_ID Counter';
+          nStr := Format(nStr, [nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
 
-        nStr := 'Create Index idx_b_%s On %s (B_Backup ASC,B_ID ASC)';
+          nStr := 'Create Index idx_b_%s On %s (B_Backup ASC,B_ID ASC)';
+          nStr := Format(nStr, [nTable, nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+        end else
+        begin
+          nStr := 'Alter Table %s Add Column B_Backup Char(1) Default "N",' +
+                  'B_Modify Char(1) Default "N"';
+          nStr := Format(nStr, [nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+
+          nStr := 'Create Index idx_b_%s On %s (B_Backup ASC)';
+          nStr := Format(nStr, [nTable, nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+        end;
+
+        nReset := True;
+        //初次需重置
+      end; //备份标记和索引
+
+      nList := TStringList.Create;
+      nWorker.FConn.GetTableNames(nList);
+
+      if (nList.IndexOf(nTable + '_b') < 0) and
+         (nList.IndexOf(nTable + '_t') < 0) then
+      begin
+        nStr := 'Select * Into %s_b From %s Where 1<>1';
         nStr := Format(nStr, [nTable, nTable]);
         gDBConnManager.WorkerExec(nWorker, nStr);
-      end else
-      begin
-        nStr := 'Alter Table %s Add Column B_Backup Char(1) Default "N",' +
-                'B_Modify Char(1) Default "N"';
-        nStr := Format(nStr, [nTable]);
-        gDBConnManager.WorkerExec(nWorker, nStr);
 
-        nStr := 'Create Index idx_b_%s On %s (B_Backup ASC)';
+        nStr := 'Create Index idx_b_%s On %s_b (B_Backup ASC, B_Modify ASC)';
         nStr := Format(nStr, [nTable, nTable]);
         gDBConnManager.WorkerExec(nWorker, nStr);
+      end; //备份表和索引
+
+      if nTable = sTable_Peibi then
+      begin
+        if nList.IndexOf(nTable + '_g') < 0 then
+        begin
+          nStr := 'Select * Into %s_g From %s Where 1<>1';
+          nStr := Format(nStr, [nTable, nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+
+          nStr := 'Alter Table %s_g Add Column B_Date DateTime,B_Valid Char(1)';
+          nStr := Format(nStr, [nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+
+          nStr := 'Create Index idx_b_%s On %s_g (配比编号 ASC,B_Date ASC,B_Valid ASC)';
+          nStr := Format(nStr, [nTable, nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+        end; //国标
+
+        if nList.IndexOf(nTable + '_w') < 0 then
+        begin
+          nStr := 'Select * Into %s_w From %s Where 1<>1';
+          nStr := Format(nStr, [nTable, nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+
+          nStr := 'Alter Table %s_w Add Column B_Date DateTime,B_Valid Char(1)';
+          nStr := Format(nStr, [nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+
+          nStr := 'Create Index idx_b_%s On %s_w (配比编号 ASC,B_Date ASC,B_Valid ASC)';
+          nStr := Format(nStr, [nTable, nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+        end; //误差
       end;
 
-      nReset := True;
-      //初次需重置
-    end; //备份标记和索引
-
-    nList := TStringList.Create;
-    nWorker.FConn.GetTableNames(nList);
-
-    if (nList.IndexOf(nTable + '_b') < 0) and
-       (nList.IndexOf(nTable + '_t') < 0) then
-    begin
-      nStr := 'Select * Into %s_b From %s Where 1<>1';
-      nStr := Format(nStr, [nTable, nTable]);
-      gDBConnManager.WorkerExec(nWorker, nStr);
-
-      nStr := 'Create Index idx_b_%s On %s_b (B_Backup ASC, B_Modify ASC)';
-      nStr := Format(nStr, [nTable, nTable]);
-      gDBConnManager.WorkerExec(nWorker, nStr);
-    end; //备份表和索引
-
-    if nTable = sTable_Peibi then
-    begin
-      if nList.IndexOf(nTable + '_g') < 0 then
+      if nReset then
       begin
-        nStr := 'Select * Into %s_g From %s Where 1<>1';
-        nStr := Format(nStr, [nTable, nTable]);
-        gDBConnManager.WorkerExec(nWorker, nStr);
-
-        nStr := 'Alter Table %s_g Add Column B_Date DateTime,B_Valid Char(1)';
+        nStr := 'Update %s Set B_Backup=''N'',B_Modify=''N'' ' +
+                'Where B_Backup=''Y'' or B_Backup is null';
         nStr := Format(nStr, [nTable]);
         gDBConnManager.WorkerExec(nWorker, nStr);
 
-        nStr := 'Create Index idx_b_%s On %s_g (配比编号 ASC,B_Date ASC,B_Valid ASC)';
-        nStr := Format(nStr, [nTable, nTable]);
-        gDBConnManager.WorkerExec(nWorker, nStr);
-      end; //国标
-
-      if nList.IndexOf(nTable + '_w') < 0 then
-      begin
-        nStr := 'Select * Into %s_w From %s Where 1<>1';
-        nStr := Format(nStr, [nTable, nTable]);
-        gDBConnManager.WorkerExec(nWorker, nStr);
-
-        nStr := 'Alter Table %s_w Add Column B_Date DateTime,B_Valid Char(1)';
+        nStr := 'Delete From %s_b';
         nStr := Format(nStr, [nTable]);
         gDBConnManager.WorkerExec(nWorker, nStr);
-
-        nStr := 'Create Index idx_b_%s On %s_w (配比编号 ASC,B_Date ASC,B_Valid ASC)';
-        nStr := Format(nStr, [nTable, nTable]);
-        gDBConnManager.WorkerExec(nWorker, nStr);
-      end; //误差
+      end; //重新备份
+    finally
+      nList.Free;
+      gDBConnManager.ReleaseConnection(nWorker);
     end;
-
-    if nReset then
+  except
+    on E:Exception do
     begin
-      nStr := 'Update %s Set B_Backup=''N'',B_Modify=''N'' ' +
-              'Where B_Backup=''Y'' or B_Backup is null';
-      nStr := Format(nStr, [nTable]);
-      gDBConnManager.WorkerExec(nWorker, nStr);
-
-      nStr := 'Delete From %s_b';
-      nStr := Format(nStr, [nTable]);
-      gDBConnManager.WorkerExec(nWorker, nStr);
-    end; //重新备份
-  finally
-    nList.Free;
-    gDBConnManager.ReleaseConnection(nWorker);
+      CloseProgressForm;
+      WriteLog(E.Message);
+    end;
   end;
 end;
 
@@ -595,79 +646,112 @@ var nStr: string;
     nErr: Integer;
     nWorker: PDBWorker;
 begin
-  nWorker := nil;
-  nList := nil;
   try
-    nWorker := gDBConnManager.GetConnection(nID, nErr);
-    if not Assigned(nWorker) then
-    begin
-      ShowMsg('连接数据库失败', sHint);
-      Exit;
-    end;
+    nWorker := nil;
+    nList := nil;
+    try
+      nWorker := gDBConnManager.GetConnection(nID, nErr);
+      if not Assigned(nWorker) then
+      begin
+        ShowMsg('连接数据库失败', sHint);
+        Exit;
+      end;
 
-    nList := TStringList.Create;
-    if not nWorker.FConn.Connected then
-      nWorker.FConn.Connected := True;
-    nWorker.FConn.GetTableNames(nList);
+      nList := TStringList.Create;
+      if not nWorker.FConn.Connected then
+        nWorker.FConn.Connected := True;
+      nWorker.FConn.GetTableNames(nList);
 
-    if nList.IndexOf(nTable + '_t') >= 0 then
-      Exit;
-    //已切换,无法备份
+      if nList.IndexOf(nTable + '_t') >= 0 then
+        Exit;
+      //已切换,无法备份
 
-    if nTable = sTable_Product then
-    begin
-      nStr := 'Insert Into %s_b Select * From %s Where B_Backup=''N'' and(' +
-              '生产时间 not in (Select 生产时间 From %s_b Where B_Backup=''N''))';
-      nStr := Format(nStr, [nTable, nTable, nTable]);
+      if nTable = sTable_Product then
+      begin
+        nStr := 'Insert Into %s_b Select * From %s Where B_Backup=''N'' and(' +
+                '生产时间 not in (Select 生产时间 From %s_b Where B_Backup=''N''))';
+        nStr := Format(nStr, [nTable, nTable, nTable]);
 
-      nInit := GetTickCount;
-      gDBConnManager.WorkerExec(nWorker, nStr);
-      WriteLog(Format('备份%s: %d', [nTable, GetTickCount - nInit]));
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('备份%s: %d', [nTable, GetTickCount - nInit]));
 
-      nStr := 'Update %s Set B_Backup=''Y'' Where B_Backup=''N'' and (' +
-              '生产时间 in (Select 生产时间 From %s_b Where B_Backup=''N''))';
-      nStr := Format(nStr, [nTable, nTable]);
+        nStr := 'Update %s Set B_Backup=''Y'' Where B_Backup=''N'' and (' +
+                '生产时间 in (Select 生产时间 From %s_b Where B_Backup=''N''))';
+        nStr := Format(nStr, [nTable, nTable]);
 
-      nInit := GetTickCount;
-      gDBConnManager.WorkerExec(nWorker, nStr);
-      WriteLog(Format('更新标记%s: %d', [nTable, GetTickCount - nInit]));
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('更新标记%s: %d', [nTable, GetTickCount - nInit]));
 
-      nStr := 'Update %s_b Set B_Backup=''Y'' Where B_Backup=''N''';
-      nStr := Format(nStr, [nTable]);
+        nStr := 'Update %s_b Set B_Backup=''Y'' Where B_Backup=''N''';
+        nStr := Format(nStr, [nTable]);
 
-      nInit := GetTickCount;
-      gDBConnManager.WorkerExec(nWorker, nStr);
-      WriteLog(Format('更新标记%s_b: %d', [nTable, GetTickCount - nInit]));
-    end else
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('更新标记%s_b: %d', [nTable, GetTickCount - nInit]));
+      end else
 
-    if nTable = sTable_Peibi then
-    begin
-      nStr := 'Insert Into %s_b Select * From %s Where B_Backup=''N'' and(' +
-              '配比号 not in (Select 配比号 From %s_b Where B_Backup=''N''))';
-      nStr := Format(nStr, [nTable, nTable, nTable]);
+      if nTable = sTable_Peibi then
+      begin
+        nStr := 'Insert Into %s_b Select * From %s Where B_Backup=''N'' and(' +
+                '配比号 not in (Select 配比号 From %s_b Where B_Backup=''N''))';
+        nStr := Format(nStr, [nTable, nTable, nTable]);
 
-      nInit := GetTickCount;
-      gDBConnManager.WorkerExec(nWorker, nStr);
-      WriteLog(Format('备份%s: %d', [nTable, GetTickCount - nInit]));
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('备份%s: %d', [nTable, GetTickCount - nInit]));
 
-      nStr := 'Update %s Set B_Backup=''Y'' Where B_Backup=''N'' and (' +
-              '配比号 in (Select 配比号 From %s_b Where B_Backup=''N''))';
-      nStr := Format(nStr, [nTable, nTable]);
+        nStr := 'Update %s Set B_Backup=''Y'' Where B_Backup=''N'' and (' +
+                '配比号 in (Select 配比号 From %s_b Where B_Backup=''N''))';
+        nStr := Format(nStr, [nTable, nTable]);
 
-      nInit := GetTickCount;
-      gDBConnManager.WorkerExec(nWorker, nStr);
-      WriteLog(Format('更新标记%s: %d', [nTable, GetTickCount - nInit]));
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('更新标记%s: %d', [nTable, GetTickCount - nInit]));
 
-      nStr := 'Update %s_b Set B_Backup=''Y'' Where B_Backup=''N''';
-      nStr := Format(nStr, [nTable]);
+        nStr := 'Update %s_b Set B_Backup=''Y'' Where B_Backup=''N''';
+        nStr := Format(nStr, [nTable]);
       
-      nInit := GetTickCount;
-      gDBConnManager.WorkerExec(nWorker, nStr);
-      WriteLog(Format('更新标记%s_b: %d', [nTable, GetTickCount - nInit]));
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('更新标记%s_b: %d', [nTable, GetTickCount - nInit]));
+      end else
+
+      if nTable = sTable_RwdPB then
+      begin
+        nStr := 'Insert Into %s_b Select * From %s Where B_Backup=''N'' and(' +
+                'pb_bh not in (Select pb_bh From %s_b Where B_Backup=''N''))';
+        nStr := Format(nStr, [nTable, nTable, nTable]);
+
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('备份%s: %d', [nTable, GetTickCount - nInit]));
+
+        nStr := 'Update %s Set B_Backup=''Y'' Where B_Backup=''N'' and (' +
+                'pb_bh in (Select pb_bh From %s_b Where B_Backup=''N''))';
+        nStr := Format(nStr, [nTable, nTable]);
+
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('更新标记%s: %d', [nTable, GetTickCount - nInit]));
+
+        nStr := 'Update %s_b Set B_Backup=''Y'' Where B_Backup=''N''';
+        nStr := Format(nStr, [nTable]);
+      
+        nInit := GetTickCount;
+        gDBConnManager.WorkerExec(nWorker, nStr);
+        WriteLog(Format('更新标记%s_b: %d', [nTable, GetTickCount - nInit]));
+      end;
+    finally
+      nList.Free;
+      gDBConnManager.ReleaseConnection(nWorker);
     end;
-  finally
-    nList.Free;
-    gDBConnManager.ReleaseConnection(nWorker);
+  except
+    on e:Exception do
+    begin
+      WriteLog('BackupData: ' + e.Message);
+    end;
   end;
 end;
 
@@ -678,29 +762,36 @@ var nStr: string;
     nWorker: PDBWorker;
     nMI: TDynamicMacroArray;
 begin
-  nWorker := nil;
   try
-    nStr := 'Select * From %s where 1<>1';
-    nStr := Format(nStr, [sTable_Peibi]);
+    nWorker := nil;
+    try
+      nStr := 'Select * From %s where 1<>1';
+      nStr := Format(nStr, [sTable_Peibi]);
 
-    nLen := 0;
-    with gDBConnManager.SQLQuery(nStr, nWorker, sSCCtrl) do
-     for nIdx:=0 to FieldCount - 1 do
-     begin
-       if Fields[nIdx].DataType = ftAutoInc then Continue;
-       SetLength(nMI, nLen + 1);
+      nLen := 0;
+      with gDBConnManager.SQLQuery(nStr, nWorker, sSCCtrl) do
+       for nIdx:=0 to FieldCount - 1 do
+       begin
+         if Fields[nIdx].DataType = ftAutoInc then Continue;
+         SetLength(nMI, nLen + 1);
 
-       nMI[nLen].FMacro := 'a.' + Fields[nIdx].FieldName;
-       nMI[nLen].FValue := 'b.' + Fields[nIdx].FieldName;
-       Inc(nLen);
-     end;
+         nMI[nLen].FMacro := 'a.' + Fields[nIdx].FieldName;
+         nMI[nLen].FValue := 'b.' + Fields[nIdx].FieldName;
+         Inc(nLen);
+       end;
 
-    nStr := 'b.B_Valid=''Y'' and a.配比编号=b.配比编号';
-    nStr := MakeSQLByMI(nMI, Format('%s_b a,%s_g b', [sTable_Peibi,
-            sTable_Peibi]), nStr, False);
-    gDBConnManager.WorkerExec(nWorker, nStr);
-  finally
-    gDBConnManager.ReleaseConnection(nWorker);
+      nStr := 'b.B_Valid=''Y'' and a.配比编号=b.配比编号';
+      nStr := MakeSQLByMI(nMI, Format('%s_b a,%s_g b', [sTable_Peibi,
+              sTable_Peibi]), nStr, False);
+      gDBConnManager.WorkerExec(nWorker, nStr);
+    finally
+      gDBConnManager.ReleaseConnection(nWorker);
+    end;
+  except
+    on e:Exception do
+    begin
+      WriteLog('CombinePeibiData: ' + e.Message);
+    end;
   end;
 end;
 
@@ -712,134 +803,143 @@ var nStr: string;
     nItem: PPBItem;
     nData: PPBData;
 begin
-  if Assigned(gPBItems) then
-       ClearPBList(gPBItems, False)
-  else gPBItems := TList.Create;
-  
-  nWorker := nil;
   try
-    nStr := 'Select 配比号,配比编号 From %s';
-    nStr := Format(nStr, [sTable_Peibi]);
+    if Assigned(gPBItems) then
+         ClearPBList(gPBItems, False)
+    else gPBItems := TList.Create;
+  
+    nWorker := nil;
+    try
+      nStr := 'Select 配比号,配比编号 From %s';
+      nStr := Format(nStr, [sTable_Peibi]);
        
-    with gDBConnManager.SQLQuery(nStr, nWorker, sSCCtrl) do
-    if RecordCount > 0 then
-    begin
-      First;
-
-      while not Eof do
+      with gDBConnManager.SQLQuery(nStr, nWorker, sSCCtrl) do
+      if RecordCount > 0 then
       begin
-        New(nItem);
-        gPBItems.Add(nItem);
+        First;
 
-        nItem.FRecord := Fields[0].AsString;
-        nItem.FPeiBi := Fields[1].AsString;
-        nItem.FData := nil;
-
-        Next;
-      end;
-    end;
-
-    //--------------------------------------------------------------------------
-    nStr := 'Select * From %s_g Where B_Valid=''Y''';
-    nStr := Format(nStr, [sTable_Peibi]);
-
-    with gDBConnManager.WorkerQuery(nWorker, nStr) do
-    if RecordCount > 0 then
-    begin
-      First;
-
-      while not Eof do
-      begin
-        nStr := FieldByName('配比编号').AsString;
-        nItem := GetPBItem(gPBItems, nStr, False);
-
-        if not Assigned(nItem) then
+        while not Eof do
         begin
+          New(nItem);
+          gPBItems.Add(nItem);
+
+          nItem.FRecord := Fields[0].AsString;
+          nItem.FPeiBi := Fields[1].AsString;
+          nItem.FData := nil;
+
           Next;
-          Continue;
         end;
-
-        if not Assigned(nItem.FData) then
-          nItem.FData := TList.Create;
-        //xxxxx
-
-        for nIdx:=FieldCount - 1 downto 0 do
-        begin
-          nStr := Fields[nIdx].AsString;
-          if (nStr = '') or (not IsNumber(nStr, True)) then Continue;
-
-          New(nData);
-          nItem.FData.Add(nData);
-
-          nData.FItem := Fields[nIdx].FieldName;
-          nData.FGuobiao := StrToFloat(nStr);
-          nData.FPercent := 0;
-        end;
-
-        Next;
       end;
-    end;
 
-    //--------------------------------------------------------------------------
-    nStr := 'Select * From %s_w Where B_Valid=''Y''';
-    nStr := Format(nStr, [sTable_Peibi]);
+      //--------------------------------------------------------------------------
+      nStr := 'Select * From %s_g Where B_Valid=''Y''';
+      nStr := Format(nStr, [sTable_Peibi]);
 
-    with gDBConnManager.WorkerQuery(nWorker, nStr) do
-    if RecordCount > 0 then
-    begin
-      First;
-
-      while not Eof do
+      with gDBConnManager.WorkerQuery(nWorker, nStr) do
+      if RecordCount > 0 then
       begin
-        nStr := FieldByName('配比编号').AsString;
-        nItem := GetPBItem(gPBItems, nStr, False);
+        First;
 
-        if not (Assigned(nItem) and Assigned(nItem.FData)) then
+        while not Eof do
         begin
-          Next;
-          Continue;
-        end;
+          nStr := FieldByName('配比编号').AsString;
+          nItem := GetPBItem(gPBItems, nStr, False);
 
-        for nIdx:=FieldCount - 1 downto 0 do
-        begin
-          nStr := Fields[nIdx].AsString;
-          if (nStr = '') or (not IsNumber(nStr, True)) then Continue;
-
-          nData := GetPBData(nItem.FData, Fields[nIdx].FieldName);
-          if not Assigned(nData) then Continue;
-
-          nPos := Pos('.', nStr);
-          if nPos > 1 then
+          if not Assigned(nItem) then
           begin
-            System.Delete(nStr, 1, nPos);
-            nStr := '1' + StringOfChar('0', Length(nStr));
-            nData.FPercent := StrToInt(nStr);
+            Next;
+            Continue;
+          end;
 
-            if nData.FPercent > 10000 then
-              nData.FPercent := 10000;
-            //避免过大越界
-          end else nData.FPercent := 1;
+          if not Assigned(nItem.FData) then
+            nItem.FData := TList.Create;
+          //xxxxx
 
-          nData.FWuCha := Trunc(Fields[nIdx].AsFloat * nData.FPercent);
-          //按比例放大误差值
+          for nIdx:=FieldCount - 1 downto 0 do
+          begin
+            nStr := Fields[nIdx].AsString;
+            if (nStr = '') or (not IsNumber(nStr, True)) then Continue;
+
+            New(nData);
+            nItem.FData.Add(nData);
+
+            nData.FItem := Fields[nIdx].FieldName;
+            nData.FGuobiao := StrToFloat(nStr);
+            nData.FPercent := 0;
+          end;
+
+          Next;
         end;
-
-        Next;
       end;
-    end;
 
-    //--------------------------------------------------------------------------
-    for nIdx:=gPBItems.Count - 1 downto 0 do
-    begin
-      nItem := gPBItems[nIdx];
-      if not Assigned(nItem.FData) then
+      //--------------------------------------------------------------------------
+      nStr := 'Select * From %s_w Where B_Valid=''Y''';
+      nStr := Format(nStr, [sTable_Peibi]);
+
+      with gDBConnManager.WorkerQuery(nWorker, nStr) do
+      if RecordCount > 0 then
       begin
-        DisposePBItem(nItem);
-        gPBItems.Delete(nIdx);
+        First;
+
+        while not Eof do
+        begin
+          nStr := FieldByName('配比编号').AsString;
+          nItem := GetPBItem(gPBItems, nStr, False);
+
+          if not (Assigned(nItem) and Assigned(nItem.FData)) then
+          begin
+            Next;
+            Continue;
+          end;
+
+          for nIdx:=FieldCount - 1 downto 0 do
+          begin
+            nStr := Fields[nIdx].AsString;
+            if (nStr = '') or (not IsNumber(nStr, True)) then Continue;
+
+            nData := GetPBData(nItem.FData, Fields[nIdx].FieldName);
+            if not Assigned(nData) then Continue;
+
+            nPos := Pos('.', nStr);
+            if nPos > 1 then
+            begin
+              System.Delete(nStr, 1, nPos);
+              nData.FPercent := Length(nStr);
+
+              if nData.FPercent > 4 then
+                nData.FPercent := 4;
+              //避免过大越界,最大10 * 4
+
+              nStr := '1' + StringOfChar('0', nData.FPercent);
+              nData.FPercent := StrToInt(nStr);
+            end else nData.FPercent := 1;
+
+            nData.FWuCha := Trunc(Fields[nIdx].AsFloat * nData.FPercent);
+            //按比例放大误差值
+          end;
+
+          Next;
+        end;
       end;
+
+      //--------------------------------------------------------------------------
+      for nIdx:=gPBItems.Count - 1 downto 0 do
+      begin
+        nItem := gPBItems[nIdx];
+        if not Assigned(nItem.FData) then
+        begin
+          DisposePBItem(nItem);
+          gPBItems.Delete(nIdx);
+        end;
+      end;
+    finally
+      gDBConnManager.ReleaseConnection(nWorker);
     end;
-  finally
-    gDBConnManager.ReleaseConnection(nWorker);
+  except
+    on e:Exception do
+    begin
+      WriteLog('LoadPBList: ' + e.Message);
+    end;
   end;
 end;
 
@@ -946,12 +1046,15 @@ begin
           
           if nInt = 1 then
           begin
+            nField := FindField('盘方量');
+            if not (Assigned(nField) and IsNumber(nField.AsString, True)) then Continue;
+
             if nData.FWuCha >= 0 then
                  nVal := nData.FGuobiao + Random(nData.FWuCha)/nData.FPercent
             else nVal := nData.FGuobiao - Random(-nData.FWuCha)/nData.FPercent;
 
-            nStr := FloatToStr(nVal);
-          end else //设定值使用国标
+            nStr := Format('%.2f', [nVal * nField.AsFloat]);
+          end else //设定值使用国标   nFi
           begin
             nStr := nStr + '设定';
             nField := FindField(nStr);
@@ -986,23 +1089,38 @@ begin
 end;
 
 //Date: 2013-10-28
-//Parm: 连接标识;旧名,新名列表
+//Parm: 连接标识;旧名,新名列表;抛出异常
 //Desc: 将nID.nOld更名为nID.nNew
-procedure RenameTable(const nID: string;
- const nTables: array of TMacroItem);
-var nInit: Int64;
+procedure RenameTable(const nID: string; const nTables: array of TMacroItem;
+ const nRaiseE: Boolean);
+var nErr: string;
+    nInit: Int64;
     nIdx: Integer;
     nAccess: OleVariant;
 begin
   nAccess := Unassigned;
   try
+    nErr := '';
     nInit := GetTickCount;
+
     nAccess := CreateOleObject('ADOX.Catalog');
     nAccess.ActiveConnection := gDBConnManager.GetConnectionStr(nID);
 
     for nIdx:=Low(nTables) to High(nTables) do
+    try
       nAccess.Tables[nTables[nIdx].FMacro].Name := nTables[nIdx].FValue;
+    except
+      on E:Exception do
+      begin
+        nErr := e.Message;
+        WriteLog('RenameTable: ' + nErr);
+      end;
+    end;
+
     WriteLog(Format('Rename %s: %d', [nID, GetTickCount - nInit]));
+    if nRaiseE and (nErr <> '') then
+      raise Exception.Create(nErr);
+    //xxxxx
   finally
     nAccess := Unassigned;
   end;
