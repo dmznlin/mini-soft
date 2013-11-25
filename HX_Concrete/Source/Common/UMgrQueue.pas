@@ -404,7 +404,7 @@ begin
         FOwner.FSyncLock.Leave;
       end;
     finally
-      gDBConnManager.ReleaseConnection(FOwner.FDBName, FDBConn);
+      gDBConnManager.ReleaseConnection(FDBConn);
     end;
   except
     on E: Exception do

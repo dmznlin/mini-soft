@@ -147,7 +147,7 @@ begin
       end;
     end;
   finally
-    gDBConnManager.ReleaseConnection(FDB.FID, nDBConn);
+    gDBConnManager.ReleaseConnection(nDBConn);
   end;
 end;
 

@@ -200,16 +200,19 @@ ResourceString
    *.C_Date: 建档时间
   -----------------------------------------------------------------------------}
 
-  sSQL_NewJSLog = 'Create Table $Table(L_ID $Inc, L_Customer varChar(100),' +
-       'L_TruckNo varChar(15), L_Stock varChar(15), L_SerialID varChar(32),' +
+  sSQL_NewJSLog = 'Create Table $Table(L_ID $Inc, L_CusID varChar(15), ' +
+       'L_Customer varChar(100), L_StockID varChar(15), L_Stock varChar(100),' +
+       'L_TruckNo varChar(15),  L_SerialID varChar(32),' +
        'L_Weight $Float, L_DaiShu Integer, L_BC Integer, L_PValue $Float,' +
        'L_ZTLine varChar(32), L_Date DateTime, L_Man varChar(32),' +
        'L_HasDone Char(1), L_OKTime DateTime, L_Memo varChar(50))';
   {-----------------------------------------------------------------------------
    计数日志: JSLog
    *.L_ID: 编号
+   *.L_CusID: 客户编号
    *.L_Customer: 客户
    *.L_TruckNo: 车牌号
+   *.L_StockID: 品种编号
    *.L_Stock: 水泥品种
    *.L_SerialID: 批次号
    *.L_Weight: 提货数量

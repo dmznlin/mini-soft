@@ -136,7 +136,7 @@ begin
       {$ENDIF}
     end else DoAfterDBWork(nData, False);
   finally
-    gDBConnManager.ReleaseConnection(FDB.FID, FDBConn);
+    gDBConnManager.ReleaseConnection(FDBConn);
   end;
 end;
 
@@ -477,7 +477,7 @@ begin
       Exit;
     end;
 
-    nStr := Fields[1].AsString;
+    nStr := Trim(Fields[1].AsString);
     if (nStr <> '') and (nStr <> sFlag_TruckOut) then
     begin
       nStr := TruckStatusToStr(nStr);

@@ -130,9 +130,8 @@ var nStr: string;
     nList: TStrings;
 begin
   ListPD.Clear;
-  nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_HasDone=''%s'' ' +
-          'Order By L_ID ASC';
-  nStr := Format(nStr, [sTable_JSLog, sTable_StockType, sFlag_No]);
+  nStr := 'Select * From %s Where L_HasDone=''%s'' Order By L_ID ASC';
+  nStr := Format(nStr, [sTable_JSLog, sFlag_No]);
 
   with FDM.QueryTemp(nStr) do
   if RecordCount > 0 then
@@ -142,11 +141,12 @@ begin
     while not Eof do
     begin
       nStr := CombinStr([FieldByName('L_TruckNo').AsString,
-              FieldByName('S_Name').AsString,
+              FieldByName('L_Stock').AsString,
               FieldByName('L_Weight').AsString,
               FieldByName('L_SerialID').AsString + ' ',
               FieldByName('L_Customer').AsString + ' ',
-              FieldByName('L_ID').AsString], ListPD.Delimiter);
+              FieldByName('L_ID').AsString,
+              IntToStr(FieldByName('L_DaiShu').AsInteger)], ListPD.Delimiter);
       ListPD.Items.Add(nStr);
 
       Next;
@@ -158,16 +158,15 @@ begin
 
   if gSysDBType = dtSQLServer then
   begin
-    nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_HasDone=''%s'' ' +
-            'And L_OKTime>=''%s'' Order By L_TruckNo ASC,L_ID DESC';
+    nStr := 'Select * From %s Where L_HasDone=''%s'' And L_OKTime>=''%s'' ' +
+            'Order By L_TruckNo ASC,L_ID DESC';
   end else
   begin
-    nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_HasDone=''%s'' ' +
-            'And L_OKTime>=CDate(''%s'') Order By L_TruckNo ASC,L_ID DESC';
+    nStr := 'Select * From %s Where L_HasDone=''%s'' And L_OKTime>=CDate(''%s'') ' +
+            'Order By L_TruckNo ASC,L_ID DESC';
   end;
 
-  nStr := Format(nStr, [sTable_JSLog, sTable_StockType, sFlag_Yes,
-          DateTime2Str(Now - 1)]);
+  nStr := Format(nStr, [sTable_JSLog, sFlag_Yes, DateTime2Str(Now - 1)]);
   //一天以内
 
   with FDM.QueryTemp(nStr) do
@@ -183,7 +182,7 @@ begin
       begin
         nList.Add(nStr);
         nStr := CombinStr([FieldByName('L_TruckNo').AsString,
-                FieldByName('S_Name').AsString,
+                FieldByName('L_Stock').AsString,
                 FieldByName('L_Weight').AsString,
                 FieldByName('L_SerialID').AsString + ' ',
                 FieldByName('L_Customer').AsString + ' ',
@@ -237,7 +236,7 @@ begin
 
     if FActiveList = ListPD then
     begin
-      Result := SplitStr(nStr, nList, 6, FActiveList.Delimiter);
+      Result := SplitStr(nStr, nList, 7, FActiveList.Delimiter);
       if not Result then Exit;
 
       with FData do
@@ -247,6 +246,7 @@ begin
         FStockName := nList[1];
         FStockNo := nList[3];
         FCustomer := nList[4];
+        FHaveDai := StrToInt(nList[6]);
 
         FIsBC := False;
         FTHValue := StrToFloat(nList[2]);
@@ -265,6 +265,7 @@ begin
         FStockName := nList[1];
         FStockNo := nList[3];
         FCustomer := nList[4];
+        FHaveDai := 1;
 
         FIsBC := True;
         FTHValue := StrToFloat(nList[2]);

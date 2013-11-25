@@ -269,7 +269,7 @@ begin
   if IsNumber(EditNum.Text, False) then
   begin
     nValue := StrToInt(EditNum.Text) * FPerWeight / 1000;
-    EditWeight.Text := FloatToStr(nValue);
+    //EditWeight.Text := FloatToStr(nValue);
   end else
   begin
     EditNum.Text := '0';
@@ -341,11 +341,8 @@ var nStr: string;
 begin
   nExt := TStringList.Create;
   try
-    //nStr := Format('%.2f', [StrToInt(EditBC.Text) / StrToInt(EditNum.Text) * 100]);
-    //nExt.Add('L_PValue=' + nStr);
-    
     nExt.Add('L_PValue=0');
-    nExt.Add('L_DaiShu=0');
+    //nExt.Add('L_DaiShu=0');
 
     if FRecordID = '' then
     begin

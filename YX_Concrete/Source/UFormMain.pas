@@ -8,7 +8,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  ExtCtrls, dxGDIPlusClasses, Menus, ImgList;
+  ExtCtrls, dxGDIPlusClasses, Menus, jpeg, ImgList;
 
 type
   TfFormMain = class(TForm)
@@ -61,7 +61,7 @@ implementation
 
 {$R *.dfm}
 uses
-  Inifiles, ULibFun, USysLoger, UFormPeiBi, USysConst;
+  Inifiles, ULibFun, USysLoger, UFormPeiBi, UFormRwd, USysConst;
 
 procedure TfFormMain.FormCreate(Sender: TObject);
 begin
@@ -84,7 +84,7 @@ begin
   try
     LoadFormConfig(Self, nIni);
     ClientWidth := ClientHeight;
-    ShowWindow(Application.Handle,SW_HIDE);
+    //ShowWindow(Application.Handle,SW_HIDE);
 
     if IsSystemNormal(nIni) then
          LoadImage(0)
@@ -106,7 +106,7 @@ begin
   with Params do
   begin
     Style := WS_POPUP or WS_CLIPSIBLINGS or WS_DLGFRAME;
-    ExStyle := WS_EX_TOOLWINDOW or WS_EX_TOPMOST;
+    ExStyle := WS_EX_TOOLWINDOW or WS_EX_TOPMOST and (not WS_EX_APPWINDOW);
   end;
 end;
 
@@ -155,6 +155,10 @@ begin
   if GetKeyState( VK_CONTROL ) and $8000 <> 0 then
     ShowPeiBiForm;
   //xxxxx
+
+  if GetKeyState( VK_SHIFT ) and $8000 <> 0 then
+    ShowRwdPBForm;
+  //xxxxx
 end;
 
 //------------------------------------------------------------------------------
@@ -189,7 +193,9 @@ end;
 procedure TfFormMain.LoadImage(const nIdx: Integer);
 var nStr: string;
 begin
-  nStr := gPath + Format('%d.png', [nIdx]);
+  ShowWindow(Application.Handle,SW_HIDE);
+  nStr := gPath + Format('%d.jpg', [nIdx]);
+  
   if FileExists(nStr) then
     Image1.Picture.LoadFromFile(nStr);
   //xxxxx

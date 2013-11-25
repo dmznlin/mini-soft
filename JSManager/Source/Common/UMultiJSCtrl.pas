@@ -428,9 +428,12 @@ begin
     FStockName.Text := FData.FStockName;
     FStockNo.Text := FData.FStockNo;
 
-    nVal := FData.FTHValue * 1000;
-    FData.FHaveDai := Trunc(nVal / FPerWeight);
-
+    if FData.FHaveDai < 1 then
+    begin
+      nVal := FData.FTHValue * 1000;
+      FData.FHaveDai := Trunc(nVal / FPerWeight);
+    end;
+    
     FData.FHasDone := 0;
     JSProgress(0, True);
     UpdateJSStatus(sStatus_Idle);
@@ -541,8 +544,8 @@ begin
 
     if nEdit = FStockDS then
     begin
-      nVal := (StrToInt(nEdit.Text) * FPerWeight) / 1000;
-      FStockValue.Text := Format('%.2f', [nVal]);
+      //nVal := (StrToInt(nEdit.Text) * FPerWeight) / 1000;
+      //FStockValue.Text := Format('%.2f', [nVal]);
     end;
 
     FData.FTHValue := StrToFloat(FStockValue.Text);

@@ -37,6 +37,7 @@ begin
     gForm := TfFormProgress.Create(nil);
   //xxxxx
 
+  Application.BringToFront;
   gForm.Show;
   gForm.Activate;
   ShowWaitForm(gForm, nHint);
