@@ -8,9 +8,9 @@ unit UROModule;
 interface
 
 uses
-  SysUtils, Classes, SyncObjs, IdContext, uROClassFactories, uROServerIntf,
-  uROIndyTCPServer, uROClient, uROServer, uROIndyHTTPServer,
-  uROSOAPMessage, uROBinMessage;
+  SysUtils, Classes, SyncObjs, IdContext, uROServerIntf, uROClassFactories,
+  uROIndyTCPServer, uROClient, uROServer, uROIndyHTTPServer, uROSOAPMessage,
+  uROBinMessage;
 
 type
   TROServerType = (stTcp, stHttp);
@@ -58,9 +58,6 @@ type
     //注册类厂
     procedure UnregClassFactories;
     //反注册
-    procedure BeforeStartServer;
-    procedure AfterStopServer;
-    //准备,善后
     procedure WriteLog(const nLog: string);
     //记录日志
   public
@@ -68,6 +65,7 @@ type
     function ActiveServer(const nServer: TROServerTypes; const nActive: Boolean;
      var nMsg: string): Boolean;
     //服务操作
+    function IsServiceRun: Boolean;
     function LockModuleStatus: PROModuleStatus;
     procedure ReleaseStatusLock;
     //获取状态
@@ -81,13 +79,14 @@ implementation
 {$R *.dfm}
 
 uses
-  UMgrParam, USysLoger, SrvBusiness_Impl, SrvConnection_Impl, MIT_Service_Invk;
+  UMgrParam, UMgrPlug, USysLoger, SrvBusiness_Impl, SrvConnection_Impl,
+  MIT_Service_Invk;
 
-//------------------------------------------------------------------------------
 procedure TROModule.DataModuleCreate(Sender: TObject);
 begin
   FSrvConnection := nil;
   FSrvBusiness := nil;
+  
   FillChar(FStatus, SizeOf(FStatus), #0);
   FSyncLock := TCriticalSection.Create;
 end;
@@ -95,7 +94,7 @@ end;
 procedure TROModule.DataModuleDestroy(Sender: TObject);
 begin
   UnregClassFactories;
-  FSyncLock.Free;
+  FreeAndNil(FSyncLock);
 end;
 
 procedure TROModule.WriteLog(const nLog: string);
@@ -175,6 +174,16 @@ begin
   end;
 end;
 
+//Desc: 服务是否运行
+function TROModule.IsServiceRun: Boolean;
+begin
+  with LockModuleStatus^ do
+  begin
+    Result := FSrvTCP or FSrvHttp;
+    ReleaseStatusLock;
+  end;
+end;
+
 //------------------------------------------------------------------------------
 procedure Create_SrvBusiness(out anInstance : IUnknown);
 begin
@@ -192,15 +201,14 @@ begin
   UnregClassFactories;
   //unreg first
 
-  if Assigned(gParamManager.ActiveParam) then
   with gParamManager.ActiveParam.FPerform^ do
   begin
     FSrvConnection := TROPooledClassFactory.Create('SrvConnection',
                 Create_SrvConnection, TSrvConnection_Invoker,
-                FPoolSizeConn, FPoolBehaviorConn);
+                FPoolSizeConn, TRoPoolBehavior(FPoolBehaviorConn));
     FSrvBusiness := TROPooledClassFactory.Create('SrvBusiness',
                 Create_SrvBusiness, TSrvBusiness_Invoker,
-                FPoolSizeBusiness, FPoolBehaviorBusiness);
+                FPoolSizeBusiness, TRoPoolBehavior(FPoolBehaviorBusiness));
   end;
 end;
 
@@ -220,16 +228,6 @@ begin
   end;
 end;
 
-//Desc: 启动前准备工作
-procedure TROModule.BeforeStartServer;
-begin
-  if (FSrvConnection = nil) or (FSrvBusiness = nil) then
-    RegClassFactories;
-  //xxxxx
-
-
-end;
-
 //Date: 2010-8-7
 //Parm: 服务类型;动作;提示信息
 //Desc: 对nServer执行nActive动作
@@ -238,15 +236,27 @@ function TROModule.ActiveServer(const nServer: TROServerTypes;
 begin
   try
     if nActive and ((not ROTcp1.Active) and (not ROHttp1.Active)) then
-      BeforeStartServer;
-    //启动前准备
+    begin
+      with gParamManager do
+       if not (Assigned(ActiveParam) and Assigned(ActiveParam.FPerform)) then
+        raise Exception.Create('无效的Active参数包.');
+      //no active parameters
+      
+      if (FSrvConnection = nil) or (FSrvBusiness = nil) then
+        RegClassFactories;
+      gPlugManager.BeforeStartServer;
+    end; //启动前准备
+
+    if not nActive then
+      gPlugManager.BeforeStopServer;
+    //关闭前准备
 
     if stTcp in nServer then
     begin
       if nActive then
       begin
         ROTcp1.Active := False;
-        //ROTcp1.Port := gParamManager.ActiveParam.FPerform.FPortTCP;
+        ROTcp1.Port := gParamManager.ActiveParam.FPerform.FPortTCP;
       end;
 
       ROTcp1.Active := nActive;
@@ -257,17 +267,21 @@ begin
       if nActive then
       begin
         ROHttp1.Active := False;
-        //ROHttp1.Port := gParamManager.ActiveParam.FPerform.FPortHttp;
+        ROHttp1.Port := gParamManager.ActiveParam.FPerform.FPortHttp;
       end;
       
       ROHttp1.Active := nActive;
     end;
 
-    if (not ROTcp1.Active) and (not ROHttp1.Active) then
+    if ROTcp1.Active or ROHttp1.Active then
+    begin
+      gPlugManager.AfterServerStarted;
+      //通知插件已启动
+    end else
     begin
       UnregClassFactories;
       //卸载类厂
-      AfterStopServer;
+      gPlugManager.AfterStopServer;
       //关闭善后
     end;
 
@@ -281,12 +295,6 @@ begin
       WriteLog(nMsg);
     end;
   end;
-end;
-
-//Desc: 服务关闭后善后工作
-procedure TROModule.AfterStopServer;
-begin
-
 end;
 
 end.

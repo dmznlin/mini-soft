@@ -8,7 +8,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, UFrameBase, ExtCtrls, StdCtrls;
+  UFrameBase, ExtCtrls, StdCtrls;
 
 type
   TfFrameRunLog = class(TfFrameBase)
@@ -27,6 +27,7 @@ type
   public
     { Public declarations }
     class function FrameID: integer; override;
+    procedure OnDestroyFrame; override;
   end;
 
 implementation
@@ -38,6 +39,13 @@ uses
 class function TfFrameRunLog.FrameID: integer;
 begin
   Result := cFI_FrameRunlog;
+end;
+
+procedure TfFrameRunLog.OnDestroyFrame;
+begin
+  gSysLoger.LogSync := False;
+  gSysLoger.LogEvent := nil;
+  inherited;
 end;
 
 procedure TfFrameRunLog.BtnCopyClick(Sender: TObject);

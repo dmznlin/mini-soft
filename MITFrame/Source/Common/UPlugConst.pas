@@ -7,9 +7,10 @@ unit UPlugConst;
 interface
 
 const
-  cFI_FrameRunlog     = $0002;                       //运行日志
-  cFI_FrameSummary    = $0005;                       //信息摘要
-  cFI_FrameParam      = $0006;                       //参数配置
+  {*Form ID*}
+  cFI_Base            = $0100;                       //标识参考
+  cFI_FormTest1       = cFI_Base + $001;
+  cFI_FormTest2       = cFI_Base + $002;
 
 ResourceString
   sHint               = '提示';                      //对话框标题

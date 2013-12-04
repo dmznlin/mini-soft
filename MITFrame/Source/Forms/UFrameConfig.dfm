@@ -1,16 +1,15 @@
-inherited fFrameParam: TfFrameParam
-  Width = 620
-  Height = 406
-  Font.Height = -15
-  object ListParam: TZnValueList
+inherited fFrameConfig: TfFrameConfig
+  Width = 535
+  Height = 423
+  object ListConfig: TZnValueList
     Left = 0
     Top = 0
-    Width = 620
-    Height = 406
+    Width = 535
+    Height = 423
     Align = alClient
     BorderStyle = bsNone
     DefaultDrawing = False
-    DefaultRowHeight = 22
+    DefaultRowHeight = 30
     Font.Charset = GB2312_CHARSET
     Font.Color = clWindowText
     Font.Height = -15
@@ -18,8 +17,11 @@ inherited fFrameParam: TfFrameParam
     Font.Style = []
     Options = [goColSizing, goThumbTracking]
     ParentFont = False
-    PopupMenu = PopupMenu1
     TabOrder = 0
+    TitleCaptions.Strings = (
+      ' '
+      ' ')
+    OnDblClick = ListConfigDblClick
     AutoFocus = True
     ColorGroup = 10475007
     ColorSelected = clSkyBlue
@@ -28,13 +30,6 @@ inherited fFrameParam: TfFrameParam
     SpaceValue = 5
     ColWidths = (
       150
-      468)
-  end
-  object PopupMenu1: TPopupMenu
-    Left = 174
-    Top = 150
-    object refresh1: TMenuItem
-      Caption = 'refresh'
-    end
+      383)
   end
 end

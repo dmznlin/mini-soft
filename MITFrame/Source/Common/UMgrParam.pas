@@ -8,7 +8,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, NativeXml, UBase64, UMgrDBConn, USAPConnection,
-  uROClassFactories, USysLoger;
+  USysLoger;
 
 type
   PPerformParam = ^TPerformParam;
@@ -20,8 +20,8 @@ type
     FPoolSizeSAP      : Integer;
     FPoolSizeConn     : Integer;
     FPoolSizeBusiness : Integer;             //连接池
-    FPoolBehaviorConn : TROPoolBehavior;
-    FPoolBehaviorBusiness : TROPoolBehavior; //缓冲模式
+    FPoolBehaviorConn : Integer;
+    FPoolBehaviorBusiness : Integer;         //缓冲模式
     FMaxRecordCount   : Integer;             //最大记录数
     FMonInterval      : Integer;             //守护间隔
     FEnable           : Boolean;             //是否启用
@@ -171,7 +171,7 @@ end;
 //Desc: 从文件读写参数
 procedure TParamManager.ParamAction(const nIsRead: Boolean);
 var nStr: string;
-    nIdx,nInt: Integer;
+    nIdx: Integer;
     nXML: TNativeXml;
     nNode,nTmp: TXmlNode;
 
@@ -273,10 +273,8 @@ begin
             FPoolSizeConn     := NodeByName('PoolSizeConn').ValueAsInteger;
             FPoolSizeBusiness := NodeByName('PoolSizeBusiness').ValueAsInteger;
 
-            nInt              := NodeByName('PoolBehaviorConn').ValueAsInteger;
-            FPoolBehaviorConn := TROPoolBehavior(nInt);
-            nInt              := NodeByName('PoolBehaviorBus').ValueAsInteger;
-            FPoolBehaviorBusiness := TROPoolBehavior(nInt);
+            FPoolBehaviorConn := NodeByName('PoolBehaviorConn').ValueAsInteger;
+            FPoolBehaviorBusiness:= NodeByName('PoolBehaviorBus').ValueAsInteger;
             FMaxRecordCount   := NodeByName('MaxRecordCount').ValueAsInteger;
             FMonInterval      := NodeByName('MonInterval').ValueAsInteger;
             FEnable   := True;
@@ -519,8 +517,8 @@ begin
     FPoolSizeConn := 10;
     FPoolSizeBusiness := 20;
 
-    FPoolBehaviorConn := pbWait;
-    FPoolBehaviorBusiness := pbCreateAdditional;
+    FPoolBehaviorConn := 1; //pbWait
+    FPoolBehaviorBusiness := 2; //pbCreateAdditional
 
     FMaxRecordCount := 1000;
     FMonInterval := 2000;

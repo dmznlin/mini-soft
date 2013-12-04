@@ -1,6 +1,6 @@
 object fFormMain: TfFormMain
-  Left = 442
-  Top = 224
+  Left = 330
+  Top = 123
   Width = 892
   Height = 606
   Caption = #19994#21153#20013#38388#20214
@@ -19,16 +19,40 @@ object fFormMain: TfFormMain
     Left = 0
     Top = 60
     Width = 225
-    Height = 493
+    Height = 491
     Align = alLeft
     Color = 14408641
     ActiveGroupIndex = 0
     TabOrder = 0
-    View = 10
+    View = 8
     OptionsBehavior.Common.DragDropFlags = []
-    OptionsImage.LargeImages = FDM.ImagesBig
-    OptionsImage.SmallImages = FDM.ImagesSmall
-    object NavGroup1: TdxNavBarGroup
+    OptionsImage.LargeImages = FDM.ImageMid
+    OptionsImage.SmallImages = FDM.ImageSmall
+    OptionsStyle.DefaultStyles.Background.BackColor = clGray
+    OptionsStyle.DefaultStyles.Background.BackColor2 = clGray
+    OptionsStyle.DefaultStyles.Background.Font.Charset = DEFAULT_CHARSET
+    OptionsStyle.DefaultStyles.Background.Font.Color = clWindowText
+    OptionsStyle.DefaultStyles.Background.Font.Height = -13
+    OptionsStyle.DefaultStyles.Background.Font.Name = 'MS Sans Serif'
+    OptionsStyle.DefaultStyles.Background.Font.Style = []
+    OptionsStyle.DefaultStyles.Background.HAlignment = haLeft
+    OptionsStyle.DefaultStyles.GroupBackground.BackColor = clWhite
+    OptionsStyle.DefaultStyles.GroupBackground.BackColor2 = clWhite
+    OptionsStyle.DefaultStyles.GroupBackground.Font.Charset = DEFAULT_CHARSET
+    OptionsStyle.DefaultStyles.GroupBackground.Font.Color = clWindowText
+    OptionsStyle.DefaultStyles.GroupBackground.Font.Height = -13
+    OptionsStyle.DefaultStyles.GroupBackground.Font.Name = 'MS Sans Serif'
+    OptionsStyle.DefaultStyles.GroupBackground.Font.Style = []
+    OptionsStyle.DefaultStyles.GroupBackground.HAlignment = haLeft
+    OptionsStyle.DefaultStyles.GroupHeader.BackColor = clWhite
+    OptionsStyle.DefaultStyles.GroupHeader.BackColor2 = clSilver
+    OptionsStyle.DefaultStyles.GroupHeader.Font.Charset = DEFAULT_CHARSET
+    OptionsStyle.DefaultStyles.GroupHeader.Font.Color = clBtnText
+    OptionsStyle.DefaultStyles.GroupHeader.Font.Height = -13
+    OptionsStyle.DefaultStyles.GroupHeader.Font.Name = 'MS Sans Serif'
+    OptionsStyle.DefaultStyles.GroupHeader.Font.Style = [fsBold]
+    OptionsStyle.DefaultStyles.GroupHeader.HAlignment = haLeft
+    object BarGroup1: TdxNavBarGroup
       Caption = #31995#32479
       LargeImageIndex = 7
       SelectedLinkIndex = -1
@@ -36,22 +60,31 @@ object fFormMain: TfFormMain
       UseSmallImages = False
       Links = <
         item
-          Item = NavItem1
+          Item = SysService
         end
         item
-          Item = NavItem2
+          Item = SysSummary
+        end
+        item
+          Item = SysRunlog
         end>
     end
-    object NavGroup2: TdxNavBarGroup
+    object BarGroup2: TdxNavBarGroup
       Caption = #21442#25968
       LargeImageIndex = 14
       SelectedLinkIndex = -1
       SmallImageIndex = 10
       TopVisibleLinkIndex = 0
       UseSmallImages = False
-      Links = <>
+      Links = <
+        item
+          Item = SysConfig
+        end
+        item
+          Item = SysRunParam
+        end>
     end
-    object NavGroup3: TdxNavBarGroup
+    object BarGroup3: TdxNavBarGroup
       Caption = #21151#33021
       LargeImageIndex = 15
       SelectedLinkIndex = -1
@@ -59,25 +92,104 @@ object fFormMain: TfFormMain
       UseSmallImages = False
       Links = <>
     end
-    object NavItem1: TdxNavBarItem
+    object BarGroup4: TdxNavBarGroup
+      Caption = #20851#20110
+      SelectedLinkIndex = -1
+      TopVisibleLinkIndex = 0
+      UseSmallImages = False
+      OptionsGroupControl.ShowControl = True
+      OptionsGroupControl.UseControl = True
+      Links = <>
+    end
+    object SysService: TdxNavBarItem
+      Caption = #21551#21160#26381#21153
+      OnClick = SysServiceClick
+    end
+    object SysSummary: TdxNavBarItem
       Caption = #25688#35201#20449#24687
       SmallImageIndex = 0
+      OnClick = SysSummaryClick
     end
-    object NavItem2: TdxNavBarItem
+    object SysRunlog: TdxNavBarItem
       Caption = #36816#34892#26085#24535
       SmallImageIndex = 3
+      OnClick = SysSummaryClick
+    end
+    object SysConfig: TdxNavBarItem
+      Caption = #22522#26412#35774#32622
+      SmallImageIndex = 6
+      OnClick = SysSummaryClick
+    end
+    object SysRunParam: TdxNavBarItem
+      Caption = #36816#34892#21442#25968
+      SmallImageIndex = 1
+      OnClick = SysSummaryClick
+    end
+    object BarGroup4Control: TdxNavBarGroupControl
+      Left = 16
+      Top = 368
+      Width = 193
+      Height = 60
+      TabOrder = 1
+      UseStyle = True
+      GroupIndex = 3
+      OriginalHeight = 60
+      object LabelCopy: TcxLabel
+        Left = 0
+        Top = 0
+        Align = alTop
+        Caption = #29256#26435#25152#26377
+        Properties.Alignment.Horz = taLeftJustify
+        Properties.Alignment.Vert = taVCenter
+        Properties.Depth = 1
+        Properties.LabelEffect = cxleCool
+        Properties.LabelStyle = cxlsLowered
+        Properties.ShadowedColor = clTeal
+        Properties.WordWrap = True
+        Transparent = True
+        Width = 193
+        AnchorY = 11
+      end
+      object LabelAdmin: TcxLabel
+        Left = 0
+        Top = 21
+        Cursor = crHandPoint
+        Align = alClient
+        Caption = #31649#29702#21592#30331#24405
+        ParentColor = False
+        ParentFont = False
+        Style.Color = clMoneyGreen
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clRed
+        Style.Font.Height = -15
+        Style.Font.Name = #23435#20307
+        Style.Font.Style = []
+        Style.HotTrack = False
+        Style.TextColor = clRed
+        Style.TransparentBorder = False
+        Style.IsFontAssigned = True
+        Properties.Alignment.Horz = taRightJustify
+        Properties.Alignment.Vert = taVCenter
+        Properties.Depth = 1
+        Properties.LabelEffect = cxleFun
+        Properties.LabelStyle = cxlsLowered
+        Properties.ShadowedColor = clMoneyGreen
+        OnClick = LabelAdminClick
+        AnchorX = 193
+        AnchorY = 41
+      end
     end
   end
   object PanelTitle: TPanel
     Left = 0
     Top = 0
-    Width = 882
+    Width = 880
     Height = 60
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
     DesignSize = (
-      882
+      880
       60)
     object ImgLeft: TImage
       Left = 0
@@ -674,7 +786,7 @@ object fFormMain: TfFormMain
     object ImgClient: TImage
       Left = 289
       Top = 0
-      Width = 593
+      Width = 591
       Height = 60
       Align = alClient
       Picture.Data = {
@@ -812,8 +924,8 @@ object fFormMain: TfFormMain
   end
   object SBar: TStatusBar
     Left = 0
-    Top = 553
-    Width = 882
+    Top = 551
+    Width = 880
     Height = 19
     Panels = <
       item
@@ -829,28 +941,31 @@ object fFormMain: TfFormMain
   object PanelWork: TPanel
     Left = 225
     Top = 60
-    Width = 657
-    Height = 493
+    Width = 655
+    Height = 491
     Align = alClient
     BevelOuter = bvNone
+    DockSite = True
     TabOrder = 3
-    object Button1: TButton
-      Left = 186
-      Top = 228
-      Width = 75
-      Height = 25
-      Caption = 'Button1'
-      TabOrder = 0
-    end
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
     Left = 16
-    Top = 315
+    Top = 485
   end
   object Timer2: TTimer
     OnTimer = Timer2Timer
     Left = 44
-    Top = 315
+    Top = 485
+  end
+  object Timer3: TTimer
+    OnTimer = Timer3Timer
+    Left = 72
+    Top = 485
+  end
+  object Timer4: TTimer
+    OnTimer = Timer4Timer
+    Left = 100
+    Top = 485
   end
 end

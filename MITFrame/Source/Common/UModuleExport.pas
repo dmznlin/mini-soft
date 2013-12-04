@@ -7,7 +7,8 @@ unit UModuleExport;
 interface
 
 uses
-  Windows, UMgrPlug, UBusinessPacker, UBusinessWorker, USysLoger, UPlugWorker;
+  Windows, UMgrPlug, UMgrControl, UBusinessPacker, UBusinessWorker, UPlugWorker,
+  UPlugModule, USysLoger;
 
 procedure BackupEnvironment(const nNewEnv: PPlugEnvironment); stdcall;
 procedure LoadModuleWorker(var nWorker: TPlugEventWorkerClass); stdcall;
@@ -32,6 +33,7 @@ begin
     TPlugManager.EnvAction(nNewEnv, False);
     gIsBackup := True;
 
+    gPlugEnv.FCtrlManager.MoveTo(gControlManager);
     gPlugEnv.FPackerManager.MoveTo(gBusinessPackerManager);
     gPlugEnv.FWorkerManager.MoveTo(gBusinessWorkerManager);
     //移交数据
@@ -43,10 +45,6 @@ procedure RestoreEnvironment;
 begin
   if gIsBackup then
   begin
-    while gSysLoger.HasItem do
-      Sleep(1);
-    //等待日志写入
-
     TPlugManager.EnvAction(@gPlugEnv, False);
     //restore all param
   end;
