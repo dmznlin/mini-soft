@@ -8,13 +8,30 @@ unit UMITConst;
 interface
 
 uses
-  Windows, SysUtils, Classes, ComCtrls, Forms, IniFiles, Registry,
-  ZnExeData, USysMAC;
+  Windows, SysUtils, Classes, ComCtrls, Forms, IniFiles, USysMAC;
 
 const
-  cSBar_Date            = 0;                         //日期面板索引
-  cSBar_Time            = 1;                         //时间面板索引
-  cSBar_User            = 2;                         //用户面板索引
+  cSBar_Date          = 0;                           //日期面板索引
+  cSBar_Time          = 1;                           //时间面板索引
+  cSBar_User          = 2;                           //用户面板索引
+
+const
+  {*Frame ID*}
+  cFI_FrameRunlog     = $0002;                       //运行日志
+  cFI_FrameSummary    = $0005;                       //信息摘要
+  cFI_FrameConfig     = $0006;                       //基本设置
+  cFI_FrameParam      = $0007;                       //参数配置
+
+  {*Command*}
+  cCmd_AdminChanged   = $0001;                       //管理切换
+  cCmd_RefreshData    = $0002;                       //刷新数据
+  cCmd_ViewSysLog     = $0003;                       //系统日志
+
+  cCmd_ModalResult    = $1001;                       //Modal窗体
+  cCmd_FormClose      = $1002;                       //关闭窗口
+  cCmd_AddData        = $1003;                       //添加数据
+  cCmd_EditData       = $1005;                       //修改数据
+  cCmd_ViewData       = $1006;                       //查看数据
 
 type
   TSysParam = record
@@ -22,6 +39,14 @@ type
     FAppTitle   : string;                            //程序标题栏提示
     FMainTitle  : string;                            //主窗体标题
     FHintText   : string;                            //提示文本
+    FCopyRight  : string;                            //版权声明
+
+    FParam      : string;                            //启动参数
+    FIconFile   : string;                            //图标文件
+
+    FAdminPwd   : string;                            //管理员密码
+    FIsAdmin    : Boolean;                           //管理员状态
+    FAdminKeep  : Integer;                           //状态保持
 
     FLocalIP    : string;                            //本机IP
     FLocalMAC   : string;                            //本机MAC
@@ -36,7 +61,6 @@ var
   gPath: string;                                     //程序所在路径
   gSysParam:TSysParam;                               //程序环境参数
   gStatusBar: TStatusBar;                            //全局使用状态栏
-  gShareData: TZnPostData;                           //跨进程数据共享
 
 procedure InitSystemEnvironment;
 //初始化系统运行环境的变量
@@ -62,8 +86,10 @@ ResourceString
   sDate               = '日期:【%s】';               //任务栏日期
   sTime               = '时间:【%s】';               //任务栏时间
   sUser               = '用户:【%s】';               //任务栏用户
-                                                               
+
   sConfigFile         = 'Config.Ini';                //主配置文件
+  sConfigSec          = 'Config';                    //主配置小节
+  
   sFormConfig         = 'FormInfo.ini';              //窗体配置
   sLogDir             = 'Logs\';                     //日志目录
   sLogSyncLock        = 'SyncLock_MIT_CommonMIT';    //日志同步锁
@@ -92,18 +118,23 @@ begin
     with nIni,gSysParam do
     begin
       if nIsRead then
-      begin 
-        FProgID     := ParamStr(1);
-        FAppTitle   := sAppTitle;
-        FMainTitle  := sMainCaption;
-        FHintText   := sHintText;
+      begin
+        FProgID    := ReadString(sConfigSec, 'ProgID', sProgID);
+        //程序标识决定以下所有参数          
+        FAppTitle  := ReadString(FProgID, 'AppTitle', sAppTitle);
+        FMainTitle := ReadString(FProgID, 'MainTitle', sMainCaption);
+        FHintText  := ReadString(FProgID, 'HintText', '');
+
+        FCopyRight := ReadString(FProgID, 'CopyRight', '');
+        FCopyRight := StringReplace(FCopyRight, '\n', #13#10, [rfReplaceAll]);
+
+        FParam     := ParamStr(1);
+        FIconFile  := ReadString(FProgID, 'IconFile', gPath + 'Icons\Icon.ini');
+        FIconFile  := StringReplace(FIconFile, '$Path\', gPath, [rfIgnoreCase]);
 
         FLocalMAC   := MakeActionID_MAC;
         GetLocalIPConfig(FLocalName, FLocalIP);
         FDisplayDPI := GetDeviceCaps(GetDC(0), LOGPIXELSY);
-      end else
-      begin
-        WriteBool('System', 'AutoMin', FAutoMin);
       end;
     end;
   finally

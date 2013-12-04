@@ -1,8 +1,7 @@
-inherited fFrameParam: TfFrameParam
+inherited fFrameSummary: TfFrameSummary
   Width = 620
   Height = 406
-  Font.Height = -15
-  object ListParam: TZnValueList
+  object ListSummary: TZnValueList
     Left = 0
     Top = 0
     Width = 620
@@ -18,7 +17,6 @@ inherited fFrameParam: TfFrameParam
     Font.Style = []
     Options = [goColSizing, goThumbTracking]
     ParentFont = False
-    PopupMenu = PopupMenu1
     TabOrder = 0
     AutoFocus = True
     ColorGroup = 10475007
@@ -30,11 +28,9 @@ inherited fFrameParam: TfFrameParam
       150
       468)
   end
-  object PopupMenu1: TPopupMenu
-    Left = 174
-    Top = 150
-    object refresh1: TMenuItem
-      Caption = 'refresh'
-    end
+  object TimerMon: TTimer
+    OnTimer = TimerMonTimer
+    Left = 12
+    Top = 34
   end
 end
