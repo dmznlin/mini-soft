@@ -14,8 +14,14 @@ uses
 type
   TfFrameParam = class(TfFrameBase)
     ListParam: TZnValueList;
-    PopupMenu1: TPopupMenu;
-    refresh1: TMenuItem;
+    PMenu1: TPopupMenu;
+    N1: TMenuItem;
+    N2: TMenuItem;
+    N3: TMenuItem;
+    N4: TMenuItem;
+    N5: TMenuItem;
+    procedure ListParamDblClick(Sender: TObject);
+    procedure N1Click(Sender: TObject);
   private
     { Private declarations }
     procedure NewParamItem(const nKey,nFlag: string;
@@ -39,7 +45,7 @@ implementation
 
 uses
   ULibFun, IniFiles, UMgrControl, UMgrDBConn, UMgrParam, USAPConnection,
-  USmallFunc, UMITConst;
+  UFormBase, USmallFunc, UMITConst;
 
 class function TfFrameParam.FrameID: integer;
 begin
@@ -51,6 +57,9 @@ begin
   inherited;
   Name := MakeFrameName(FrameID);
   ListParam.DoubleBuffered := True;
+
+  {$IFDEF DBPool}N2.Visible := True;{$ENDIF}
+  {$IFDEF SAP}N3.Visible := True;{$ENDIF}
 
   LoadConfig(True);
   UpdateParam;
@@ -131,7 +140,7 @@ var nStr: string;
     nPack: PParamItemPack;
     nPerform: PPerformParam;
     {$IFDEF DBPool}nDB: PDBParam;{$ENDIF}
-    {$IFDEF SAPMIT}nSAP: PSAPParam;{$ENDIF}
+    {$IFDEF SAP}nSAP: PSAPParam;{$ENDIF}
 
     function ItemFlag(const nInc: Byte): string;
     begin
@@ -266,7 +275,7 @@ begin
     end; //perform
 
     //--------------------------------------------------------------------------
-    {$IFDEF SAPMIT}
+    {$IFDEF SAP}
     nNum := 1;
     gParamManager.LoadParam(nList, ptSAP);
 
@@ -312,9 +321,97 @@ begin
       UpdateItem(ItemFlag(1), nSAP.FCodePage);
     end; //sap
     {$ENDIF}
+
+    //--------------------------------------------------------------------------
+    nIdx := 1;
+    nStr := 'url_0_';
+    ListParam.AddData('服务URL', '', nil, nStr, vtGroup);
+
+    nNum := 1;
+    for i:=0 to gParamManager.URLLocal.Count - 1 do
+    begin
+      NewParamItem('本地URL ' + IntToStr(nNum), ItemFlag(0));
+      UpdateItem(ItemFlag(1), gParamManager.URLLocal[i]);
+      Inc(nNum);
+    end;
+    
+    nNum := 1;
+    for i:=0 to gParamManager.URLRemote.Count - 1 do
+    begin
+      NewParamItem('远程URL ' + IntToStr(nNum), ItemFlag(0));
+      UpdateItem(ItemFlag(1), gParamManager.URLRemote[i]);
+      Inc(nNum);
+    end;
   finally
     nList.Free;
   end;
+end;
+
+//Desc: 编辑内容
+procedure TfFrameParam.ListParamDblClick(Sender: TObject);
+var nStr: string;
+    nPos: Integer;
+    nData: PZnVLData;
+    nParam: TFormCommandParam;
+    nResult: TFormCreateResult;
+begin
+  nData := ListParam.GetSelectData();
+  if not Assigned(nData) then Exit;
+
+  nStr := nData.FFlag;
+  nPos := StrPosR('_', nStr);
+  System.Delete(nStr, nPos + 1, Length(nStr) - nPos);
+
+  nData := ListParam.FindData(nStr + '1');
+  if not Assigned(nData) then Exit;
+  nStr := PZnVLPicture(nData.FData).FValue.FText;
+
+  nParam.FCommand := cCmd_ViewData;
+  nParam.FParamA := nStr;
+  //param
+  
+  if Pos('pack', nData.FFlag) = 1 then
+    nResult := CreateBaseFormItem(cFI_FormPack, '', @nParam) else
+  //pack
+
+  if Pos('db', nData.FFlag)  = 1 then
+    nResult := CreateBaseFormItem(cFI_FormDB, '', @nParam)else
+  //db
+
+  if Pos('sap', nData.FFlag)  = 1 then
+    nResult := CreateBaseFormItem(cFI_FormSAP, '', @nParam) else
+  //sap
+  
+  if Pos('perform', nData.FFlag)  = 1 then
+       nResult := CreateBaseFormItem(cFI_FormPerform, '', @nParam)
+  else nResult.FModalResult := mrNone;
+
+  if nResult.FModalResult = mrOk  then
+    UpdateParam;
+  //refresh list
+end;
+
+//Desc: 快捷菜单
+procedure TfFrameParam.N1Click(Sender: TObject);
+var nForm: Integer;
+begin
+  if not gSysParam.FIsAdmin then
+  begin
+    ShowMsg('请以管理员身份登录', sHint);
+    Exit;
+  end;
+
+  case TComponent(Sender).Tag of
+   10: nForm := cFI_FormPack;
+   20: nForm := cFI_FormDB;
+   30: nForm := cFI_FormSAP;
+   40: nForm := cFI_FormPerform;
+   50: nForm := cFI_FormServiceURL else Exit;
+  end;
+
+  if CreateBaseFormItem(nForm).FModalResult = mrOk then
+    UpdateParam;
+  //refresh list
 end;
 
 initialization

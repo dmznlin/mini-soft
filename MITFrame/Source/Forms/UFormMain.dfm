@@ -1,6 +1,6 @@
 object fFormMain: TfFormMain
-  Left = 330
-  Top = 123
+  Left = 387
+  Top = 246
   Width = 892
   Height = 606
   Caption = #19994#21153#20013#38388#20214
@@ -82,6 +82,9 @@ object fFormMain: TfFormMain
         end
         item
           Item = SysRunParam
+        end
+        item
+          Item = SysPlugs
         end>
     end
     object BarGroup3: TdxNavBarGroup
@@ -125,9 +128,13 @@ object fFormMain: TfFormMain
       SmallImageIndex = 1
       OnClick = SysSummaryClick
     end
+    object SysPlugs: TdxNavBarItem
+      Caption = #25554#20214#31649#29702
+      OnClick = SysSummaryClick
+    end
     object BarGroup4Control: TdxNavBarGroupControl
       Left = 16
-      Top = 368
+      Top = 392
       Width = 193
       Height = 60
       TabOrder = 1

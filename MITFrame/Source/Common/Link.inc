@@ -8,7 +8,7 @@
 {$IFDEF COM_MIT}
   {$DEFINE DBPool}
   //启用数据库支持
-  {.$DEFINE SAPMIT}
+  {.$DEFINE SAP}
   //启用SAP支持
   {.$DEFINE ClientMon}
   //支持守护服务
@@ -18,7 +18,7 @@
 {$IFDEF BUS_MIT}
   {$DEFINE DBPool}
   //启用数据库支持
-  {.$DEFINE SAPMIT}
+  {.$DEFINE SAP}
   //启用SAP支持
   {.$DEFINE ClientMon}
   //支持守护服务
@@ -28,7 +28,7 @@
 {$IFDEF SAP_MIT}
   {.$DEFINE DBPool}
   //启用数据库支持
-  {$DEFINE SAPMIT}
+  {$DEFINE SAP}
   //启用SAP支持 
   {.$DEFINE ClientMon}
   //支持守护服务

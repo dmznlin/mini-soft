@@ -72,13 +72,10 @@ begin
 
     if (not Result) and (Pos(#10#13, nData) < 1) then
     begin
-      {$IFDEF SAPMIT}
-      nData := Format('来源: SAPMIT,%s' + #13#10 + '对象: %s',
-               [gSysParam.FLocalName, nWorker.FunctionName]) + #13#10#13#10 + nData;
-      {$ELSE}
-      nData := Format('来源: BusMIT,%s' + #13#10 + '对象: %s',
-               [gSysParam.FLocalName, nWorker.FunctionName]) + #13#10#13#10 + nData;
-      {$ENDIF}
+      nData := Format('来源: %s,%s' + #13#10 + '对象: %s',
+               [gSysParam.FAppFlag, gSysParam.FLocalName,
+               nWorker.FunctionName]) + #13#10#13#10 + nData;
+      //xxxxx
     end;
   finally
     gBusinessWorkerManager.RelaseWorker(nWorker);

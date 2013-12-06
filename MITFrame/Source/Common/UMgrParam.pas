@@ -10,6 +10,10 @@ uses
   Windows, Classes, SysUtils, NativeXml, UBase64, UMgrDBConn, USAPConnection,
   USysLoger;
 
+const
+  cParamIDCharacters = ['a'..'z','A'..'Z','0'..'9','_',Char(VK_BACK)];
+  //ID标识可用字符
+
 type
   PPerformParam = ^TPerformParam;
   TPerformParam = record

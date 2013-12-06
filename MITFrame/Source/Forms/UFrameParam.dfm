@@ -18,8 +18,9 @@ inherited fFrameParam: TfFrameParam
     Font.Style = []
     Options = [goColSizing, goThumbTracking]
     ParentFont = False
-    PopupMenu = PopupMenu1
+    PopupMenu = PMenu1
     TabOrder = 0
+    OnDblClick = ListParamDblClick
     AutoFocus = True
     ColorGroup = 10475007
     ColorSelected = clSkyBlue
@@ -30,11 +31,36 @@ inherited fFrameParam: TfFrameParam
       150
       468)
   end
-  object PopupMenu1: TPopupMenu
-    Left = 174
-    Top = 150
-    object refresh1: TMenuItem
-      Caption = 'refresh'
+  object PMenu1: TPopupMenu
+    AutoHotkeys = maManual
+    Left = 14
+    Top = 40
+    object N1: TMenuItem
+      Tag = 10
+      Caption = #21442#25968#32452
+      OnClick = N1Click
+    end
+    object N2: TMenuItem
+      Tag = 20
+      Caption = #25968#25454#24211
+      Visible = False
+      OnClick = N1Click
+    end
+    object N3: TMenuItem
+      Tag = 30
+      Caption = 'SAP'#37197#32622
+      Visible = False
+      OnClick = N1Click
+    end
+    object N4: TMenuItem
+      Tag = 40
+      Caption = #24615#33021#37197#32622
+      OnClick = N1Click
+    end
+    object N5: TMenuItem
+      Tag = 50
+      Caption = #26381#21153#22320#22336
+      OnClick = N1Click
     end
   end
 end
