@@ -40,6 +40,7 @@ type
     Timer3: TTimer;
     SysService: TdxNavBarItem;
     Timer4: TTimer;
+    SysPlugs: TdxNavBarItem;
     procedure Timer2Timer(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -320,14 +321,21 @@ end;
 //Desc: 标准菜单动作
 procedure TfFormMain.SysSummaryClick(Sender: TObject);
 begin
-  if Sender = SysSummary then
-    CreateBaseFrameItem(cFI_FrameSummary, PanelWork) else
-  if Sender = SysRunlog then
-    CreateBaseFrameItem(cFI_FrameRunlog, PanelWork) else
-  if Sender = SysConfig then
-    CreateBaseFrameItem(cFI_FrameConfig, PanelWork) else
-  if Sender = SysRunParam then
-    CreateBaseFrameItem(cFI_FrameParam, PanelWork);
+  LockWindowUpdate(PanelWork.Handle);
+  try
+    if Sender = SysSummary then
+      CreateBaseFrameItem(cFI_FrameSummary, PanelWork) else
+    if Sender = SysRunlog then
+      CreateBaseFrameItem(cFI_FrameRunlog, PanelWork) else
+    if Sender = SysConfig then
+      CreateBaseFrameItem(cFI_FrameConfig, PanelWork) else
+    if Sender = SysRunParam then
+      CreateBaseFrameItem(cFI_FrameParam, PanelWork) else
+    if Sender = SysPlugs then
+      CreateBaseFrameItem(cFI_FramePlugs, PanelWork)
+  finally
+    LockWindowUpdate(0);
+  end;
 end;
 
 //Desc: 启动服务
@@ -342,8 +350,8 @@ end;
 //Desc: 刷新菜单
 procedure TfFormMain.PMRefreshMenu(var nMsg: TMessage);
 var nIdx: Integer;
-    nMenu: PPlugMenuItem;
     nItem: TdxNavBarItem;
+    nMenus: TPlugMenuItems;
 begin
   if csDestroying in ComponentState then Exit;
   //filter
@@ -378,17 +386,19 @@ begin
     end;
   end;
 
-  for nIdx:=0 to gPlugManager.Menus.Count - 1 do
+  SetLength(nMenus, 0);
+  nMenus := gPlugManager.GetMenuItems;
+  
+  for nIdx:=Low(nMenus) to High(nMenus) do
   begin
-    nMenu := gPlugManager.Menus[nIdx];
     nItem := dxNavBar1.Items.Add;
 
     with nItem do
     begin
-      Caption := nMenu.FCaption;
-      Tag := nMenu.FFormID;
+      Caption := nMenus[nIdx].FCaption;
+      Tag := nMenus[nIdx].FFormID;
       OnClick := DoMenuClick;
-      SmallImageIndex := FDM.IconIndex(nMenu.FName);
+      SmallImageIndex := FDM.IconIndex(nMenus[nIdx].FName);
 
       BarGroup3.CreateLink(nItem);
       //xxxxx

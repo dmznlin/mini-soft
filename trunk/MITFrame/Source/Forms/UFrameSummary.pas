@@ -196,7 +196,7 @@ begin
     NewSummaryItem('峰值时间', ItemFlag);
     {$ENDIF}
 
-    {$IFDEF SAPMIT}
+    {$IFDEF SAP}
     nIdx := 1;
     nStr := 'sap_status';
 
@@ -206,6 +206,7 @@ begin
     NewSummaryItem('连接参数', ItemFlag);
     NewSummaryItem('连接对象', ItemFlag);
     NewSummaryItem('已连对象', ItemFlag);
+    NewSummaryItem('连接次数', ItemFlag);
     NewSummaryItem('复用对象', ItemFlag);
     NewSummaryItem('当前队列', ItemFlag);
     NewSummaryItem('连接峰值', ItemFlag);
@@ -290,7 +291,7 @@ begin
   end;
   {$ENDIF}
 
-  {$IFDEF SAPMIT}
+  {$IFDEF SAP}
   with gSAPConnectionManager.Status do
   begin
     nIdx := 1;

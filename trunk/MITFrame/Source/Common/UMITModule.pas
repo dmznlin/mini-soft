@@ -38,7 +38,7 @@ begin
   gDBConnManager := TDBConnManager.Create;
   {$ENDIF}
 
-  {$IFDEF SAPMIT}
+  {$IFDEF SAP}
   gSAPConnectionManager := TSAPConnectionManager.Create;
   //sap conn pool
   {$ENDIF}

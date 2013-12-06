@@ -21,6 +21,14 @@ const
   cFI_FrameSummary    = $0005;                       //信息摘要
   cFI_FrameConfig     = $0006;                       //基本设置
   cFI_FrameParam      = $0007;                       //参数配置
+  cFI_FramePlugs      = $0008;                       //插件管理
+
+  {*Form ID*}
+  cFI_FormPack        = $0050;                       //参数包
+  cFI_FormDB          = $0051;                       //数据库
+  cFI_FormSAP         = $0052;                       //sap
+  cFI_FormPerform     = $0053;                       //性能配置
+  cFI_FormServiceURL  = $0055;                       //服务地址
 
   {*Command*}
   cCmd_AdminChanged   = $0001;                       //管理切换
@@ -41,6 +49,7 @@ type
     FHintText   : string;                            //提示文本
     FCopyRight  : string;                            //版权声明
 
+    FAppFlag    : string;                            //程序标识
     FParam      : string;                            //启动参数
     FIconFile   : string;                            //图标文件
 
@@ -127,6 +136,7 @@ begin
 
         FCopyRight := ReadString(FProgID, 'CopyRight', '');
         FCopyRight := StringReplace(FCopyRight, '\n', #13#10, [rfReplaceAll]);
+        FAppFlag   := ReadString(FProgID, 'AppFlag', 'COMMIT');
 
         FParam     := ParamStr(1);
         FIconFile  := ReadString(FProgID, 'IconFile', gPath + 'Icons\Icon.ini');
