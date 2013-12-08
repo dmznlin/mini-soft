@@ -78,13 +78,13 @@ object fFormMain: TfFormMain
       UseSmallImages = False
       Links = <
         item
+          Item = SysPlugs
+        end
+        item
           Item = SysConfig
         end
         item
           Item = SysRunParam
-        end
-        item
-          Item = SysPlugs
         end>
     end
     object BarGroup3: TdxNavBarGroup

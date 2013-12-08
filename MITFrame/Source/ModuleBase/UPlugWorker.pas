@@ -13,7 +13,12 @@ type
   TPlugWorker = class(TPlugEventWorker)
   public
     class function ModuleInfo: TPlugModuleInfo; override;
+    procedure RunSystemObject(const nParam: PPlugRunParameter); override;
   end;
+
+var
+  gPlugRunParam: TPlugRunParameter;
+  //运行参数
 
 implementation
 
@@ -21,6 +26,11 @@ class function TPlugWorker.ModuleInfo: TPlugModuleInfo;
 begin
   Result := inherited ModuleInfo;
   Result.FModuleName := '测试模块';
+end;
+
+procedure TPlugWorker.RunSystemObject(const nParam: PPlugRunParameter);
+begin
+  gPlugRunParam := nParam^;
 end;
 
 end.

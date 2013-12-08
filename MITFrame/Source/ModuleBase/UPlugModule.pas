@@ -8,6 +8,9 @@ unit UPlugModule;
 
 interface
 
+uses
+  UModuleWorker, UModulePacker;
+
 implementation
 
 end.
