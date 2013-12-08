@@ -47,6 +47,12 @@ begin
   begin
     FAppHandle := Application.Handle;
     FMainForm  := nMainForm;
+    FAppFlag   := gSysParam.FAppFlag;
+    FAppPath   := gPath;
+
+    FLocalIP   := gSysParam.FLocalIP;
+    FLocalMAC  := gSysParam.FLocalMAC;
+    FLocalName := gSysParam.FLocalName;
   end;
 
   gPlugManager := TPlugManager.Create(nParam);
