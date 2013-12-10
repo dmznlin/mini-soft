@@ -2,7 +2,7 @@
   作者: dmzn@163.com 2013-12-07
   描述: 常规业务处理工作对象
 *******************************************************************************}
-unit UMITWorker;
+unit UPlugWorker;
 
 {$I Link.Inc}
 interface
@@ -12,7 +12,7 @@ uses
   UBusinessPacker, UBusinessConst;
 
 type
-  TMITWorkerBase = class(TBusinessWorkerBase)
+  TPlugWorkerBase = class(TBusinessWorkerBase)
   protected
     FInBase: PBWDataBase;
     FOutBase: PBWDataBase;
@@ -24,7 +24,7 @@ type
     //结果数据
     procedure SetIOData(const nIn,nOut: Pointer); virtual;
     procedure GetIOData(var nIn,nOut: Pointer); virtual;
-    function DoMITWork: Boolean; virtual; abstract;
+    function DoPlugWork: Boolean; virtual; abstract;
     //子类业务
     procedure SetOutBaseInfo;
     //输出信息
@@ -37,7 +37,7 @@ type
     //执行业务
   end;
 
-  TMITDBWorker = class(TMITWorkerBase)
+  TPlugDBWorker = class(TPlugWorkerBase)
   protected
     FErrNum: Integer;
     //错误码
@@ -51,7 +51,7 @@ type
     function DoDBWork: Boolean; virtual; abstract;
     //数据业务
   public
-    function DoMITWork: Boolean; override;
+    function DoPlugWork: Boolean; override;
     //执行业务
   end;
 
@@ -64,7 +64,8 @@ type
     function ErrDescription(const nCode, nDesc: string;
       const nInclude: TDynamicStrArray): string;
     //错误描述
-    function MITWork(var nData: string): Boolean;
+    function DoMITWork(var nData: string): Boolean;
+    function DoAfterMITWork(const nResult: Boolean): Boolean; virtual;
     //执行业务
     function GetFixedServiceURL: string; virtual;
     //固定地址
@@ -79,13 +80,13 @@ type
 implementation
 
 uses
-  UMgrParam, UMgrChannel, UChannelChooser, UPlugWorker, USysLoger,
+  UMgrParam, UMgrChannel, UChannelChooser, UEventWorker, USysLoger,
   MIT_Service_Intf;
 
 //Date: 2013-12-07
 //Parm: 入参;出参
 //Desc: 执行以nIn为入参的业务,输出nOut结果
-function TMITWorkerBase.DoWork(const nIn, nOut: Pointer): Boolean;
+function TPlugWorkerBase.DoWork(const nIn, nOut: Pointer): Boolean;
 begin
   FInBase := nIn;
   FOutBase := nOut;
@@ -100,7 +101,7 @@ begin
   FOutBase^ := FInBase^;
   SetResult(FOutBase, True, 'S.00', '业务完成');
 
-  Result := DoMITWork;
+  Result := DoPlugWork;
   //do business
 
   SetOutBaseInfo;
@@ -110,7 +111,7 @@ end;
 //Date: 2013-12-07
 //Parm: 如参数护具
 //Desc: 获取连接数据库所需的资源
-function TMITWorkerBase.DoWork(var nData: string): Boolean;
+function TPlugWorkerBase.DoWork(var nData: string): Boolean;
 begin
   FOutInfo := itFinal;   
   GetIOData(Pointer(FInBase), Pointer(FOutBase));
@@ -121,8 +122,9 @@ begin
   
   FOutBase^ := FInBase^;
   SetResult(FOutBase, True, 'S.00', '业务完成');
-
-  Result := DoMITWork;
+  //default result
+  
+  Result := DoPlugWork;
   //do business
 
   if Result then
@@ -141,7 +143,7 @@ end;
 //Date: 2013-12-07
 //Parm: 数据;结果;错误码;错误描述
 //Desc: 设置nData的相关数据
-class procedure TMITWorkerBase.SetResult(const nData: PBWDataBase;
+class procedure TPlugWorkerBase.SetResult(const nData: PBWDataBase;
   const nResult: Boolean; const nCode,nDesc: string);
 begin
   with nData^ do
@@ -153,7 +155,7 @@ begin
 end;
 
 //Desc: 从子类获取入参出参
-procedure TMITWorkerBase.GetIOData(var nIn,nOut: Pointer);
+procedure TPlugWorkerBase.GetIOData(var nIn,nOut: Pointer);
 var nStr: string;
 begin
   nStr := '工作对象[ %s ]不支持远程调用.';
@@ -162,7 +164,7 @@ begin
 end;
 
 //Desc: 设置子类入参出参
-procedure TMITWorkerBase.SetIOData(const nIn,nOut: Pointer);
+procedure TPlugWorkerBase.SetIOData(const nIn,nOut: Pointer);
 var nStr: string;
 begin
   nStr := '工作对象[ %s ]不支持本地调用.';
@@ -171,7 +173,7 @@ begin
 end;
 
 //Desc: 填写输出信息
-procedure TMITWorkerBase.SetOutBaseInfo;
+procedure TPlugWorkerBase.SetOutBaseInfo;
   procedure SetWorkerInfo(var nInfo: TBWWorkerInfo);
   begin
     with nInfo do
@@ -194,7 +196,7 @@ end;
 //------------------------------------------------------------------------------
 //Date: 2013-12-07
 //Desc: 获取连接数据库所需的资源
-function TMITDBWorker.DoMITWork: Boolean;
+function TPlugDBWorker.DoPlugWork: Boolean;
 begin
   Result := False;
   FDBConn := nil;
@@ -235,13 +237,13 @@ begin
 end;
 
 //Desc: 数据库操作完毕后收尾业务
-function TMITDBWorker.DoAfterDBWork( const nResult: Boolean): Boolean;
+function TPlugDBWorker.DoAfterDBWork( const nResult: Boolean): Boolean;
 begin
   Result := True;
 end;
 
 //Desc: 验证入参是否有效
-function TMITDBWorker.VerifyParamIn: Boolean;
+function TPlugDBWorker.VerifyParamIn: Boolean;
 begin
   Result := True;
 end;
@@ -272,7 +274,6 @@ end;
 function TClientWorkerBase.DoWork(const nIn, nOut: Pointer): Boolean;
 var nStr: string;
     nParam: string;
-    nArray: TDynamicStrArray;
 begin
   with PBWDataBase(nIn)^ do
   begin
@@ -290,7 +291,7 @@ begin
   end;
 
   nStr := FPacker.PackIn(nIn);
-  Result := MITWork(nStr);
+  Result := DoMITWork(nStr);
 end;
 
 //Date: 2012-3-20
@@ -326,7 +327,7 @@ end;
 //Date: 2012-3-9
 //Parm: 入参数据
 //Desc: 连接MIT执行具体业务
-function TClientWorkerBase.MITWork(var nData: string): Boolean;
+function TClientWorkerBase.DoMITWork(var nData: string): Boolean;
 var nChannel: PChannelItem;
 begin
   Result := False;
@@ -369,6 +370,11 @@ begin
   finally
     gChannelManager.ReleaseChannel(nChannel);
   end;
+end;
+
+function TClientWorkerBase.DoAfterMITWork(const nResult: Boolean): Boolean;
+begin
+
 end;
 
 end.

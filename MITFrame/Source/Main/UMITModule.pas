@@ -10,7 +10,7 @@ unit UMITModule;
 interface
 
 uses
-  Forms, SysUtils, UMITConst,
+  Forms, Classes, SysUtils, UMITConst,
   //常规定义
   UBusinessWorker, UBusinessPacker, UMgrDBConn, UMgrParam, UMgrPlug,
   USAPConnection, USysShareMem, USysLoger;
@@ -53,6 +53,7 @@ begin
     FLocalIP   := gSysParam.FLocalIP;
     FLocalMAC  := gSysParam.FLocalMAC;
     FLocalName := gSysParam.FLocalName;
+    FExtParam  := TStringList.Create;
   end;
 
   gPlugManager := TPlugManager.Create(nParam);
