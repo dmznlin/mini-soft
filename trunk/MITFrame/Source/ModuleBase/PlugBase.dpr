@@ -16,7 +16,7 @@ library PlugBase;
 
 uses
   FastMM4,
-  UModuleExport;
+  UPlugExport;
 
 {$R *.res}
 

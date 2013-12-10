@@ -7,7 +7,7 @@ unit UModuleWorker;
 interface
 
 uses
-  UBusinessWorker, UBusinessPacker, UBusinessConst, UMITWorker, UPlugWorker;
+  UBusinessWorker, UBusinessPacker, UBusinessConst, UPlugWorker, UEventWorker;
 
 implementation
 
