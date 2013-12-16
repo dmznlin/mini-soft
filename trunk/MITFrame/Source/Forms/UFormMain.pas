@@ -282,7 +282,7 @@ begin
     LabelAdmin.Hint := '点击进入管理状态';
 
     gSysParam.FIsAdmin := False;
-    PostMessage(Handle, PM_RefreshMenu, 0, 0);
+    PostMessage(Handle, PM_RefreshMenu, PM_RM_OnlyStatus, 0);
     BroadcastFrameCommand(nil, cCmd_AdminChanged);
   end;  
 end;
@@ -309,7 +309,7 @@ begin
       LabelAdmin.Hint := '点击注销管理员';
 
       gSysParam.FIsAdmin := True;
-      PostMessage(Handle, PM_RefreshMenu, 0, 0);
+      PostMessage(Handle, PM_RefreshMenu, PM_RM_OnlyStatus, 0);
       BroadcastFrameCommand(nil, cCmd_AdminChanged);
       
       ShowMsg('管理员登录成功', sHint);
@@ -343,7 +343,7 @@ procedure TfFormMain.SysServiceClick(Sender: TObject);
 var nStr: string;
 begin
   if ROModule.ActiveServer([stHttp], not ROModule.IsServiceRun, nStr) then
-       PostMessage(Handle, PM_RefreshMenu, 0, 0)
+       PostMessage(Handle, PM_RefreshMenu, PM_RM_OnlyStatus, 0)
   else ShowMsg('服务启动失败', '请查阅日志');
 end;
 
@@ -363,7 +363,8 @@ begin
 
   for nIdx:=dxNavBar1.Items.Count - 1 downto 0 do
   begin
-    if Assigned(BarGroup3.FindLink(dxNavBar1.Items[nIdx])) then
+    if (nMsg.WParam = PM_RM_FullStatus) and
+       Assigned(BarGroup3.FindLink(dxNavBar1.Items[nIdx])) then
     begin
       BarGroup3.RemoveLinks(dxNavBar1.Items[nIdx]);
       dxNavBar1.Items.Delete(nIdx);
@@ -386,22 +387,27 @@ begin
     end;
   end;
 
+  if nMsg.WParam <> PM_RM_FullStatus then Exit;
   SetLength(nMenus, 0);
-  nMenus := gPlugManager.GetMenuItems;
+  nMenus := gPlugManager.GetMenuItems(True);
   
   for nIdx:=Low(nMenus) to High(nMenus) do
   begin
     nItem := dxNavBar1.Items.Add;
 
-    with nItem do
+    with nItem,nMenus[nIdx] do
     begin
-      Caption := nMenus[nIdx].FCaption;
-      Tag := nMenus[nIdx].FFormID;
-      OnClick := DoMenuClick;
-      SmallImageIndex := FDM.IconIndex(nMenus[nIdx].FName);
+      Name := FName;
+      Caption := FCaption;
+      Tag := FFormID;
 
+      OnClick := DoMenuClick;
+      SmallImageIndex := FDM.IconIndex(FName);
       BarGroup3.CreateLink(nItem);
-      //xxxxx
+
+      if FDefault then
+        DoMenuClick(nItem);
+      //click
     end;
   end;
 end;

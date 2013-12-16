@@ -270,8 +270,19 @@ begin
   if QueryDlg(nStr, sAsk, Handle) then
   begin
     FPacks[nIdx].FEnable := False;
-    InitFormData('');
     BtnOK.Enabled := True;
+
+    Dec(nIdx);
+    if nIdx >= Low(FPacks) then
+    begin
+      InitFormData(FPacks[nIdx].FID);
+      Exit;
+    end;
+
+    Inc(nIdx, 2);
+    if nIdx <= High(FPacks) then
+      InitFormData(FPacks[nIdx].FID);
+    //xxxxx
   end;
 end;
 
