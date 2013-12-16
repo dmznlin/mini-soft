@@ -8,28 +8,12 @@
 {$IFDEF COM_MIT}
   {$DEFINE DBPool}
   //启用数据库支持
+  {.$DEFINE ChannelPool}
+  //启用通道支持
+  {.$DEFINE AutoChannel}
+  //启用通道平衡
   {.$DEFINE SAP}
   //启用SAP支持
-  {.$DEFINE ClientMon}
-  //支持守护服务
-{$ENDIF}
-
-//业务中间件
-{$IFDEF BUS_MIT}
-  {$DEFINE DBPool}
-  //启用数据库支持
-  {.$DEFINE SAP}
-  //启用SAP支持
-  {.$DEFINE ClientMon}
-  //支持守护服务
-{$ENDIF}
-
-//SAP中间件
-{$IFDEF SAP_MIT}
-  {.$DEFINE DBPool}
-  //启用数据库支持
-  {$DEFINE SAP}
-  //启用SAP支持 
   {.$DEFINE ClientMon}
   //支持守护服务
 {$ENDIF}

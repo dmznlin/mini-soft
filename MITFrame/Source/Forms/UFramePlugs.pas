@@ -158,11 +158,11 @@ begin
     NewPlugItem('描述', ItemFlag(0));
     UpdateItem(ItemFlag(1), FModuleDesc);
 
-    NewPlugItem('文件', ItemFlag(0));
-    UpdateItem(ItemFlag(1), FModuleFile);
-
     NewPlugItem('编译', ItemFlag(0));
     UpdateItem(ItemFlag(1), DateTime2Str(FModuleBuildTime));
+
+    NewPlugItem('文件', ItemFlag(0));
+    UpdateItem(ItemFlag(1), FModuleFile);
   end;
 end;
 

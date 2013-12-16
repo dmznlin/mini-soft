@@ -55,33 +55,10 @@ type
     //执行业务
   end;
 
-  TClientWorkerBase = class(TBusinessWorkerBase)
-  protected
-    FListA,FListB: TStrings;
-    //字符列表
-    procedure WriteLog(const nEvent: string);
-    //记录日志
-    function ErrDescription(const nCode, nDesc: string;
-      const nInclude: TDynamicStrArray): string;
-    //错误描述
-    function DoMITWork(var nData: string): Boolean;
-    function DoAfterMITWork(const nResult: Boolean): Boolean; virtual;
-    //执行业务
-    function GetFixedServiceURL: string; virtual;
-    //固定地址
-  public
-    constructor Create; override;
-    destructor destroy; override;
-    //创建释放
-    function DoWork(const nIn, nOut: Pointer): Boolean; override;
-    //执行业务
-  end;
-
 implementation
 
 uses
-  UMgrParam, UMgrChannel, UChannelChooser, UEventWorker, USysLoger,
-  MIT_Service_Intf;
+  UMgrParam, UEventWorker, USysLoger;
 
 //Date: 2013-12-07
 //Parm: 入参;出参
@@ -246,135 +223,6 @@ end;
 function TPlugDBWorker.VerifyParamIn: Boolean;
 begin
   Result := True;
-end;
-
-//------------------------------------------------------------------------------
-procedure TClientWorkerBase.WriteLog(const nEvent: string);
-begin
-  gSysLoger.AddLog(ClassType, '客户业务对象', nEvent);
-end;
-
-constructor TClientWorkerBase.Create;
-begin
-  FListA := TStringList.Create;
-  FListB := TStringList.Create;
-  inherited;
-end;
-
-destructor TClientWorkerBase.destroy;
-begin
-  FreeAndNil(FListA);
-  FreeAndNil(FListB);
-  inherited;
-end;
-
-//Date: 2012-3-11
-//Parm: 入参;出参
-//Desc: 执行业务并对异常做处理
-function TClientWorkerBase.DoWork(const nIn, nOut: Pointer): Boolean;
-var nStr: string;
-    nParam: string;
-begin
-  with PBWDataBase(nIn)^ do
-  begin
-    nParam := FParam;
-    FPacker.InitData(nIn, True, False);
-
-    with FFrom do
-    begin
-      FUser   := gPlugRunParam.FLocalName;
-      FIP     := gPlugRunParam.FLocalIP;
-      FMAC    := gPlugRunParam.FLocalMAC;
-      FTime   := FWorkTime;
-      FKpLong := FWorkTimeInit;
-    end;
-  end;
-
-  nStr := FPacker.PackIn(nIn);
-  Result := DoMITWork(nStr);
-end;
-
-//Date: 2012-3-20
-//Parm: 代码;描述
-//Desc: 格式化错误描述
-function TClientWorkerBase.ErrDescription(const nCode, nDesc: string;
-  const nInclude: TDynamicStrArray): string;
-var nIdx: Integer;
-begin
-  FListA.Text := StringReplace(nCode, #9, #13#10, [rfReplaceAll]);
-  FListB.Text := StringReplace(nDesc, #9, #13#10, [rfReplaceAll]);
-
-  if FListA.Count <> FListB.Count then
-  begin
-    Result := '※.代码: ' + nCode + #13#10 +
-              '   描述: ' + nDesc + #13#10#13#10;
-  end else Result := '';
-
-  for nIdx:=0 to FListA.Count - 1 do
-  if (Length(nInclude) = 0) or (StrArrayIndex(FListA[nIdx], nInclude) > -1) then
-  begin
-    Result := Result + '※.代码: ' + FListA[nIdx] + #13#10 +
-                       '   描述: ' + FListB[nIdx] + #13#10#13#10;
-  end;
-end;
-
-//Desc: 强制指定服务地址
-function TClientWorkerBase.GetFixedServiceURL: string;
-begin
-  Result := '';
-end;
-
-//Date: 2012-3-9
-//Parm: 入参数据
-//Desc: 连接MIT执行具体业务
-function TClientWorkerBase.DoMITWork(var nData: string): Boolean;
-var nChannel: PChannelItem;
-begin
-  Result := False;
-  nChannel := nil;
-  try
-    nChannel := gChannelManager.LockChannel(cBus_Channel_Business);
-    if not Assigned(nChannel) then
-    begin
-      nData := '连接MIT服务失败(BUS-MIT No Channel).';
-      Exit;
-    end;
-
-    with nChannel^ do
-    while True do
-    try
-      if not Assigned(FChannel) then
-        FChannel := CoSrvBusiness.Create(FMsg, FHttp);
-      //xxxxx
-
-      if GetFixedServiceURL = '' then
-           FHttp.TargetURL := gChannelChoolser.ActiveURL
-      else FHttp.TargetURL := GetFixedServiceURL;
-
-      Result := ISrvBusiness(FChannel).Action(GetFlagStr(cWorker_GetMITName),
-                                              nData);
-      //call mit funciton
-      Break;
-    except
-      on E:Exception do
-      begin
-        if (GetFixedServiceURL <> '') or
-           (gChannelChoolser.GetChannelURL = FHttp.TargetURL) then
-        begin
-          nData := Format('%s(BY %s ).', [E.Message, gPlugRunParam.FLocalName]);
-          WriteLog('Function:[ ' + FunctionName + ' ]' + E.Message);
-          Exit;
-        end;
-      end;
-    end;
-  finally
-    gChannelManager.ReleaseChannel(nChannel);
-  end;
-end;
-
-function TClientWorkerBase.DoAfterMITWork(const nResult: Boolean): Boolean;
-begin
-
 end;
 
 end.

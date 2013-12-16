@@ -10,10 +10,10 @@ unit UMITModule;
 interface
 
 uses
-  Forms, Classes, SysUtils, UMITConst,
+  Forms, Classes, SysUtils, ULibFun, UMITConst,
   //常规定义
-  UBusinessWorker, UBusinessPacker, UMgrDBConn, UMgrParam, UMgrPlug,
-  USAPConnection, USysShareMem, USysLoger;
+  UBusinessWorker, UBusinessPacker, UMgrDBConn, UMgrParam, UMgrPlug, UMgrChannel,
+  UChannelChooser, USAPConnection, USysShareMem, USysLoger;
   //系统对象
 
 procedure InitSystemObject(const nMainForm: THandle);
@@ -23,6 +23,83 @@ procedure FreeSystemObject;
 
 implementation
 
+type
+  TMainEventWorker = class(TPlugEventWorker)
+  protected
+    procedure GetExtendMenu(const nList: TList); override;
+    procedure BeforeStartServer; override;
+    procedure BeforeStopServer; override;
+  public
+    class function ModuleInfo: TPlugModuleInfo; override;
+  end;
+
+class function TMainEventWorker.ModuleInfo: TPlugModuleInfo;
+begin
+  Result := inherited ModuleInfo;
+  with Result do
+  begin
+    FModuleID       := '{2497C39C-E1B2-406D-B7AC-9C8DB49C44DF}';
+    FModuleName     := '框架事件';
+    FModuleAuthor   := 'dmzn@163.com';
+    FModuleVersion  := '2013-12-12';
+    FModuleDesc     := '主框架对象,处理基本业务.';
+    FModuleBuildTime:= Str2DateTime('2013-12-12 13:05:00');
+  end;
+end;
+
+procedure TMainEventWorker.GetExtendMenu(const nList: TList);
+//var nMenu: PPlugMenuItem;
+begin
+{
+  New(nMenu);
+  nList.Add(nMenu);
+
+  nMenu.FModule := ModuleInfo.FModuleID;
+  nMenu.FName := '';
+  nMenu.FCaption := '';
+  nMenu.FFormID := 0;
+  nMenu.FDefault := True;
+}
+end;
+
+procedure TMainEventWorker.BeforeStartServer;
+begin
+  {$IFDEF DBPool}
+  with gParamManager do
+  begin
+    gDBConnManager.AddParam(ActiveParam.FDB^);
+    gDBConnManager.MaxConn := ActiveParam.FPerform.FPoolSizeConn;
+  end;
+  {$ENDIF} //db
+
+  {$IFDEF SAP}
+  with gParamManager do
+  begin
+    gSAPConnectionManager.AddParam(ActiveParam.FSAP^);
+    gSAPConnectionManager.PoolSize := ActiveParam.FPerform.FPoolSizeSAP;
+  end;
+  {$ENDIF}//sap
+
+  {$IFDEF ChannelPool}
+  gChannelManager.ChannelMax := 50;
+  {$ENDIF} //channel
+
+  {$IFDEF AutoChannel}
+  gChannelChoolser.AddChanels(gParamManager.URLRemote.Text);
+  gChannelChoolser.StartRefresh;
+  {$ENDIF} //channel auto select
+end;
+
+procedure TMainEventWorker.BeforeStopServer;
+begin
+  inherited;
+
+  {$IFDEF AutoChannel}
+  gChannelChoolser.StopRefresh;
+  {$ENDIF} //channel
+end;
+
+//------------------------------------------------------------------------------
 //Desc: 初始化系统对象
 procedure InitSystemObject(const nMainForm: THandle);
 var nParam: TPlugRunParameter;
@@ -43,6 +120,15 @@ begin
   //sap conn pool
   {$ENDIF}
 
+  {$IFDEF ChannelPool}
+  gChannelManager := TChannelManager.Create;
+  {$ENDIF}
+
+  {$IFDEF AutoChannel}
+  gChannelChoolser := TChannelChoolser.Create(gPath + 'Service.Ini');
+  gChannelChoolser.AddChanels(gParamManager.URLRemote.Text);
+  {$ENDIF}
+
   with nParam do
   begin
     FAppHandle := Application.Handle;
@@ -57,9 +143,14 @@ begin
   end;
 
   gPlugManager := TPlugManager.Create(nParam);
-  gPlugManager.LoadPlugsInDirectory(gPath + 'Plugs');
-  gPlugManager.InitSystemObject;
-  //插件管理器(需最后一个初始化)
+  with gPlugManager do
+  begin
+    AddEventWorker(TMainEventWorker.Create);
+    LoadPlugsInDirectory(gPath + 'Plugs');
+
+    RefreshUIMenu;
+    InitSystemObject;
+  end; //插件管理器(需最后一个初始化)
 end;
 
 //Desc: 运行系统对象
