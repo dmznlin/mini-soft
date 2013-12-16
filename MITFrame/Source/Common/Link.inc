@@ -1,6 +1,9 @@
 {$DEFINE debug}
 //调试模式
 
+{.$DEFINE GenRODL}
+//生成RODL资源
+
 {$DEFINE COM_MIT}
 //定义系统模式
 
