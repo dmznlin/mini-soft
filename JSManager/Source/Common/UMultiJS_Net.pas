@@ -21,6 +21,7 @@ const
   cMultiJS_Interval        = 1200;      //刷新频率
 
   cFrame_Control           = $05;       //控制帧
+  cFrame_Display           = $09;       //显示帧
   cFrame_Query             = $12;       //查询帧
   cFrame_Clear             = $27;       //清理帧
 
@@ -168,7 +169,8 @@ type
     procedure StartJS;
     procedure StopJS;
     //启停计数
-    function AddJS(const nTunnel,nTruck:string; nDaiNum: Integer): Boolean;
+    function AddJS(const nTunnel,nTruck:string; const nDaiNum: Integer;
+     const nOnlyDisplay: Boolean = False): Boolean;
     //添加计数
     function DelJS(const nTunnel: string): Boolean;
     //删除计数
@@ -607,10 +609,10 @@ begin
 end;
 
 //Date: 2012-4-23
-//Parm: 通道标识;车牌;袋数
+//Parm: 通道标识;车牌;袋数;只显示不启动
 //Desc: 在nTunnel添加一个计数操作
 function TMultiJSManager.AddJS(const nTunnel, nTruck: string;
-  nDaiNum: Integer): Boolean;
+ const nDaiNum: Integer; const nOnlyDisplay: Boolean): Boolean;
 var nStr: string;
     nList: TList;
     nPH: PMultiJSHost;
@@ -637,7 +639,10 @@ begin
       FHeader[0] := $0A;
       FHeader[1] := $55;
       FAddr := nPH.F485Addr;
-      FType := cFrame_Control;
+
+      if nOnlyDisplay then
+           FType := cFrame_Display
+      else FType := cFrame_Control;
 
       with FData do
       begin

@@ -112,7 +112,8 @@ type
   end;
 
 const
-  cSpace_V_Edit = 8;             //垂直方向两行间距
+  cSize_Font = 11;               //字体大小
+  cSpace_V_Edit = 5;             //垂直方向两行间距
   cSpace_H_Edge = 12;            //水平方向边距
   cSpace_H_LabelEdit = 2;        //水平方向标签与文本框间距
   cSpace_V_LabelEdit = 2;        //垂直方向标签与文本框间距
@@ -139,6 +140,9 @@ begin
     Height := Bottom;
   end;
 
+  ParentFont := True;
+  Style.Font.Size := cSize_Font;
+
   FPerWeight := 50;
   FillChar(FData, SizeOf(FData), #0);
 end;
@@ -152,7 +156,7 @@ end;
 //Desc: 面板大小
 class function TMultiJSPanel.PanelRect: TRect;
 begin
-  Result := Rect(0, 0, 275, 372);
+  Result := Rect(0, 0, 285, 385);
 end;
 
 //Desc: 标签组
@@ -168,6 +172,7 @@ begin
     with Style do
     begin
       TextColor := clBlack;
+      Font.Size := cSize_Font;
     end;
 
     Caption := nLable;
@@ -189,13 +194,15 @@ begin
     with Style do
     begin
       Edges := [bBottom];
-      TextColor := $00408000; 
+      TextColor := $00408000;
+      Font.Size := cSize_Font;
     end;
 
     with StyleFocused do
     begin
       Color := clInfoBk;
       TextColor := $00408000;
+      Font.Size := cSize_Font;
     end;
 
     nL := cSpace_H_Edge;
@@ -223,6 +230,7 @@ begin
     begin
       Edges := [];
       TextColor := clWhite;
+      Font.Size := cSize_Font;
     end;
 
     nL := cSpace_H_Edge;
