@@ -13,13 +13,13 @@ inherited fFormJS_Net: TfFormJS_Net
   OnPaint = FormPaint
   OnResize = WorkPanelResize
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 15
   object dxStatusBar1: TdxStatusBar
     Left = 0
-    Top = 219
+    Top = 216
     Width = 405
-    Height = 20
+    Height = 25
     Panels = <
       item
         PanelStyleClassName = 'TdxStatusBarTextPanelStyle'
@@ -27,7 +27,7 @@ inherited fFormJS_Net: TfFormJS_Net
       end>
     Font.Charset = GB2312_CHARSET
     Font.Color = clWindowText
-    Font.Height = -12
+    Font.Height = -15
     Font.Name = #23435#20307
     Font.Style = []
   end

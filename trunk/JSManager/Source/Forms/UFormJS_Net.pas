@@ -421,7 +421,11 @@ begin
        end;
     //forbid multi load
 
-    (Sender as TMultiJSPanel).SetData(nData);
+    with (Sender as TMultiJSPanel) do
+    begin
+      SetData(nData);
+      gMultiJSManager.AddJS(Tunnel.FComm, UIData.FTruckNo, UIData.FHaveDai, True);
+    end;
   end;
 end;
 
