@@ -416,7 +416,7 @@ begin
   try
     ParepareDBWork(False);
     //备份数据
-    CombineProductData;
+    CombineProductData(365);
     //旧数据应用旧配比
 
     if FNewPBDate = '' then

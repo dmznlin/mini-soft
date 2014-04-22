@@ -28,7 +28,7 @@ procedure ParepareDBWork(const nFullBackup: Boolean);
 procedure BackupData(const nID,nTable: string);
 //备份数据
 procedure CombinePeibiData;
-procedure CombineProductData;
+procedure CombineProductData(const nDays: Integer = 30);
 //合并数据
 procedure RenameTable(const nID: string; const nTables: array of TMacroItem;
  const nRaiseE: Boolean = False);
@@ -577,6 +577,13 @@ begin
         nStr := 'Create Index idx_b_%s On %s_b (B_Backup ASC, B_Modify ASC)';
         nStr := Format(nStr, [nTable, nTable]);
         gDBConnManager.WorkerExec(nWorker, nStr);
+
+        if nTable = sTable_Product then
+        begin
+          nStr := 'Create Index idx_b_%s_1 On %s_b (生产时间 DESC)';
+          nStr := Format(nStr, [nTable, nTable]);
+          gDBConnManager.WorkerExec(nWorker, nStr);
+        end;
       end; //备份表和索引
 
       if nTable = sTable_Peibi then
@@ -944,7 +951,7 @@ begin
 end;
 
 //Desc: 应用产品数据
-procedure CombineProductData;
+procedure CombineProductData(const nDays: Integer);
 var nStr: string;
     nField: TField;
     nWorker: PDBWorker;
@@ -1006,8 +1013,8 @@ begin
     LoadPBList;
     //读取配比列表
     
-    nStr := 'Select * From %s_b where B_Modify=''N''';
-    nStr := Format(nStr, [sTable_Product]);
+    nStr := 'Select * From %s_b where 生产时间>=Date()-%d And B_Modify=''N''';
+    nStr := Format(nStr, [sTable_Product, nDays]);
 
     with gDBConnManager.SQLQuery(nStr, nWorker, sSCData) do
     if RecordCount > 0 then
@@ -1097,6 +1104,19 @@ var nErr: string;
     nInit: Int64;
     nIdx: Integer;
     nAccess: OleVariant;
+
+    function TableExits(const nName: string): Boolean;
+    var i: Integer;
+    begin
+      Result := False;
+
+      for i:=0 to nAccess.Tables.Count - 1 do
+      if CompareText(nName, nAccess.Tables[i].Name) = 0 then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;  
 begin
   nAccess := Unassigned;
   try
@@ -1108,6 +1128,8 @@ begin
 
     for nIdx:=Low(nTables) to High(nTables) do
     try
+      if TableExits(nTables[nIdx].FMacro) and (not
+         TableExits(nTables[nIdx].FValue)) then
       nAccess.Tables[nTables[nIdx].FMacro].Name := nTables[nIdx].FValue;
     except
       on E:Exception do
@@ -1127,7 +1149,7 @@ begin
 end;
 
 initialization
-
+  gDBConnManager := TDBConnManager.Create;
 finalization
   if Assigned(gPBItems) then
     ClearPBList(gPBItems, True);
