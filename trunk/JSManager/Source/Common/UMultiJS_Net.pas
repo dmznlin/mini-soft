@@ -174,6 +174,8 @@ type
     //添加计数
     function DelJS(const nTunnel: string): Boolean;
     //删除计数
+    function GetJSStatus(const nList: TStrings): Boolean;
+    //计数状态
     property Hosts: TList read FHosts;
     property FileName: string read FFileName;
     property QueryEnable: Boolean read FEnableQuery write FEnableQuery;
@@ -620,8 +622,17 @@ var nStr: string;
     nSend: PMultiJSDataSend;
 begin
   Result := False;
-  if not FEnableCount then Exit;
-  if not (GetTunnel(nTunnel, nPH, nPT) and Assigned(nPH.FReader)) then Exit;
+  if not FEnableCount then
+  begin
+    WriteLog('计数器未开启config.count参数.');
+    Exit;
+  end;
+
+  if not (GetTunnel(nTunnel, nPH, nPT) and Assigned(nPH.FReader)) then
+  begin
+    WriteLog(Format('通道号[ %s ]无效.', [nTunnel]));
+    Exit;
+  end;
 
   nList := nPH.FReader.FBuffer.LockList;
   try
@@ -661,6 +672,8 @@ begin
 
       FEnd := $0D;
     end;
+
+    Result := True;
   finally
     nPH.FReader.FBuffer.UnlockList;
   end;
@@ -676,7 +689,11 @@ var nList: TList;
     nSend: PMultiJSDataSend;
 begin
   Result := False;
-  if not (GetTunnel(nTunnel, nPH, nPT) and Assigned(nPH.FReader)) then Exit;
+  if not (GetTunnel(nTunnel, nPH, nPT) and Assigned(nPH.FReader)) then
+  begin
+    WriteLog(Format('通道号[ %s ]无效.', [nTunnel]));
+    Exit;
+  end;
 
   nList := nPH.FReader.FBuffer.LockList;
   try
@@ -699,8 +716,37 @@ begin
       FData.FAddr := nPT.FTunnel;
       FEnd := $0D;
     end;
+
+    Result := True;
   finally
     nPH.FReader.FBuffer.UnlockList;
+  end;
+end;
+
+//Date: 2013-07-22
+//Parm: 结果列表(tunnel=dai)
+//Desc: 获取各通道的计数结果
+function TMultiJSManager.GetJSStatus(const nList: TStrings): Boolean;
+var i,nIdx: Integer;
+    nPHost: PMultiJSHost;
+    nPTunnel: PMultiJSTunnel;
+begin
+  Result := True;
+  nList.Clear;
+
+  for i:=0 to FHosts.Count - 1 do
+  begin
+    nPHost := FHosts[i];
+    for nIdx:=0 to nPHost.FTunnel.Count - 1 do
+    begin
+      nPHost.FReader.FBuffer.LockList;
+      try
+        nPTunnel := nPHost.FTunnel[nIdx];
+        nList.Values[nPTunnel.FID] := IntToStr(nPTunnel.FHasDone);
+      finally
+        nPHost.FReader.FBuffer.UnlockList;
+      end;
+    end
   end;
 end;
 
