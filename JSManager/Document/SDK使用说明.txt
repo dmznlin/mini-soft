@@ -1,0 +1,70 @@
+1.将SDK库文件存放在程序目录下,或者Windows目录下.
+
+2.使用特定语言翻译如下接口,以Pascal为例:
+//Date: 2014-04-27
+//Parm: 配置文件全路径
+//Desc: 载入计数管理器所需的配置文件
+function JSLoadConfig(const nConfigFile: PChar): Boolean; stdcall;
+
+//Date: 2014-04-28
+//Desc: 启动服务
+procedure JSServiceStart; stdcall;
+
+//Date: 2014-04-28
+//Desc: 停止服务
+procedure JSServiceStop; stdcall;
+
+//Date: 2014-04-27
+//Parm: 通道号;车牌号;袋数
+//Desc: 向nTunnel发送nTruck.nDaiNum计数
+function JSStart(const nTunnel,nTruck: PChar; const nDaiNum: Integer): Boolean; stdcall;
+
+//Date: 2014-04-28
+//Parm: 通道号
+//Desc: 像nTunnel发送停止计数指令
+function JSStop(const nTunnel: PChar): Boolean; stdcall;
+
+//Date: 2014-04-28
+//Parm: 状态结果
+//Desc: 获取计数结果,返回有效数据长度
+function JSStatus(const nStatus: PChar): Integer; stdcall;
+
+3.计数器配置文件格式,该文件由志信提供.
+<?xml version="1.0" encoding="gb2312"?>
+<items>
+  <config>
+    <query>1</query>
+    <!--开启查询 1,开启;其它,关闭 -->
+    <count>1</count>
+    <!--开启计数 0,开启;其它,关闭 -->
+  </config>
+  <item name="11111">
+    <param>
+      <ip>172.16.16.173</ip>
+      <port>8000</port>
+      <addr>1</addr>
+      <linenum>2</linenum>
+    </param>
+    <lines>
+      <line>
+        <id>zt001</id>
+        <name>装车1道</name>
+        <tunnel>1</tunnel>
+        <delay>7</delay>
+      </line>
+      <line>
+        <id>zt002</id>
+        <name>装车2道</name>
+        <tunnel>2</tunnel>
+        <delay>7</delay>
+      </line>
+  </item>
+</items>
+
+3.接口使用方法:
+a.调用JSLoadConfig载入计数器配置文件,该配置文件请向志信技术人员索取,不能自行编写.该接口只需在JSServiceStart前调用一次.
+b.调用JSServiceStart启动计数服务.
+c.调用JSStart发送开启计数指令,通道号为配置文件的line.id.
+d.调用JSStatus获取计数状态.
+e.调用JSStop发送停止计数指令.
+f.调用JSServiceStop停止计数服务.程序退出时调用一次,或者与JSServiceStart配对使用.
