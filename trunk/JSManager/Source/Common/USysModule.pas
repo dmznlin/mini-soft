@@ -18,7 +18,8 @@ uses
   {$ENDIF}
   UFrameLog, UFrameSysLog, UFormIncInfo, UFormPassword,
   UFrameStockType, UFormStockType, UFrameTruckInfo, UFormTruckInfo,
-  UFrameJSLog, UFrameCustomer, UFormCustomer, UFrameJSItem, UFormJSItem;
+  UFrameJSLog, UFrameCustomer, UFormCustomer, UFrameJSItem, UFormJSItem,
+  UFrameJSCard;
 
 procedure InitSystemObject;
 procedure RunSystemObject;

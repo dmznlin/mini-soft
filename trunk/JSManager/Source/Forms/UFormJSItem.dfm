@@ -1,41 +1,41 @@
 inherited fFormJSItem: TfFormJSItem
   Left = 460
   Top = 278
-  ClientHeight = 251
-  ClientWidth = 387
+  ClientHeight = 337
+  ClientWidth = 522
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 15
   inherited dxLayout1: TdxLayoutControl
-    Width = 387
-    Height = 251
+    Width = 522
+    Height = 337
     inherited BtnOK: TButton
-      Left = 241
-      Top = 218
-      TabOrder = 9
-    end
-    inherited BtnExit: TButton
-      Left = 311
-      Top = 218
+      Left = 340
+      Top = 295
       TabOrder = 10
     end
+    inherited BtnExit: TButton
+      Left = 427
+      Top = 295
+      TabOrder = 11
+    end
     object EditTruck: TcxComboBox [2]
-      Left = 81
-      Top = 36
+      Left = 87
+      Top = 73
       Hint = 'T.L_TruckNo'
       ParentFont = False
       Properties.ImmediateDropDown = False
       Properties.IncrementalSearch = False
       Properties.ItemHeight = 18
       Properties.MaxLength = 15
-      TabOrder = 0
+      TabOrder = 1
       OnKeyDown = OnCtrlKeyDown
-      Width = 125
+      Width = 157
     end
     object EditStock: TcxComboBox [3]
-      Left = 81
-      Top = 86
+      Left = 87
+      Top = 129
       Hint = 'T.L_Stock'
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
@@ -43,98 +43,116 @@ inherited fFormJSItem: TfFormJSItem
       Properties.IncrementalSearch = False
       Properties.ItemHeight = 18
       Properties.OnChange = EditStockPropertiesChange
-      TabOrder = 2
+      TabOrder = 3
       OnKeyDown = OnCtrlKeyDown
-      Width = 125
+      Width = 157
     end
     object EditSID: TcxTextEdit [4]
-      Left = 81
-      Top = 136
+      Left = 87
+      Top = 187
       Hint = 'T.L_SerialID'
       ParentFont = False
       Properties.MaxLength = 32
-      TabOrder = 6
+      TabOrder = 7
       OnKeyDown = OnCtrlKeyDown
-      Width = 122
+      Width = 153
     end
     object EditWeight: TcxTextEdit [5]
-      Left = 81
-      Top = 111
+      Left = 87
+      Top = 157
       Hint = 'T.L_Weight'
       HelpType = htKeyword
       HelpKeyword = 'I'
       ParentFont = False
       Properties.OnChange = EditWeightPropertiesChange
-      TabOrder = 3
+      TabOrder = 4
       Text = '0'
       OnKeyDown = OnCtrlKeyDown
-      Width = 92
+      Width = 115
     end
     object EditNum: TcxTextEdit [6]
-      Left = 266
-      Top = 111
+      Left = 301
+      Top = 157
       Hint = 'T.L_DaiShu'
       HelpType = htKeyword
       HelpKeyword = 'I'
       ParentFont = False
       Properties.OnChange = EditNumPropertiesChange
-      TabOrder = 5
+      TabOrder = 6
       Text = '0'
       OnKeyDown = OnCtrlKeyDown
-      Width = 98
+      Width = 122
     end
     object EditMemo: TcxMemo [7]
-      Left = 81
-      Top = 161
+      Left = 87
+      Top = 215
       Hint = 'T.L_Memo'
       ParentFont = False
       Properties.MaxLength = 50
       Properties.ScrollBars = ssVertical
-      TabOrder = 8
+      TabOrder = 9
       OnKeyDown = OnCtrlKeyDown
-      Height = 45
-      Width = 160
+      Height = 57
+      Width = 200
     end
     object cxLabel1: TcxLabel [8]
-      Left = 178
-      Top = 111
+      Left = 207
+      Top = 157
       AutoSize = False
       Caption = #21544
       ParentFont = False
       Properties.Alignment.Vert = taVCenter
       Transparent = True
-      Height = 20
-      Width = 25
-      AnchorY = 121
+      Height = 25
+      Width = 31
+      AnchorY = 170
     end
     object EditCus: TcxComboBox [9]
-      Left = 81
-      Top = 61
+      Left = 87
+      Top = 101
       Hint = 'T.L_Customer'
       ParentFont = False
       Properties.ImmediateDropDown = False
       Properties.IncrementalSearch = False
       Properties.ItemHeight = 18
       Properties.MaxLength = 100
-      TabOrder = 1
+      TabOrder = 2
       OnKeyDown = EditCusKeyDown
-      Width = 130
+      Width = 163
     end
     object EditBC: TcxTextEdit [10]
-      Left = 266
-      Top = 136
+      Left = 303
+      Top = 187
       Hint = 'T.L_BC'
       HelpType = htKeyword
       HelpKeyword = 'I'
       ParentFont = False
       Properties.ReadOnly = True
-      TabOrder = 7
+      TabOrder = 8
       Text = '0'
-      Width = 85
+      Width = 106
+    end
+    object EditCard: TcxButtonEdit [11]
+      Left = 87
+      Top = 45
+      Properties.Buttons = <
+        item
+          Default = True
+          Kind = bkEllipsis
+        end>
+      Properties.OnButtonClick = EditCardPropertiesButtonClick
+      TabOrder = 0
+      OnKeyPress = OnCtrlKeyPress
+      Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
         Caption = #25552#36135#20449#24687
+        object dxLayout1Item10: TdxLayoutItem
+          Caption = #30913#21345#32534#21495':'
+          Control = EditCard
+          ControlOptions.ShowBorder = False
+        end
         object dxLayout1Item4: TdxLayoutItem
           Caption = #25552#36135#36710#36742':'
           Control = EditTruck

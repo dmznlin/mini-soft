@@ -100,6 +100,7 @@ ResourceString
   sTable_TruckInfo    = 'Sys_TruckInfo';             //车辆管理
   sTable_Customer     = 'Sys_Customer';              //客户管理
   sTable_JSLog        = 'Sys_JSLog';                 //计数日志
+  sTable_JSItem       = 'Sys_JSPrepare';             //待启用计数项
 
   {*新建表*}
   sSQL_NewSysDict = 'Create Table $Table(D_ID $Inc, D_Name varChar(15),' +
@@ -202,16 +203,20 @@ ResourceString
 
   sSQL_NewJSLog = 'Create Table $Table(L_ID $Inc, L_CusID varChar(15), ' +
        'L_Customer varChar(100), L_StockID varChar(15), L_Stock varChar(100),' +
-       'L_TruckNo varChar(15),  L_SerialID varChar(32),' +
+       'L_TruckNo varChar(15), L_Driver varChar(80), L_SerialID varChar(32),' +
        'L_Weight $Float, L_DaiShu Integer, L_BC Integer, L_PValue $Float,' +
-       'L_ZTLine varChar(32), L_Date DateTime, L_Man varChar(32),' +
-       'L_HasDone Char(1), L_OKTime DateTime, L_Memo varChar(50))';
+       'L_ZTLine varChar(32), L_Card varChar(15), L_Bill varChar(15),' +
+       'L_BillDate DateTime, L_PPTime DateTime, L_PPValue $Float,' +
+       'L_PMTime DateTime, L_PMValue $Float, ' +
+       'L_HasDone Char(1), L_OKTime DateTime, L_Date DateTime,' +
+       'L_Man varChar(32), L_Memo varChar(50))';
   {-----------------------------------------------------------------------------
    计数日志: JSLog
    *.L_ID: 编号
    *.L_CusID: 客户编号
    *.L_Customer: 客户
    *.L_TruckNo: 车牌号
+   *.L_Driver: 司机名称
    *.L_StockID: 品种编号
    *.L_Stock: 水泥品种
    *.L_SerialID: 批次号
@@ -220,10 +225,14 @@ ResourceString
    *.L_BC: 补差袋数
    *.L_PValue: 破袋率
    *.L_ZTLine: 栈台位置
-   *.L_Date: 操作日期
-   *.L_Man: 操作人
+   *.L_Card: 磁卡号
+   *.L_Bill,L_BillDate: 开单信息
+   *.L_PPTime,L_PPValue: 皮重
+   *.L_PMTime,L_PMValue: 毛重
    *.L_HasDone: 是否装车
    *.L_OKTime: 完成时间
+   *.L_Date: 操作日期
+   *.L_Man: 操作人
    *.L_Memo: 备注
   -----------------------------------------------------------------------------}
 
@@ -281,6 +290,8 @@ begin
   AddSysTableItem(sTable_Customer, sSQL_NewCustomer);
 
   AddSysTableItem(sTable_JSLog, sSQL_NewJSLog);
+
+  AddSysTableItem(sTable_JSItem, sSQL_NewJSLog);
 end;
 
 //Desc: 清理系统表
