@@ -24,6 +24,7 @@ const
   cFI_FrameJSLog        = $0006;                     //计数记录
   cFI_FrameCustomer     = $0007;                     //客户管理
   cFI_FrameJSItem       = $0008;                     //计数排队
+  cFI_FrameCard         = $0010;                     //磁卡管理
 
   cFI_FormBackup        = $1001;                     //数据备份
   cFI_FormRestore       = $1002;                     //数据恢复
@@ -180,6 +181,9 @@ begin
 
   AddMenuModuleItem('MAIN_B07', cFI_FrameJSItem);
   //计数排队
+
+  AddMenuModuleItem('MAIN_C01', cFI_FrameCard);
+  //磁卡管理
 end;
 
 //Desc: 清理模块列表

@@ -13,7 +13,8 @@ uses
   cxButtonEdit, cxTextEdit, ADODB, cxContainer, cxLabel, cxGridLevel,
   cxClasses, cxControls, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, ComCtrls, ToolWin, Menus,
-  cxLookAndFeels, cxLookAndFeelPainters, UBitmapPanel, cxSplitter;
+  cxLookAndFeels, cxLookAndFeelPainters, UBitmapPanel, cxSplitter,
+  dxSkinsCore, dxSkinsDefaultPainters;
 
 type
   TfFrameJSLog = class(TfFrameNormal)
@@ -83,6 +84,10 @@ procedure TfFrameJSLog.OnCreateFrame;
 begin
   inherited;
   InitDateRange(Name, FStart, FEnd);
+
+  if FStart = FEnd then
+    FEnd := FEnd + 1;
+  //next day
 end;
 
 procedure TfFrameJSLog.OnDestroyFrame;
@@ -129,26 +134,24 @@ begin
 
   if gSysDBType = dtSQLServer then
   begin
-    Result := 'Select * From %s,%s Where L_Stock=S_ID And ' +
-              '(L_Date>=''%s'' And L_Date<''%s'')';
+    Result := 'Select * From %s Where (L_Date>=''%s'' And L_Date<''%s'')';
   end else
   begin
-    Result := 'Select * From %s,%s Where L_Stock=S_ID And ' +
-              '(L_Date>=#%s# And L_Date<#%s#)';
+    Result := 'Select * From %s Where (L_Date>=#%s# And L_Date<#%s#)';
   end;
 
-  Result := Format(Result, [sTable_JSLog, sTable_StockType,
-            Date2Str(FStart), Date2Str(FEnd + 1)]);
-  if nWhere <> '' then Result := Result + ' And (' + nWhere + ')';
-
-  Result := Result + ' Order By L_ID';
+  Result := Format(Result, [sTable_JSLog,
+            DateTime2Str(FStart), DateTime2Str(FEnd)]);
+  if nWhere <> '' then
+    Result := Result + ' And (' + nWhere + ')';
+  //xxxxx
 end;
 
 //Desc: 日期筛选
 procedure TfFrameJSLog.EditDatePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  if ShowDateFilterForm(FStart, FEnd) then InitFormData(FWhere);
+  if ShowDateFilterForm(FStart, FEnd, True) then InitFormData(FWhere);
 end;
 
 //Desc: 执行查询
@@ -163,7 +166,7 @@ begin
 
   if Sender = EditStock then
   begin
-    FWhere := 'S_ID Like ''%%%s%%'' Or S_Name Like ''%%%s%%''';
+    FWhere := 'L_StockID Like ''%%%s%%'' Or L_Stock Like ''%%%s%%''';
     FWhere := Format(FWhere, [EditStock.Text, EditStock.Text]);
     InitFormData(FWhere);
   end else

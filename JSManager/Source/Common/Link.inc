@@ -15,3 +15,6 @@
 
 {$DEFINE NetMode}
 //网络模式支持
+
+{$DEFINE CardSupport}
+//支持磁卡

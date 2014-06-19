@@ -1,0 +1,2 @@
+Update ICStockBillEntry Set B_Backup='Y' Where B_Backup Is Null
+Update ICStockBillEntry Set B_Backup='Y' Where B_Backup='N'

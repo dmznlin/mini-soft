@@ -4,13 +4,15 @@
 *******************************************************************************}
 unit UFormJSItem;
 
+{$I Link.Inc}
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxMemo, cxTextEdit,
-  cxMaskEdit, cxDropDownEdit, dxLayoutControl, StdCtrls;
+  cxMaskEdit, cxDropDownEdit, dxLayoutControl, StdCtrls, dxSkinsCore,
+  dxSkinsDefaultPainters, cxButtonEdit;
 
 type
   TfFormJSItem = class(TfFormNormal)
@@ -34,6 +36,8 @@ type
     EditBC: TcxTextEdit;
     dxLayout1Item3: TdxLayoutItem;
     dxLayout1Group4: TdxLayoutGroup;
+    EditCard: TcxButtonEdit;
+    dxLayout1Item10: TdxLayoutItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditStockPropertiesChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -41,6 +45,8 @@ type
       Shift: TShiftState);
     procedure EditWeightPropertiesChange(Sender: TObject);
     procedure EditNumPropertiesChange(Sender: TObject);
+    procedure EditCardPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
   private
     { Private declarations }
   protected
@@ -48,6 +54,10 @@ type
     //记录编号
     FPerWeight: Double;
     //袋重
+    FCardNO: string;
+    //磁卡编号
+    FDriver,FBill,FBillDate: string;
+    //交货单
     function OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean; override;
     procedure GetSaveSQLList(const nList: TStrings); override;
     //基类函数
@@ -69,7 +79,7 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UMgrControl, UAdjustForm, UDataModule,  USysConst, USysDB,
-  UFormBase, UFormCtrl, UFrameBase;
+  UFormBase, UFormCtrl, UFormInputbox, UFrameBase;
 
 var
   gForm: TfFormJSItem = nil;
@@ -137,6 +147,15 @@ end;
 
 procedure TfFormJSItem.FormCreate(Sender: TObject);
 begin
+  {$IFNDEF CardSupport}
+  dxLayout1Item10.Visible := False;
+  Height := Height - 15;
+  //不显示磁卡号
+  {$ENDIF}
+
+  FBill := '';
+  FBillDate := '';
+  
   FRecordID := '';
   ResetHintAllCtrl(Self, 'T', sTable_JSLog);
   
@@ -195,7 +214,7 @@ begin
     nStr := 'Select * From %s Where L_ID=%s';
     nStr := Format(nStr, [sTable_JSLog, FRecordID]);
     LoadDataToForm(FDM.QuerySQL(nStr), Self, sTable_JSLog);
-    
+
     EditCus.Text := FDM.SqlQuery.FieldByName('L_Customer').AsString;
     EditTruck.Text := FDM.SqlQuery.FieldByName('L_TruckNo').AsString;
   end;
@@ -233,7 +252,7 @@ procedure TfFormJSItem.EditWeightPropertiesChange(Sender: TObject);
 var nStr: string;
     nInt: integer;
 begin
-  if not EditWeight.IsFocused then Exit;
+  //if not EditWeight.IsFocused then Exit;
   //need focus first
 
   nStr := EditWeight.Text;
@@ -344,6 +363,13 @@ begin
     nExt.Add('L_PValue=0');
     //nExt.Add('L_DaiShu=0');
 
+    if FBill <> '' then
+    begin
+      nExt.Add(SF('L_Driver', FDriver));
+      nExt.Add(SF('L_Bill', FBill));
+      nExt.Add(SF('L_BillDate', FBillDate));
+    end;
+
     if FRecordID = '' then
     begin
       nExt.Add('L_Date=''' + DateTime2Str(Now) + '''');
@@ -358,8 +384,63 @@ begin
       nStr := MakeSQLByForm(Self, sTable_JSLog, nStr, False, GetData, nExt);
       nList.Add(nStr);
     end;
+
+    if FBill <> '' then
+    begin
+      nStr := 'Delete From %s Where L_Bill=''%s''';
+      nStr := Format(nStr, [sTable_JSItem, FBill]);
+      nList.Add(nStr);
+    end;
   finally
     nExt.Free;
+  end;
+end;
+
+//Desc: 读卡
+procedure TfFormJSItem.EditCardPropertiesButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
+var nStr: string;
+    nIdx: Integer;
+begin
+  EditCard.Text := Trim(EditCard.Text);
+  if EditCard.Text = '' then Exit;
+  nStr := Format('Select * From %s Where L_Card=''%s''', [sTable_JSItem, nStr]);
+
+  with FDM.QuerySQL(nStr) do
+  begin
+    if RecordCount < 1 then
+    begin
+      ShowMsg('磁卡已无效', sHint);
+      Exit;
+    end;
+
+    First;
+    FCardNO := EditCard.Text;
+    
+    FBill := FieldByName('L_Bill').AsString;
+    FDriver := FieldByName('L_Driver').AsString;
+    FBillDate := DateTime2Str(FieldByName('L_BillDate').AsDateTime);
+
+    EditCus.Text := FieldByName('L_Customer').AsString;
+    EditTruck.Text := FieldByName('L_TruckNo').AsString;
+
+    SetCtrlData(EditStock, FieldByName('L_StockID').AsString);
+    EditWeight.Text := FieldByName('L_Weight').AsString;
+    EditMemo.Text := '开单时间: ' + FBillDate;
+
+    for nIdx:=dxLayout1.ControlCount - 1 downto 0 do
+    begin
+      if dxLayout1.Controls[nIdx] is TcxComboBox then
+        (dxLayout1.Controls[nIdx] as TcxComboBox).Properties.ReadOnly := True;
+      //xxxxx
+
+      if dxLayout1.Controls[nIdx] is TcxTextEdit then
+        (dxLayout1.Controls[nIdx] as TcxTextEdit).Properties.ReadOnly := True;
+      //xxxxx
+    end;
+
+    EditTruck.Properties.ReadOnly := False;
+    EditSID.Properties.ReadOnly := False;
   end;
 end;
 
