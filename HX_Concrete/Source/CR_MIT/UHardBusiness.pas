@@ -56,7 +56,7 @@ begin
     end;
   finally
     gBusinessPackerManager.RelasePacker(nPacker);
-    gBusinessWorkerManager.RelaseWorkder(nWorker);
+    gBusinessWorkerManager.RelaseWorker(nWorker);
   end;
 end;
 
@@ -85,7 +85,7 @@ begin
     end;
   finally
     gBusinessPackerManager.RelasePacker(nPacker);
-    gBusinessWorkerManager.RelaseWorkder(nWorker);
+    gBusinessWorkerManager.RelaseWorker(nWorker);
   end;
 end;
 
@@ -189,7 +189,7 @@ begin
   finally
     nList.Free;
     gBusinessPackerManager.RelasePacker(nPacker);
-    gBusinessWorkerManager.RelaseWorkder(nWorker);
+    gBusinessWorkerManager.RelaseWorker(nWorker);
   end;
 end;
 

@@ -77,7 +77,7 @@ begin
       //xxxxx
     end;
   finally
-    gBusinessWorkerManager.RelaseWorkder(nWorker);
+    gBusinessWorkerManager.RelaseWorker(nWorker);
   end;
 end;
 

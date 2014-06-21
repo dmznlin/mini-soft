@@ -20,8 +20,9 @@ const
   cSend_FootFile                    = 'foot.txt';
 
   //控制器通讯模式
-  SEND_MODE_COMM                    = 0;
-  SEND_MODE_NET                     = 2;
+  SEND_MODE_SERIALPORT              = 0;
+  SEND_MODE_NETWORK                 = 2;
+  SEND_MODE_SAVEFILE                = 5;
   
   //用户发送信息命令表
   SEND_CMD_PARAMETER                = $A1FF; //加载屏参数。
@@ -54,6 +55,26 @@ const
   CONTROLLER_TYPE_5M2               = $0252;
   CONTROLLER_TYPE_5M3               = $0352;
   CONTROLLER_TYPE_5M4               = $0452;
+
+  CONTROLLER_BX_5E1                 = $0154;
+  CONTROLLER_BX_5E2                 = $0254;
+  CONTROLLER_BX_5E3                 = $0354; //动态区域卡
+
+  {************************* 以下定义用于动态区域卡 ***************************}
+  RUN_MODE_CYCLE_SHOW               = 0;
+  //动态区数据循环显示；
+  RUN_MODE_SHOW_LAST_PAGE           = 1;
+  //动态区数据显示完成后静止显示最后一页数据；
+  RUN_MODE_SHOW_CYCLE_WAITOUT_NOSHOW = 2;
+  //动态区数据循环显示，超过设定时间后数据仍未更新时不再显示；
+  RUN_MODE_SHOW_ORDERPLAYED_NOSHOW  = 4;
+  //动态区数据顺序显示，显示完最后一页后就不再显示
+
+  //返回状态代码定义
+  RETURN_ERROR_NOFIND_DYNAMIC_AREA  = $E1;
+  RETURN_ERROR_NOFIND_DYNAMIC_AREA_FILE_ORD = $E2;
+  RETURN_ERROR_NOFIND_DYNAMIC_AREA_PAGE_ORD = $E3;
+  RETURN_ERROR_NOSUPPORT_FILETYPE   = $E4;
 
 type
   TCardCode = record
@@ -104,11 +125,6 @@ const
              (FCode: $27; FDesc:'向下移动'),
              (FCode: $28; FDesc:'向下连移'));
   //系统支持的特效
-
-  cCardList: array[0..1] of TCardCode = (
-             (FCode:CONTROLLER_TYPE_4M; FDesc:'BX-4M'),
-             (FCode:CONTROLLER_TYPE_4M1; FDesc:'BX-4M1'));
-  //系统支持的卡列表
 
 type
   TCardFont = record
@@ -173,6 +189,7 @@ type
     //执行线程
     procedure DrawQueue;
     //绘制队列
+    function SendDynamicData: Boolean;
     function SendQueueData: Boolean;
     //发送队列
     procedure BuildFootFormatText;
@@ -224,7 +241,7 @@ var
 implementation
 
 const
-  cDLL = 'BX_IV.dll';
+  cDLL        = 'BX_IV.dll';
 
 function InitDLLResource(nHandle: Integer): integer; stdcall; external cDLL;
 procedure FreeDLLResource; stdcall; external cDLL;
@@ -263,6 +280,45 @@ function DeleteScreenProgramAreaBmpTextFile(nScreenNo, nProgramOrd, nAreaOrd,
 function SendScreenInfo(nScreenNo, nSendMode, nSendCmd,
   nOtherParam1: Integer): Integer; stdcall; external cDLL;
 //发送相应命令到显示屏
+
+{*************************** 以下定义用于动态区域卡 ***************************}
+const
+  cDLLDyn     = 'BX_Dyn.dll';
+
+function DynAddScreen(nControlType, nScreenNo, nSendMode, nWidth, nHeight,
+  nScreenType, nPixelMode: Integer;
+  pCom: PChar; nBaud: Integer; pSocketIP: PChar; nSocketPort: Integer;
+  pCommandDataFile: pChar): integer; stdcall; external cDLLDyn name 'AddScreen';
+//向动态库中添加显示屏信息
+function AddScreenDynamicArea(nScreenNo, nDYAreaID: Integer; nRunMode: Integer;
+  nTimeOut, nAllProRelate: Integer; pProRelateList: PChar;
+  nPlayPriority: Integer; nAreaX, nAreaY, nAreaWidth, nAreaHeight: Integer;
+  nAreaFMode, nAreaFLine, nAreaFColor, nAreaFStunt, nAreaFRunSpeed,
+  nAreaFMoveStep: Integer): Integer; stdcall; external cDLLDyn;
+//向动态库中指定显示屏添加动态区域
+function AddScreenDynamicAreaFile(nScreenNo, nDYAreaID: Integer;
+  pFileName: PChar; nShowSingle: integer; pFontName: PChar;
+  nFontSize, nBold, nFontColor: Integer;
+  nStunt, nRunSpeed, nShowTime: Integer): Integer; stdcall; external cDLLDyn;
+//向动态库中指定显示屏的指定动态区域添加信息文件
+function DynDeleteScreen(nScreenNo: Integer): Integer; stdcall;
+  external cDLLDyn name 'DeleteScreen';
+//删除动态库中指定显示屏的所有信息
+function DeleteScreenDynamicAreaFile(nScreenNo, nDYAreaID,
+  nFileOrd: Integer): Integer; stdcall; external cDLLDyn;
+//删除动态库中指定显示屏指定的动态区域指定文件信息
+function SendDynamicAreaInfoCommand(nScreenNo,
+  nDYAreaID: Integer): Integer; stdcall; external cDLLDyn;
+//发送动态库中指定显示屏指定的动态区域信息到显示屏
+function SendDeleteDynamicAreasCommand(nScreenNo, nDelAllDYArea: Integer;
+  pDYAreaIDList: PChar): Integer; stdcall; external cDLLDyn;
+//删除动态库中指定显示屏指定的动态区域信息
+function SendUpdateDynamicAreaPageInfoCommand(nScreenNo, nDYAreaID, nFileOrd,
+  nPageOrd: Integer): Integer; stdcall; external cDLLDyn;
+//向动态库中指定显示屏指定的动态区域单独更新指定的数据页信息
+function SendDeleteDynamicAreaPageCommand(nScreenNo, nDYAreaID: Integer;
+  pDYAreaPageOrdList: PChar): Integer; stdcall; external cDLLDyn;
+//删除动态库中指定显示屏的指定动态区域指定的数据页信息
 
 //------------------------------------------------------------------------------
 procedure WriteLog(const nEvent: string);
@@ -515,6 +571,14 @@ begin
 
   with FNowItem^,FOwner do
   try
+    case FType of
+     CONTROLLER_BX_5E1, CONTROLLER_BX_5E2, CONTROLLER_BX_5E3:
+      begin
+        Result := SendDynamicData;
+        Exit;
+      end;
+    end;
+
     try
       nRes := DeleteScreen(1);
       if (nRes<>RETURN_NOERROR) and (nRes<>RETURN_ERROR_NOFIND_SCREENNO) then
@@ -642,7 +706,7 @@ begin
     end;
 
     //--------------------------------------------------------------------------
-    nRes := SendScreenInfo(1, SEND_MODE_NET, SEND_CMD_SENDALLPROGRAM, 0);
+    nRes := SendScreenInfo(1, SEND_MODE_NETWORK, SEND_CMD_SENDALLPROGRAM, 0);
     Result := nRes = RETURN_NOERROR;
 
     if not Result then
@@ -652,6 +716,168 @@ begin
     {$IFDEF DEBUG}
     WriteLog('屏幕:' + FNowItem.FName + '数据发送完毕.');
     {$ENDIF}                                          
+  except
+    On E:Exception do
+    begin
+      WriteLog(E.Message);
+    end;
+  end;
+end;
+
+//Desc: 向动态区域控制卡发送数据
+function TCardSendThread.SendDynamicData: Boolean;
+var nRes,nIdx,nArea: Integer;
+begin
+  Result := False;
+  //default is failure
+
+  with FNowItem^,FOwner do
+  try
+    try
+      nRes := DynDeleteScreen(1);
+      if (nRes<>RETURN_NOERROR) and (nRes<>RETURN_ERROR_NOFIND_SCREENNO) then
+      begin
+        WriteLog(Format('DeleteScreen:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+    except
+      //ignor any error
+    end;
+
+    nRes := DynAddScreen(FType, 1, SEND_MODE_NETWORK, FWidth, FHeight, 1, 2, 
+            'COM1', 9600, PChar(FIP), FPort, nil);
+    if nRes <> RETURN_NOERROR then
+    begin
+      WriteLog(Format('AddScreen:%s', [GetErrorDesc(nRes)]));
+      Exit;
+    end;
+
+    with FHeadRect,FHeadFont do
+    begin
+      nArea := 0;
+      //first area
+
+      nRes := AddScreenDynamicArea(1, nArea, RUN_MODE_CYCLE_SHOW, 3600*24, 0, nil,
+              0, Left, Top, Right-Left, Bottom-Top, 255, 0, 255, 1, 0, 1);
+      //xxxxx
+      
+      if nRes <> RETURN_NOERROR then
+      begin
+        WriteLog(Format('AddScreenDynamicArea:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+
+      FFileOpt.Text := FHeadText;
+      FFileOpt.SaveToFile(FTempDir + cSend_HeadFile);
+      Sleep(1000); //wait I/O
+
+      if FFontBold then
+           nIdx := 1
+      else nIdx := 0;
+
+      nRes := AddScreenDynamicAreaFile(1, nArea, PChar(FTempDir+cSend_HeadFile),
+              1, PChar(FFontName), FFontSize, nIdx, clRed, FEffect, FSpeed, FKeep);
+      //xxxxx
+
+      if nRes <> RETURN_NOERROR then
+      begin
+        WriteLog(Format('AddScreenDynamicAreaFile:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+
+      nRes := SendDynamicAreaInfoCommand(1, nArea);
+      if nRes <> RETURN_NOERROR then
+      begin
+        WriteLog(Format('SendDynamicAreaInfoCommand:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+
+      Inc(nArea);
+      //next area
+    end;
+
+    //--------------------------------------------------------------------------
+    if FPicNum > 0 then
+    with FDataRect,FDataFont do
+    begin
+      nRes := AddScreenDynamicArea(1, nArea, RUN_MODE_CYCLE_SHOW, 3600*24, 0, nil,
+              0, Left, Top, Right-Left, Bottom-Top, 255, 0, 255, 1, 0, 1);
+      //xxxxx
+
+      if nRes <> RETURN_NOERROR then
+      begin
+        WriteLog(Format('AddScreenDynamicArea:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+
+      for nIdx:=1 to FPicNum do
+      begin
+        nRes := AddScreenDynamicAreaFile(1, nArea, PChar(GetBMPFile(FGroup, nIdx)),
+                0, PChar(FFontName), FFontSize, nIdx, clRed, FEffect, FSpeed, FKeep);
+        //xxxxx
+
+        if nRes <> RETURN_NOERROR then
+        begin
+          WriteLog(Format('AddScreenDynamicAreaFile:%s', [GetErrorDesc(nRes)]));
+          Exit;
+        end;
+      end;
+
+      nRes := SendDynamicAreaInfoCommand(1, nArea);
+      if nRes <> RETURN_NOERROR then
+      begin
+        WriteLog(Format('SendDynamicAreaInfoCommand:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+
+      Inc(nArea);
+      //next area
+    end;
+
+    //--------------------------------------------------------------------------
+    if FFootEnable then
+    with FFootRect, FFootFont do
+    begin
+      nRes := AddScreenDynamicArea(1, nArea, RUN_MODE_CYCLE_SHOW, 3600*24, 0, nil,
+              0, Left, Top, Right-Left, Bottom-Top, 255, 0, 255, 1, 0, 1);
+      //xxxxx
+      
+      if nRes <> RETURN_NOERROR then
+      begin
+        WriteLog(Format('AddScreenDynamicArea:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+
+      FFileOpt.Text := FFootFormat;
+      FFileOpt.SaveToFile(FTempDir + cSend_FootFile);
+      Sleep(1000); //wait I/O
+
+      if FFontBold then
+           nIdx := 1
+      else nIdx := 0;
+
+      nRes := AddScreenDynamicAreaFile(1, nArea, PChar(FTempDir+cSend_FootFile),
+              1, PChar(FFontName), FFontSize, nIdx, clRed, FEffect, FSpeed, FKeep);
+      //xxxxx
+
+      if nRes <> RETURN_NOERROR then
+      begin
+        WriteLog(Format('AddScreenDynamicAreaFile:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+
+      nRes := SendDynamicAreaInfoCommand(1, nArea);
+      if nRes <> RETURN_NOERROR then
+      begin
+        WriteLog(Format('SendDynamicAreaInfoCommand:%s', [GetErrorDesc(nRes)]));
+        Exit;
+      end;
+    end;
+
+    {$IFDEF DEBUG}
+    WriteLog('屏幕:' + FNowItem.FName + '数据发送完毕.');
+    {$ENDIF}
+    Result := True;                                          
   except
     On E:Exception do
     begin
@@ -703,23 +929,40 @@ end;
 //------------------------------------------------------------------------------
 function TCardManager.GetErrorDesc(const nErr: Integer): string;
 begin
+  Result := '未定义的错误.';
+
   case nErr of
-   RETURN_ERROR_NO_USB_DISK: Result := '找不到usb设备路径';
-   RETURN_ERROR_NOSUPPORT_USB: Result := '不支持USB模式';
-   RETURN_ERROR_AERETYPE: Result := '区域类型错误,在添加、删除图文区域' +
-                     '文件时区域类型出错返回此类型错误.';
-   RETURN_ERROR_RA_SCREENNO: Result := '已经有该显示屏信息,如要重新' +
-                     '设定请先DeleteScreen删除该显示屏再添加.';
-   RETURN_ERROR_NOFIND_AREAFILE: Result := '没有找到有效的区域文件';
-   RETURN_ERROR_NOFIND_AREA: Result := '没有找到有效的显示区域,可以' +
-                       '使用AddScreenProgramBmpTextArea添加区域信息.';
-   RETURN_ERROR_NOFIND_PROGRAM: Result := '没有找到有效的显示屏节目.可以' +
-                       '使用AddScreenProgram函数添加指定节目.';
-   RETURN_ERROR_NOFIND_SCREENNO: Result := '系统内没有查找到该显示屏,可以' +
-                       '使用AddScreen函数添加显示屏.';
-   RETURN_ERROR_NOW_SENDING: Result := '系统内正在向该显示屏通讯,请稍后再通讯.';
-   RETURN_ERROR_OTHER: Result := '其它错误.';
-   RETURN_NOERROR: Result := '操作成功' else Result := '未定义的错误.';
+   RETURN_ERROR_NO_USB_DISK:
+    Result := '找不到usb设备路径';
+   RETURN_ERROR_NOSUPPORT_USB:
+    Result := '不支持USB模式';
+   RETURN_ERROR_AERETYPE:
+    Result := '区域类型错误,在添加、删除图文区域文件时区域类型出错返回此类型错误.';
+   RETURN_ERROR_RA_SCREENNO:
+    Result := '已经有该显示屏信息,如要重新设定请先DeleteScreen删除该显示屏再添加.';
+   RETURN_ERROR_NOFIND_AREAFILE:
+    Result := '没有找到有效的区域文件';
+   RETURN_ERROR_NOFIND_AREA:
+    Result := '没有找到有效的显示区域,可以使用AddScreenProgram添加区域信息.';
+   RETURN_ERROR_NOFIND_PROGRAM:
+    Result := '没有找到有效的显示屏节目.可以使用AddScreenProgram函数添加指定节目.';
+   RETURN_ERROR_NOFIND_SCREENNO:
+    Result := '系统内没有查找到该显示屏,可以使用AddScreen函数添加显示屏.';
+   RETURN_ERROR_NOW_SENDING:
+    Result := '系统内正在向该显示屏通讯,请稍后再通讯.';
+   RETURN_ERROR_OTHER:
+    Result := '其它错误.';
+   RETURN_NOERROR:
+    Result := '操作成功';
+
+   //dynamic area card
+   RETURN_ERROR_NOFIND_DYNAMIC_AREA:
+    Result := '没有找到有效的动态区域';
+   RETURN_ERROR_NOFIND_DYNAMIC_AREA_FILE_ORD:
+    Result := '在指定的动态区域没有找到指定的文件序号';
+   RETURN_ERROR_NOFIND_DYNAMIC_AREA_PAGE_ORD:
+    Result := '在指定的动态区域没有找到指定的页序号';
+   RETURN_ERROR_NOSUPPORT_FILETYPE: Result := '不支持该文件类型';
   end;
 end;
 
@@ -776,7 +1019,13 @@ begin
       if CompareText('5m3', nStr) = 0 then
            FType := CONTROLLER_TYPE_5M3 else
       if CompareText('5m4', nStr) = 0 then
-           FType := CONTROLLER_TYPE_5M4;
+           FType := CONTROLLER_TYPE_5M4 else
+      if CompareText('5e1', nStr) = 0 then
+           FType := CONTROLLER_BX_5E1 else
+      if CompareText('5e2', nStr) = 0 then
+           FType := CONTROLLER_BX_5E2 else
+      if CompareText('5e3', nStr) = 0 then
+           FType := CONTROLLER_BX_5E3;
       //for card type
 
       FIP := nNode.NodeByName('ip').ValueAsString;
