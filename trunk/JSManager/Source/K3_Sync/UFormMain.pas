@@ -88,6 +88,9 @@ begin
   gPath := ExtractFilePath(Application.ExeName);
   InitGlobalVariant(gPath, gPath + sConfigFile, gPath + sFormConfig, gPath + sDBConfig);
 
+  Group3.Width := ClientWidth - 20;
+  MemoLog.Width := Group3.Width;
+  
   LoadFormConfig(Self);
   InitSystemObjects;
 end;

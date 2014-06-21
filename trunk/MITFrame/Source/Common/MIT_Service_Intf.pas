@@ -36,7 +36,7 @@ type
   { ISrvConnection }
 
   { Description:
-      连接服务,负责安全验证、心跳指令等 }
+      Service For Login Verify,SweetHeart ETC. }
   ISrvConnection = interface
     ['{3E08D66D-DFBE-485E-A65C-F5EC6DC9F7CF}']
     function Action(const nFunName: AnsiString; var nData: AnsiString): Boolean;
@@ -58,7 +58,7 @@ type
   { ISrvBusiness }
 
   { Description:
-      处理系统业务 }
+      Service For Business }
   ISrvBusiness = interface
     ['{6173318C-3ECB-4FA8-A32A-4FC64D22AFF5}']
     function Action(const nFunName: AnsiString; var nData: AnsiString): Boolean;

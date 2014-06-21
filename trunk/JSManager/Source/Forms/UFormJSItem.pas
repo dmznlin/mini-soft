@@ -215,8 +215,12 @@ begin
     nStr := Format(nStr, [sTable_JSLog, FRecordID]);
     LoadDataToForm(FDM.QuerySQL(nStr), Self, sTable_JSLog);
 
-    EditCus.Text := FDM.SqlQuery.FieldByName('L_Customer').AsString;
-    EditTruck.Text := FDM.SqlQuery.FieldByName('L_TruckNo').AsString;
+    with FDM.SqlQuery do
+    begin
+      EditCus.Text := FieldByName('L_Customer').AsString;
+      EditTruck.Text := FieldByName('L_TruckNo').AsString;
+      SetCtrlData(EditStock, FieldByName('L_StockID').AsString);
+    end;
   end;
 end;
 
@@ -360,15 +364,19 @@ var nStr: string;
 begin
   nExt := TStringList.Create;
   try
-    nExt.Add('L_PValue=0');
-    //nExt.Add('L_DaiShu=0');
-
     if FBill <> '' then
     begin
       nExt.Add(SF('L_Driver', FDriver));
       nExt.Add(SF('L_Bill', FBill));
       nExt.Add(SF('L_BillDate', FBillDate));
     end;
+
+    nStr := EditStock.Text;
+    System.Delete(nStr, 1, Pos('¡¢', nStr) + 1);
+
+    nExt.Add(SF('L_PValue', 0, sfVal));
+    nExt.Add(SF('L_StockID', GetCtrlData(EditStock)));
+    nExt.Add(SF('L_Stock', nStr));
 
     if FRecordID = '' then
     begin
@@ -404,6 +412,8 @@ var nStr: string;
 begin
   EditCard.Text := Trim(EditCard.Text);
   if EditCard.Text = '' then Exit;
+
+  nStr := EditCard.Text;
   nStr := Format('Select * From %s Where L_Card=''%s''', [sTable_JSItem, nStr]);
 
   with FDM.QuerySQL(nStr) do

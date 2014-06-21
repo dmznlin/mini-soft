@@ -1,7 +1,7 @@
 program MIT;
 
 {$IFDEF GenRODL}
-  {#ROGEN:..\Common\MIT_Service.rodl}
+  {.#ROGEN:..\Common\MIT_Service.rodl}
 {$ENDIF}
 
 uses

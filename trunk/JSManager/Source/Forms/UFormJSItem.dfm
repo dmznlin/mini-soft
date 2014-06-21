@@ -36,7 +36,6 @@ inherited fFormJSItem: TfFormJSItem
     object EditStock: TcxComboBox [3]
       Left = 87
       Top = 129
-      Hint = 'T.L_Stock'
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.ImmediateDropDown = False
@@ -135,6 +134,7 @@ inherited fFormJSItem: TfFormJSItem
     object EditCard: TcxButtonEdit [11]
       Left = 87
       Top = 45
+      ParentFont = False
       Properties.Buttons = <
         item
           Default = True

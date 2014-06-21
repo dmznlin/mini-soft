@@ -29,7 +29,7 @@ begin
   gSysLoger := TSysLoger.Create(gPath + sLogDir, 'Hard_Mon_Loger');
   //system loger
 
-  //gDBConnManager := TDBConnManager.Create;
+  gDBConnManager := TDBConnManager.Create;
   //db conn pool
 
   gParamManager := TParamManager.Create(gPath + sConfigFile);

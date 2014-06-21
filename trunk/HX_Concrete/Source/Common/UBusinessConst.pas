@@ -9,6 +9,9 @@ unit UBusinessConst;
 
 interface
 
+uses
+  UBusinessPacker;
+  
 const
   {*channel type*}
   cBus_Channel_Connection     = $0002;
@@ -30,30 +33,6 @@ const
   cBC_LoadQueueTrucks         = $0062;
 
 type
-  TBWWorkerInfo = record
-    FUser   : string;              //发起人
-    FIP     : string;              //IP地址
-    FMAC    : string;              //主机标识
-    FTime   : TDateTime;           //发起时间
-    FKpLong : Int64;               //消耗时长
-  end;
-
-  PBWDataBase = ^TBWDataBase;
-  TBWDataBase = record
-    FWorker   : string;            //封装者
-    FFrom     : TBWWorkerInfo;     //源
-    FVia      : TBWWorkerInfo;     //经由
-    FFinal    : TBWWorkerInfo;     //到达
-
-    FMsgNO    : string;            //消息号
-    FKey      : string;            //记录标记
-    FParam    : string;            //扩展参数
-
-    FResult   : Boolean;           //执行结果
-    FErrCode  : string;            //错误代码
-    FErrDesc  : string;            //错误描述
-  end;
-
   PWorkerBusinessCommand = ^TWorkerBusinessCommand;
   TWorkerBusinessCommand = record
     FBase     : TBWDataBase;

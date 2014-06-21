@@ -83,11 +83,12 @@ end;
 
 function TfFrameJSItem.InitFormDataSQL(const nWhere: string): string;
 begin
-  Result := 'Select * From %s,%s Where L_Stock=S_ID And L_HasDone=''%s''';
-  Result := Format(Result, [sTable_JSLog, sTable_StockType, sFlag_No]);
+  Result := 'Select * From %s Where L_HasDone=''%s''';
+  Result := Format(Result, [sTable_JSLog, sFlag_No]);
   
-  if nWhere <> '' then Result := Result + ' And (' + nWhere + ')';
-  Result := Result + ' Order By L_ID';
+  if nWhere <> '' then
+    Result := Result + ' And (' + nWhere + ')';
+  //xxxxx
 end;
 
 //------------------------------------------------------------------------------

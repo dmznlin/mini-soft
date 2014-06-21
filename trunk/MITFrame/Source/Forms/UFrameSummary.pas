@@ -190,7 +190,7 @@ begin
     NewSummaryItem('连接分组', ItemFlag);
     NewSummaryItem('连接对象', ItemFlag);
     NewSummaryItem('已连对象', ItemFlag);
-    NewSummaryItem('分组服用', ItemFlag);
+    NewSummaryItem('分组复用', ItemFlag);
     NewSummaryItem('当前队列', ItemFlag);
     NewSummaryItem('队列峰值', ItemFlag);
     NewSummaryItem('峰值时间', ItemFlag);

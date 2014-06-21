@@ -7,8 +7,8 @@ unit USyncConst;
 interface
 
 uses
-  Windows, Classes, SysUtils, DB, UMgrDBConn, UFormCtrl, UWaitItem, USysLoger,
-  USysDB;
+  Windows, Classes, SysUtils, DB, UMgrDBConn, UFormCtrl, UWaitItem, ULibFun,
+  USysLoger, USysDB;
 
 type
   TSyncThread = class(TThread)
@@ -238,7 +238,7 @@ begin
             '  Inner Join t_Organization t4 on v1.FSupplyID=t4.FItemID ' +
             '  Inner Join t_ICItem t14 on u1.FItemID=t14.FItemID ' +
             'Where u1.B_Backup=''N'' And v1.FTranType=21 And ' +
-            '  v1.FHeadSelfB0148 Is Not Null';
+            '  v1.FHeadSelfB0146 Is Not Null And v1.FHeadSelfB0148 > 0';
     //未同步已过磅散装交货单
 
     with gDBConnManager.SQLQuery(nStr, nK3, sDB_K3) do
@@ -250,6 +250,9 @@ begin
 
       while not Eof do
       begin
+        nStr := DateTime2Str(FieldByName('FMTime').AsDateTime);
+        //称毛时间
+
         nStr := MakeSQLByStr([SF('L_CusID', FieldByName('FCusID').AsString),
                 SF('L_Customer', FieldByName('FCusName').AsString),
                 SF('L_StockID', FieldByName('FItemID').AsString),
@@ -257,10 +260,14 @@ begin
                 SF('L_TruckNo', FieldByName('FTruck').AsString),
                 SF('L_Weight', FieldByName('FQty').AsFloat),
                 SF('L_PPValue', FieldByName('FPValue').AsFloat),
-                SF('L_PMTime', FieldByName('FMTime').AsDateTime, sfDateTime),
+                SF('L_PMTime', nStr),
                 SF('L_PMValue', FieldByName('FMValue').AsFloat),
                 SF('L_Bill', FieldByName('FBillNo').AsString),
-                SF('L_BillDate', sField_SQLServer_Now, sfVal)
+                SF('L_BillDate', nStr),
+                SF('L_HasDone', sFlag_Yes),
+                SF('L_OKTime', nStr),
+                SF('L_Date', nStr),
+                SF('L_Memo', 'K3自动同步')
                 ], sTable_JSLog, '', True);
         nListJS.Add(nStr);
 
