@@ -162,20 +162,24 @@ begin
 end;
 
 procedure TfFrameCard.BtnAddClick(Sender: TObject);
-var nStr: string;
+var nStr,nCard: string;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
     ShowMsg('ÇëÑ¡ÔñÒª°ì¿¨µÄ¼ÇÂ¼', sHint); Exit;
   end;
 
-  nStr := '';
-  if not ShowInputBox('ÇëÊäÈë´Å¿¨ºÅ:', '°ì¿¨', nStr, 15) then Exit;
+  nCard := '';
+  if not ShowInputBox('ÇëÊäÈë´Å¿¨ºÅ:', '°ì¿¨', nCard, 15) then Exit;
+
+  nStr := Format('Update %s Set L_Card='''' Where L_Card=''%s''',
+          [sTable_JSItem, nCard]);
+  FDM.ExecuteSQL(nStr);
 
   nStr := Format('Update %s Set L_Card=''%s'' Where L_Bill=''%s''',
-          [sTable_JSItem, nStr, SQLQuery.FieldByName('L_Bill').AsString]);
+          [sTable_JSItem, nCard, SQLQuery.FieldByName('L_Bill').AsString]);
   //xxxxx
-  
+
   FDM.ExecuteSQL(nStr);
   InitFormData(FWhere);
 end;
