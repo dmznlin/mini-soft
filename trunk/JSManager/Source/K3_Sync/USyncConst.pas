@@ -13,6 +13,8 @@ uses
 type
   TSyncThread = class(TThread)
   private
+    FStrings: TStrings;
+    //字符列表
     FWaiter: TWaitObject;
     //等待对象
     FLastClearAll: TDateTime;
@@ -81,6 +83,7 @@ begin
   inherited Create(False);
   FreeOnTerminate := False;
 
+  FStrings := TStringList.Create;
   FWaiter := TWaitObject.Create;
   FWaiter.Interval := Trunc(3.5 * 1000);
 end;
@@ -88,6 +91,7 @@ end;
 destructor TSyncThread.Destroy;
 begin
   FWaiter.Free;
+  FStrings.Free;
   inherited;
 end;
 
@@ -246,12 +250,24 @@ begin
     begin
       nListK3 := TStringList.Create;
       nListJS := TStringList.Create;
+
+      FStrings.Clear;
       First;
 
       while not Eof do
       begin
         nStr := DateTime2Str(FieldByName('FMTime').AsDateTime);
         //称毛时间
+
+        if FStrings.IndexOf(nStr) < 0 then
+        begin
+          FStrings.Add(nStr);
+          //filter flag
+        end else
+        begin
+          Next;
+          Continue;
+        end;
 
         nStr := MakeSQLByStr([SF('L_CusID', FieldByName('FCusID').AsString),
                 SF('L_Customer', FieldByName('FCusName').AsString),
@@ -273,8 +289,8 @@ begin
 
         nStr := 'Update %s Set B_Backup=''Y'' Where FInterID=%s ';
         nStr := Format(nStr, [sTable_K3_Bill, FieldByName('FInterID').AsString]);
-        nListK3.Add(nStr);
 
+        nListK3.Add(nStr);
         Next;
       end;
 
