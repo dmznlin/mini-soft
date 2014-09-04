@@ -103,6 +103,7 @@ ResourceString
   sLogDir             = 'Logs\';                     //日志目录
   sLogSyncLock        = 'SyncLock_MIT_CommonMIT';    //日志同步锁
 
+  sPlugDir            = 'Plugs\';                    //插件目录
   sInvalidConfig      = '配置文件无效或已经损坏';    //配置文件无效
   sCloseQuery         = '确定要退出程序吗?';         //主窗口退出
   

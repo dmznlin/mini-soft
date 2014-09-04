@@ -8,12 +8,19 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  UDataModule, UFrameBase, ExtCtrls, Grids, ValEdit, UZnValueList;
+  UDataModule, UFrameBase, ExtCtrls, Grids, ValEdit, UZnValueList, Menus;
 
 {$I Link.Inc}
 type
   TfFramePlugs = class(TfFrameBase)
     ListPlugs: TZnValueList;
+    PMenu1: TPopupMenu;
+    N1: TMenuItem;
+    N2: TMenuItem;
+    N3: TMenuItem;
+    procedure N1Click(Sender: TObject);
+    procedure N3Click(Sender: TObject);
+    procedure PMenu1Popup(Sender: TObject);
   private
     { Private declarations }
     procedure NewPlugItem(const nKey,nFlag: string;
@@ -120,6 +127,14 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+//Desc: 权限
+procedure TfFramePlugs.PMenu1Popup(Sender: TObject);
+begin
+  N1.Enabled := gSysParam.FIsAdmin;
+  N3.Enabled := gSysParam.FIsAdmin;
+end;
+
 //Desc: 更新列表
 procedure TfFramePlugs.UpdatePlugList;
 var nStr: string;
@@ -164,6 +179,42 @@ begin
     NewPlugItem('文件', ItemFlag(0));
     UpdateItem(ItemFlag(1), FModuleFile);
   end;
+end;
+
+//Desc: 卸载
+procedure TfFramePlugs.N1Click(Sender: TObject);
+var nStr,nExt: string;
+    nPos: Integer;
+    nData: PZnVLData;
+begin
+  nData := ListPlugs.GetSelectData();
+  if not Assigned(nData) then Exit;
+
+  nStr := nData.FFlag;
+  nPos := StrPosR('_', nStr);
+  System.Delete(nStr, nPos + 1, Length(nStr) - nPos);
+
+  nData := ListPlugs.FindData(nStr + '1');
+  if not Assigned(nData) then Exit;
+
+  nStr := PZnVLPicture(nData.FData).FValue.FText;
+  nExt := ExtractFileExt(gPlugManager.GetModuleInfo(nStr).FModuleFile);
+
+  if LowerCase(nExt) = '.dll' then
+  begin
+    gPlugManager.UnloadPlug(nStr);
+    UpdatePlugList;
+  end else
+  begin
+    ShowMsg('关键插件无法卸载', sHint);
+  end;
+end;
+
+//Desc: 重载
+procedure TfFramePlugs.N3Click(Sender: TObject);
+begin
+  gPlugManager.LoadPlugsInDirectory(gPath + sPlugDir);
+  UpdatePlugList;
 end;
 
 initialization

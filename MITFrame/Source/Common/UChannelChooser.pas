@@ -12,7 +12,8 @@ interface
 
 uses
   Windows, Classes, ComCtrls, SysUtils, SyncObjs, IniFiles, UWaitItem,
-  UMgrChannel, UBusinessConst, UBusinessPacker, MIT_Service_Intf;
+  UMgrChannel, UBusinessConst, UBusinessWorker, UBusinessPacker,
+  MIT_Service_Intf, ULibFun;
 
 type
   TChannelChoolser = class;
@@ -52,7 +53,7 @@ type
     //激活通道
     FWaiter: TWaitObject;
     //等待对象
-    FLastCheck: Cardinal;
+    FLastCheck: Int64;
     FNumChecker: Integer;
     //探测线程
     FRefresher: TChannelRefresher;
@@ -60,6 +61,7 @@ type
     FLockOuter: TCriticalSection;
     FLockInner: TCriticalSection;
     //同步锁
+    FAutoLocalList: Boolean;
     FURLs: array of TChannelURLItem;
     //通道列表
     function URLValid(const nURL: string): Boolean;
@@ -82,6 +84,7 @@ type
     property FileName: string read FFileName;
     property ChannelValid: Boolean read FIsValid;
     property ActiveURL: string read FActiveOne write FActiveOne;
+    property AutoUpdateLocal: Boolean read FAutoLocalList write FAutoLocalList;
     //属性相关
   end;
 
@@ -216,7 +219,7 @@ begin
       FLockInner.Leave;
     end;
 
-    if nStr <> '' then
+    if FAutoLocalList and (nStr <> '') then
     begin
       nStr := PackerDecodeStr(nStr);
       nList := TStringList.Create;
@@ -278,6 +281,7 @@ constructor TChannelChoolser.Create(const nFileName: string);
 begin
   FLastCheck := 0;
   FNumChecker := 0;
+  FAutoLocalList := True;
 
   FIsValid := True;
   FModified := False;
@@ -345,7 +349,9 @@ begin
         begin
           FSrvURL := nStr;
           FEnable := True;
-          FLastAct := ReadDateTime(cSrvURL, 'Act' + nTag, Now);
+
+          nStr := ReadString(cSrvURL, 'Act' + nTag, DateTime2Str(Now));
+          FLastAct := Str2DateTime(nStr);
         end;
       finally
         Dec(nIdx);
@@ -366,7 +372,7 @@ begin
         Inc(nLen);
 
         WriteString(cSrvURL, 'URL' + nStr, FURLs[nIdx].FSrvURL);
-        WriteDateTime(cSrvURL, 'Act' + nStr, FURLs[nIdx].FLastAct);
+        WriteString(cSrvURL, 'Act' + nStr, DateTime2Str(FURLs[nIdx].FLastAct));
       end;
 
       WriteString(cSystem, 'Active', FActiveOne);

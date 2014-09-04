@@ -12,8 +12,9 @@ interface
 uses
   Forms, Classes, SysUtils, ULibFun, UMITConst,
   //常规定义
-  UBusinessWorker, UBusinessPacker, UMgrDBConn, UMgrParam, UMgrPlug, UMgrChannel,
-  UChannelChooser, USAPConnection, USysShareMem, USysLoger;
+  UBusinessWorker, UBusinessPacker, UMgrDBConn, UMgrParam, UMgrPlug,
+  UMgrChannel, UTaskMonitor, UChannelChooser, USAPConnection, USysShareMem,
+  USysLoger;
   //系统对象
 
 procedure InitSystemObject(const nMainForm: THandle);
@@ -88,11 +89,16 @@ begin
   gChannelChoolser.AddChanels(gParamManager.URLRemote.Text);
   gChannelChoolser.StartRefresh;
   {$ENDIF} //channel auto select
+
+  gTaskMonitor.StartMon;
+  //mon task start
 end;
 
 procedure TMainEventWorker.BeforeStopServer;
 begin
   inherited;
+  gTaskMonitor.StopMon;
+  //stop mon task
 
   {$IFDEF AutoChannel}
   gChannelChoolser.StopRefresh;
@@ -106,6 +112,9 @@ var nParam: TPlugRunParameter;
 begin
   gSysLoger := TSysLoger.Create(gPath + sLogDir, sLogSyncLock);
   //日志管理器
+  gTaskMonitor := TTaskMonitor.Create;
+  //任务监控器
+
   gParamManager := TParamManager.Create(gPath + 'Parameters.xml');
   if gSysParam.FParam <> '' then
     gParamManager.GetParamPack(gSysParam.FParam, True);
@@ -126,6 +135,7 @@ begin
 
   {$IFDEF AutoChannel}
   gChannelChoolser := TChannelChoolser.Create(gPath + 'Service.Ini');
+  gChannelChoolser.AutoUpdateLocal := False;
   gChannelChoolser.AddChanels(gParamManager.URLRemote.Text);
   {$ENDIF}
 
@@ -146,7 +156,7 @@ begin
   with gPlugManager do
   begin
     AddEventWorker(TMainEventWorker.Create);
-    LoadPlugsInDirectory(gPath + 'Plugs');
+    LoadPlugsInDirectory(gPath + sPlugDir);
 
     RefreshUIMenu;
     InitSystemObject;

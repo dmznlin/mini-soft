@@ -7,7 +7,7 @@ unit UEventWorker;
 interface
 
 uses
-  Windows, Classes, UMgrPlug;
+  Windows, Classes, UMgrPlug, UBusinessConst, ULibFun, UPlugConst;
 
 type
   TPlugWorker = class(TPlugEventWorker)
@@ -25,7 +25,11 @@ implementation
 class function TPlugWorker.ModuleInfo: TPlugModuleInfo;
 begin
   Result := inherited ModuleInfo;
-  Result.FModuleName := '²âÊÔÄ£¿é';
+  with Result do
+  begin
+    FModuleID := '';
+    FModuleName := '²âÊÔÄ£¿é';
+  end;
 end;
 
 procedure TPlugWorker.RunSystemObject(const nParam: PPlugRunParameter);

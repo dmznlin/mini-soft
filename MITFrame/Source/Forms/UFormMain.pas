@@ -104,7 +104,7 @@ begin
               
   with nLabel do
   begin
-    Caption := sHintText;
+    Caption := gSysParam.FHintText;
     Left := PanelTitle.Width - Width - 12;
     Top := (PanelTitle.Height - Height) div 2 + 2;
   end;
@@ -188,6 +188,11 @@ begin
     Caption := gSysParam.FMainTitle + ' V' + nStr;
   end else Caption := gSysParam.FMainTitle;
 
+  nStr := ChangeFileExt(Application.ExeName, '.ico');
+  if FileExists(nStr) then
+    Application.Icon.LoadFromFile(nStr);
+  //change app icon
+
   FormLoadConfig;
   //load config
   
@@ -262,9 +267,11 @@ begin
     SysService.OnClick(nil);
     //try to start
 
+    {$IFDEF DEBUG}
     if ROModule.IsServiceRun then
       PostMessage(Handle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
     //xxxxx
+    {$ENDIF}
   end;
 end;
 
