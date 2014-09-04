@@ -13,6 +13,8 @@ uses
 type
   TSrvBusiness = class(TRORemotable, ISrvBusiness)
   private
+    FEvent: string;
+    FTaskID: Int64;
     procedure WriteLog(const nLog: string);
   protected
     function Action(const nFunName: AnsiString; var nData: AnsiString): Boolean;
@@ -21,7 +23,7 @@ type
 implementation
 
 uses
-  USysLoger, UROModule, UBusinessWorker, UMITConst;
+  UROModule, UBusinessWorker, UTaskMonitor, USysLoger, UMITConst;
 
 procedure TSrvBusiness.WriteLog(const nLog: string);
 begin
@@ -35,6 +37,10 @@ function TSrvBusiness.Action(const nFunName: AnsiString;
  var nData: AnsiString): Boolean;
 var nWorker: TBusinessWorkerBase;
 begin
+  FEvent := Format('TSrvBusiness.Action( %s )', [nFunName]);
+  FTaskID := gTaskMonitor.AddTask(FEvent, 10 * 1000);
+  //new task
+
   nWorker := gBusinessWorkerManager.LockWorker(nFunName);
   try 
     try
@@ -78,6 +84,7 @@ begin
       //xxxxx
     end;
   finally
+    gTaskMonitor.DelTask(FTaskID);
     gBusinessWorkerManager.RelaseWorker(nWorker);
   end;
 end;
