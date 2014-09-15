@@ -321,6 +321,7 @@ var nStr,nTag: string;
     nIni: TIniFile;
     nIdx,nLen: Integer;
 begin
+  if nFile = '' then Exit;
   nIni := TIniFile.Create(nFile);
 
   with nIni do

@@ -267,7 +267,7 @@ begin
     SysService.OnClick(nil);
     //try to start
 
-    {$IFDEF DEBUG}
+    {$IFNDEF DEBUG}
     if ROModule.IsServiceRun then
       PostMessage(Handle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
     //xxxxx
