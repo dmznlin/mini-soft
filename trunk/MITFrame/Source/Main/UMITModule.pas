@@ -69,7 +69,7 @@ begin
   with gParamManager do
   begin
     gDBConnManager.AddParam(ActiveParam.FDB^);
-    gDBConnManager.MaxConn := ActiveParam.FPerform.FPoolSizeConn;
+    gDBConnManager.MaxConn := ActiveParam.FDB.FNumWorker;
   end;
   {$ENDIF} //db
 
@@ -134,7 +134,7 @@ begin
   {$ENDIF}
 
   {$IFDEF AutoChannel}
-  gChannelChoolser := TChannelChoolser.Create(gPath + 'Service.Ini');
+  gChannelChoolser := TChannelChoolser.Create('');
   gChannelChoolser.AutoUpdateLocal := False;
   gChannelChoolser.AddChanels(gParamManager.URLRemote.Text);
   {$ENDIF}
