@@ -18,8 +18,8 @@ object fFormMain: TfFormMain
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 140
-    Height = 47
+    Width = 138
+    Height = 45
     Align = alClient
     BevelOuter = bvLowered
     ParentColor = True
@@ -27,8 +27,8 @@ object fFormMain: TfFormMain
     object Image1: TImage
       Left = 1
       Top = 1
-      Width = 138
-      Height = 45
+      Width = 136
+      Height = 43
       Align = alClient
       PopupMenu = PMenu1
       Proportional = True

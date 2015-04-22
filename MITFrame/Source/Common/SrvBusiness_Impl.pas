@@ -41,8 +41,9 @@ begin
   FTaskID := gTaskMonitor.AddTask(FEvent, 10 * 1000);
   //new task
 
-  nWorker := gBusinessWorkerManager.LockWorker(nFunName);
-  try 
+  nWorker := nil;
+  try
+    nWorker := gBusinessWorkerManager.LockWorker(nFunName);
     try
       if nWorker.FunctionName = '' then
       begin

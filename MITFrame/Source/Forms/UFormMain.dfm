@@ -19,7 +19,7 @@ object fFormMain: TfFormMain
     Left = 0
     Top = 60
     Width = 225
-    Height = 491
+    Height = 495
     Align = alLeft
     Color = 14408641
     ActiveGroupIndex = 0
@@ -190,13 +190,13 @@ object fFormMain: TfFormMain
   object PanelTitle: TPanel
     Left = 0
     Top = 0
-    Width = 880
+    Width = 884
     Height = 60
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
     DesignSize = (
-      880
+      884
       60)
     object ImgLeft: TImage
       Left = 0
@@ -793,7 +793,7 @@ object fFormMain: TfFormMain
     object ImgClient: TImage
       Left = 289
       Top = 0
-      Width = 591
+      Width = 595
       Height = 60
       Align = alClient
       Picture.Data = {
@@ -931,8 +931,8 @@ object fFormMain: TfFormMain
   end
   object SBar: TStatusBar
     Left = 0
-    Top = 551
-    Width = 880
+    Top = 555
+    Width = 884
     Height = 19
     Panels = <
       item
@@ -948,8 +948,8 @@ object fFormMain: TfFormMain
   object PanelWork: TPanel
     Left = 225
     Top = 60
-    Width = 655
-    Height = 491
+    Width = 659
+    Height = 495
     Align = alClient
     BevelOuter = bvNone
     DockSite = True

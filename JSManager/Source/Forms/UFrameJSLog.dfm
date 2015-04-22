@@ -54,7 +54,7 @@ inherited fFrameJSLog: TfFrameJSLog
     Height = 150
     object cxTextEdit1: TcxTextEdit [0]
       Left = 69
-      Top = 93
+      Top = 96
       Hint = 'T.L_TruckNo'
       ParentFont = False
       TabOrder = 4
@@ -90,7 +90,7 @@ inherited fFrameJSLog: TfFrameJSLog
     end
     object cxTextEdit2: TcxTextEdit [3]
       Left = 232
-      Top = 93
+      Top = 96
       Hint = 'T.S_Name'
       ParentFont = False
       TabOrder = 5
@@ -98,7 +98,7 @@ inherited fFrameJSLog: TfFrameJSLog
     end
     object cxTextEdit3: TcxTextEdit [4]
       Left = 405
-      Top = 93
+      Top = 96
       Hint = 'T.L_SerialID'
       ParentFont = False
       TabOrder = 6
@@ -120,7 +120,7 @@ inherited fFrameJSLog: TfFrameJSLog
     end
     object cxTextEdit4: TcxTextEdit [6]
       Left = 560
-      Top = 93
+      Top = 96
       Hint = 'T.L_Weight'
       ParentFont = False
       TabOrder = 7
@@ -142,7 +142,7 @@ inherited fFrameJSLog: TfFrameJSLog
     end
     object cxTextEdit5: TcxTextEdit [8]
       Left = 703
-      Top = 93
+      Top = 96
       Hint = 'T.L_Customer'
       ParentFont = False
       TabOrder = 8

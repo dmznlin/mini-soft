@@ -29,7 +29,7 @@ type
   protected
     procedure GetExtendMenu(const nList: TList); override;
     procedure BeforeStartServer; override;
-    procedure BeforeStopServer; override;
+    procedure AfterStopServer; override;
   public
     class function ModuleInfo: TPlugModuleInfo; override;
   end;
@@ -94,7 +94,7 @@ begin
   //mon task start
 end;
 
-procedure TMainEventWorker.BeforeStopServer;
+procedure TMainEventWorker.AfterStopServer;
 begin
   inherited;
   gTaskMonitor.StopMon;
@@ -103,9 +103,33 @@ begin
   {$IFDEF AutoChannel}
   gChannelChoolser.StopRefresh;
   {$ENDIF} //channel
+
+  {$IFDEf SAP}
+  gSAPConnectionManager.ClearAllConnection;
+  {$ENDIF}//stop sap
+
+  {$IFDEF DBPool}
+  gDBConnManager.Disconnection();
+  {$ENDIF} //db
 end;
 
 //------------------------------------------------------------------------------
+//Desc: 填充数据库参数
+procedure FillAllDBParam;
+var nIdx: Integer;
+    nList: TStrings;
+begin
+  nList := TStringList.Create;
+  try
+    gParamManager.LoadParam(nList, ptDB);
+    for nIdx:=0 to nList.Count - 1 do
+      gDBConnManager.AddParam(gParamManager.GetDB(nList[nIdx])^);
+    //xxxxx
+  finally
+    nList.Free;
+  end;
+end;
+
 //Desc: 初始化系统对象
 procedure InitSystemObject(const nMainForm: THandle);
 var nParam: TPlugRunParameter;
@@ -122,6 +146,7 @@ begin
 
   {$IFDEF DBPool}
   gDBConnManager := TDBConnManager.Create;
+  FillAllDBParam;
   {$ENDIF}
 
   {$IFDEF SAP}

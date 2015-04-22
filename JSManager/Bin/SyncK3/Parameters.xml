@@ -10,7 +10,7 @@
   <Param>
     <DBList>
       <DB ID="k3_db" Name="K3数据库">
-        <Host>127.0.0.1</Host>
+        <Host>dmzn</Host>
         <Port>1433</Port>
         <DBName>AIS20101231173129</DBName>
         <User>sa</User>
@@ -19,7 +19,7 @@
         <WorkerNum>5</WorkerNum>
       </DB>
 	  <DB ID="js_db" Name="计数器数据库">
-        <Host>127.0.0.1</Host>
+        <Host>dmzn</Host>
         <Port>1433</Port>
         <DBName>JSData</DBName>
         <User>sa</User>

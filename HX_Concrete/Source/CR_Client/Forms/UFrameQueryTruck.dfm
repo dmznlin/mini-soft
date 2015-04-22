@@ -29,7 +29,7 @@ inherited fFrameTruckQuery: TfFrameTruckQuery
     Height = 128
     object cxTextEdit1: TcxTextEdit [0]
       Left = 81
-      Top = 93
+      Top = 96
       Hint = 'T.T_Truck'
       ParentFont = False
       TabOrder = 4
@@ -65,7 +65,7 @@ inherited fFrameTruckQuery: TfFrameTruckQuery
     end
     object cxTextEdit2: TcxTextEdit [3]
       Left = 244
-      Top = 93
+      Top = 96
       Hint = 'T.T_TaskID'
       ParentFont = False
       TabOrder = 5
@@ -73,7 +73,7 @@ inherited fFrameTruckQuery: TfFrameTruckQuery
     end
     object cxTextEdit3: TcxTextEdit [4]
       Left = 407
-      Top = 93
+      Top = 96
       Hint = 'T.C_Name'
       ParentFont = False
       TabOrder = 6

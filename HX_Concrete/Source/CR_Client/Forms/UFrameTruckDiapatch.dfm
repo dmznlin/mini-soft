@@ -42,7 +42,7 @@ inherited fFrameTruckDispatch: TfFrameTruckDispatch
     Height = 135
     object cxTextEdit1: TcxTextEdit [0]
       Left = 81
-      Top = 93
+      Top = 96
       Hint = 'T.T_Truck'
       ParentFont = False
       TabOrder = 1
@@ -64,7 +64,7 @@ inherited fFrameTruckDispatch: TfFrameTruckDispatch
     end
     object cxTextEdit2: TcxTextEdit [2]
       Left = 234
-      Top = 93
+      Top = 96
       Hint = 'T.T_Line'
       ParentFont = False
       TabOrder = 2
@@ -72,7 +72,7 @@ inherited fFrameTruckDispatch: TfFrameTruckDispatch
     end
     object cxTextEdit3: TcxTextEdit [3]
       Left = 397
-      Top = 93
+      Top = 96
       Hint = 'T.T_InTime'
       ParentFont = False
       TabOrder = 3

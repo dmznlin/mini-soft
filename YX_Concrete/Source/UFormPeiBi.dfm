@@ -91,7 +91,7 @@ object fFormPeiBi: TfFormPeiBi
         Left = 19
         Top = 28
         Width = 219
-        Height = 20
+        Height = 23
         EditLabel.Width = 53
         EditLabel.Height = 15
         EditLabel.Caption = #37197#27604#39033':'
@@ -102,7 +102,7 @@ object fFormPeiBi: TfFormPeiBi
         Left = 19
         Top = 83
         Width = 219
-        Height = 20
+        Height = 23
         EditLabel.Width = 53
         EditLabel.Height = 15
         EditLabel.Caption = #22269#26631#20540':'
@@ -113,7 +113,7 @@ object fFormPeiBi: TfFormPeiBi
         Left = 19
         Top = 138
         Width = 219
-        Height = 20
+        Height = 23
         EditLabel.Width = 53
         EditLabel.Height = 15
         EditLabel.Caption = #28014#21160#20540':'
