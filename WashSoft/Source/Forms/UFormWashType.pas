@@ -109,7 +109,7 @@ begin
   if Sender = EditPrice then
   begin
     Result := IsNumber(EditPrice.Text, True);
-    nHint := '折扣为>0的数';
+    nHint := '价格为>0的数';
 
     if Result then
     begin

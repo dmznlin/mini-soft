@@ -10,6 +10,11 @@ uses
   Windows, DB, Classes, Controls, SysUtils, ULibFun, UFormCtrl, UDataModule,
   UDataReport, USysConst, USysDB, USysLoger;
 
+procedure LoadBaseInfoByGroup(const nGroup: string; const nList: TStrings;
+ const nClearFirt: Boolean = True);
+procedure SaveBaseInfoByGroup(const nGroup,nItem: string;
+ const nDel: Boolean = False);
+//基础信息
 function GetSerailID(const nGroup,nObject: string; nUseDate: Boolean): string;
 //获取串号
 function GetMemberValidMoney(const nMemberID: string;
@@ -24,6 +29,61 @@ implementation
 procedure WriteLog(const nEvent: string);
 begin
   gSysLoger.AddLog(nEvent);
+end;
+
+//Date: 2015-06-28
+//Parm: 分组;列表
+//Desc: 载入nGroup的信息到nList中
+procedure LoadBaseInfoByGroup(const nGroup: string; const nList: TStrings;
+ const nClearFirt: Boolean);
+var nStr: string;
+begin
+  if nClearFirt then
+    nList.Clear;
+  //xxxxx
+
+  nStr := 'Select * From %s Where B_Group=''%s'' Order By B_Py ASC,B_Index DESC';
+  nStr := Format(nStr, [sTable_BaseInfo, nGroup]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount < 1 then Exit;
+    First;
+
+    while not Eof do
+    begin
+      nStr := FieldByName('B_Text').AsString;
+      nList.Add(nStr);
+      Next;
+    end;
+  end;
+end;
+
+//Date: 2015-06-28
+//Parm: 分组;项;是否删除
+//Desc: 增加或删除nGroup.nItem项
+procedure SaveBaseInfoByGroup(const nGroup,nItem: string;
+ const nDel: Boolean = False);
+var nStr: string;
+begin
+  if nDel then
+  begin
+    nStr := 'Delete From %s Where B_Group=''%s'' And B_Text=''%s''';
+    nStr := Format(nStr, [sTable_BaseInfo, nGroup, nItem]);
+
+   FDM.ExecuteSQL(nStr);
+    Exit;
+  end;
+
+  nStr := 'Select Count(*) From %s Where B_Group=''%s'' And B_Text=''%s''';
+  nStr := Format(nStr, [sTable_BaseInfo, nGroup, nItem]);
+  if FDM.QueryTemp(nStr).Fields[0].AsInteger > 0 then Exit;
+
+  nStr := MakeSQLByStr([SF('B_Group', nGroup),
+          SF('B_Text', nItem),
+          SF('B_Py', GetPinYinOfStr(nItem))
+          ], sTable_BaseInfo, '', True);
+  FDM.ExecuteSQL(nStr);
 end;
 
 //Date: 2012-3-25
@@ -131,8 +191,66 @@ end;
 //Parm: 收衣记录
 //Desc: 删除洗衣记录
 function DeleteWashData(const nWashID: string): Boolean;
+var nStr: string;
+    nIdx: Integer;
+    nVal: Double;
+    nList: TStrings;
 begin
+  nList := TStringList.Create;
+  try
+    Result := True;
+    nStr := 'Select D_MID,D_Money,D_HasMoney From %s Where D_ID=''%s''';
+    nStr := Format(nStr, [sTable_WashData, nWashID]);
 
+    with FDM.QueryTemp(nStr) do
+    begin
+      if RecordCount < 1 then Exit;
+      //miss record
+
+      nStr := 'Delete From %s Where D_ID=''%s''';
+      nStr := Format(nStr, [sTable_WashData, nWashID]);
+      nList.Add(nStr);
+
+      nStr := 'Delete From %s Where D_ID=''%s''';
+      nStr := Format(nStr, [sTable_WashDetail, nWashID]);
+      nList.Add(nStr);
+
+      nVal := FieldByName('D_Money').AsFloat;
+      if FieldByName('D_HasMoney').AsFloat > 0 then
+        nVal := 0;
+      //未付款
+
+      nStr := 'Update %s Set M_MoneyOut=M_MoneyOut-(%.2f),M_Times=M_Times-1 ' +
+              'Where M_ID=''%s''';
+      nStr := Format(nStr, [sTable_Member, nVal, FieldByName('D_MID').AsString]);
+      nList.Add(nStr);
+
+      if nVal > 0 then
+      begin
+        nStr := Format('删除时退款[ %s ]', [nWashID]);
+        nStr := MakeSQLByStr([
+                SF('M_ID', FieldByName('D_MID').AsString),
+                SF('M_Type', sFlag_IOType_Out),
+                SF('M_Money', -nVal, sfVal),
+                SF('M_Date', sField_SQLServer_Now, sfVal),
+                SF('M_Memo', nStr)
+                ], sTable_InOutMoney, '', True);
+        nList.Add(nStr)
+      end;
+    end;
+
+    FDM.ADOConn.BeginTrans;
+    try
+      for nIdx:=0 to nList.Count - 1 do
+        FDM.ExecuteSQL(nList[nIdx]);
+      FDM.ADOConn.CommitTrans;
+    except
+      FDM.ADOConn.RollbackTrans;
+      ShowMsg('删除失败,未知错误', sHint);
+    end;   
+  finally
+    nList.Free;
+  end;   
 end;
 
 end.

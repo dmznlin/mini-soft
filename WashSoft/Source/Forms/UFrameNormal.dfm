@@ -143,7 +143,6 @@ inherited fFrameNormal: TfFrameNormal
       end
       object GroupDetail1: TdxLayoutGroup
         Caption = #31616#26126#20449#24687
-        Visible = False
         LayoutDirection = ldHorizontal
       end
     end

@@ -73,9 +73,14 @@ ResourceString
   sFlag_IOType_In     = 'C';                         //充值
   sFlag_IOType_Out    = 'X';                         //消费
 
+  sFlag_GroupUnit     = 'Unit';                      //单位
+  sFlag_GroupColor    = 'Color';                     //颜色
+  sFlag_GroupType     = 'Type';                      //类型
+
   sFlag_BusGroup      = 'BusFunction';               //业务编码组
   sFlag_MemberID      = 'ID_Member';                 //会员编号
   sFlag_WashTypeID    = 'ID_WashType';               //衣物类型
+  sFlag_WashData      = 'ID_WashData';               //洗衣记录
 
   {*数据表*}
   sTable_Group        = 'Sys_Group';                 //用户组
@@ -195,7 +200,7 @@ ResourceString
   sSQL_NewInOutMoney = 'Create Table $Table(R_ID $Inc, M_ID varChar(16),' +
        'M_Type Char(1), M_Money $Float, M_Date DateTime, M_Memo varChar(100))';
   {-----------------------------------------------------------------------------
-   会员表: InOutMoney
+   资金明细: InOutMoney
    *.R_ID: 编号
    *.M_ID: 标识
    *.M_Type: 类型
@@ -238,13 +243,14 @@ ResourceString
   -----------------------------------------------------------------------------}
 
   sSQL_NewWashDetail = 'Create Table $Table(R_ID $Inc, D_ID varChar(16),' +
-       'D_Name varChar(32), D_Py varChar(32), D_Unit varChar(16),' +
-       'D_WashType varChar(16), D_Number Integer, D_HasNumber Integer,' +
-       'D_Color varChar(16), D_Memo varChar(100))';
+       'D_TID varChar(16), D_Name varChar(32), D_Py varChar(32), ' +
+       'D_Unit varChar(16),D_WashType varChar(16), D_Color varChar(16), ' +
+       'D_Number Integer, D_HasNumber Integer,D_Memo varChar(100))';
   {-----------------------------------------------------------------------------
    收衣明细: WashDetail
    *.R_ID: 编号
-   *.D_ID: 衣物号
+   *.D_ID: 上架号
+   *.D_TID: 类型号
    *.D_Name: 名称
    *.D_Py: 拼音
    *.D_Unit: 单位

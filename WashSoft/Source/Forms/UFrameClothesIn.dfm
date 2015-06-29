@@ -7,6 +7,7 @@ inherited fFrameClothesIn: TfFrameClothesIn
       OnClick = BtnAddClick
     end
     inherited BtnEdit: TToolButton
+      Visible = False
       OnClick = BtnEditClick
     end
     inherited BtnDel: TToolButton

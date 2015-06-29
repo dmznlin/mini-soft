@@ -161,7 +161,7 @@ begin
     nStr := Format('确定要删除编号为[ %s ]记录吗?', [nStr]);
     if not QueryDlg(nStr, sAsk) then Exit;
 
-    if DeleteWashData(SQLQuery.FieldByName('R_ID').AsString) then
+    if DeleteWashData(SQLQuery.FieldByName('D_ID').AsString) then
     begin
       InitFormData(FWhere);
       ShowMsg('删除成功', sHint);

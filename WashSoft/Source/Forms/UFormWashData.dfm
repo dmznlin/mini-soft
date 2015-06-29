@@ -15,12 +15,12 @@ inherited fFormWashData: TfFormWashData
     inherited BtnOK: TButton
       Left = 500
       Top = 616
-      TabOrder = 12
+      TabOrder = 13
     end
     inherited BtnExit: TButton
       Left = 571
       Top = 616
-      TabOrder = 13
+      TabOrder = 14
     end
     object EditPhone: TcxTextEdit [2]
       Left = 108
@@ -63,7 +63,7 @@ inherited fFormWashData: TfFormWashData
     end
     object ListGrid: TcxListView [6]
       Left = 31
-      Top = 237
+      Top = 224
       Width = 121
       Height = 97
       Columns = <
@@ -89,44 +89,50 @@ inherited fFormWashData: TfFormWashData
           Caption = #22791#27880
         end>
       ParentFont = False
+      ReadOnly = True
+      RowSelect = True
+      SmallImages = FDM.ImageBar
       Style.Edges = [bLeft, bTop, bRight, bBottom]
       TabOrder = 4
       ViewStyle = vsReport
+      OnDblClick = ListGridDblClick
     end
-    object cxTextEdit3: TcxTextEdit [7]
+    object EditYSMoney: TcxTextEdit [7]
       Left = 108
-      Top = 521
+      Top = 491
       ParentFont = False
       Properties.ReadOnly = True
       TabOrder = 8
       Width = 121
     end
-    object cxTextEdit4: TcxTextEdit [8]
+    object EditSSMoney: TcxTextEdit [8]
       Left = 406
-      Top = 521
+      Top = 491
       ParentFont = False
       TabOrder = 9
       Width = 121
     end
-    object cxButton1: TcxButton [9]
+    object BtnDel: TcxButton [9]
       Left = 545
-      Top = 419
+      Top = 389
       Width = 75
       Height = 25
       Caption = #21024#38500
       TabOrder = 6
+      OnClick = BtnDelClick
     end
-    object cxButton2: TcxButton [10]
+    object BtnAdd: TcxButton [10]
       Left = 464
-      Top = 419
+      Top = 389
       Width = 75
       Height = 25
       Caption = #28155#21152
       TabOrder = 5
+      OnClick = BtnAddClick
     end
     object Check1: TcxCheckBox [11]
       Left = 31
-      Top = 491
+      Top = 461
       Caption = #21462#34915#29289#26102#32467#24080
       ParentFont = False
       TabOrder = 7
@@ -135,17 +141,24 @@ inherited fFormWashData: TfFormWashData
     end
     object cxLabel1: TcxLabel [12]
       Left = 31
-      Top = 551
+      Top = 521
       Caption = #25552#31034': '#23458#25143#20132#29616#37329#26102#36755#20837#37329#39069#65292#27809#20132#29616#37329#35831#36755#20837'0.'
       ParentFont = False
       Transparent = True
     end
     object EditPay: TcxTextEdit [13]
       Left = 108
-      Top = 577
+      Top = 547
       ParentFont = False
       TabOrder = 11
       Text = '0'
+      Width = 121
+    end
+    object EditMemo: TcxTextEdit [14]
+      Left = 108
+      Top = 577
+      Properties.MaxLength = 100
+      TabOrder = 12
       Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
@@ -204,13 +217,13 @@ inherited fFormWashData: TfFormWashData
           object dxLayout1Item13: TdxLayoutItem
             Caption = 'cxButton2'
             ShowCaption = False
-            Control = cxButton2
+            Control = BtnAdd
             ControlOptions.ShowBorder = False
           end
           object dxLayout1Item12: TdxLayoutItem
             Caption = 'cxButton1'
             ShowCaption = False
-            Control = cxButton1
+            Control = BtnDel
             ControlOptions.ShowBorder = False
           end
         end
@@ -235,14 +248,14 @@ inherited fFormWashData: TfFormWashData
             AutoAligns = [aaVertical]
             AlignHorz = ahClient
             Caption = #24212#25910#37329#39069':'
-            Control = cxTextEdit3
+            Control = EditYSMoney
             ControlOptions.ShowBorder = False
           end
           object dxLayout1Item11: TdxLayoutItem
             AutoAligns = [aaVertical]
             AlignHorz = ahClient
             Caption = #23454#25910#37329#39069':'
-            Control = cxTextEdit4
+            Control = EditSSMoney
             ControlOptions.ShowBorder = False
           end
         end
@@ -255,6 +268,11 @@ inherited fFormWashData: TfFormWashData
         object dxLayout1Item14: TdxLayoutItem
           Caption = #26412#27425#25903#20184':'
           Control = EditPay
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item15: TdxLayoutItem
+          Caption = #22791#27880#20449#24687':'
+          Control = EditMemo
           ControlOptions.ShowBorder = False
         end
       end
