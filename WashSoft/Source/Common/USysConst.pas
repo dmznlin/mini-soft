@@ -31,6 +31,7 @@ const
 
   cFI_FrameClothesIn    = $0020;                     //收衣服
   cFI_FrameClothesOut   = $0021;                     //取衣服
+  cFI_FrameClothesDtl   = $0022;                     //收衣明细
 
   cFI_FormBackup        = $1001;                     //数据备份
   cFI_FormRestore       = $1002;                     //数据恢复
@@ -43,6 +44,7 @@ const
   cFI_FormWashType      = $1013;                     //衣物类型
 
   cFI_FormWashData      = $1020;                     //洗衣数据
+  cFI_FormWashOut       = $1021;                     //取衣数据
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -166,6 +168,7 @@ begin
 
   AddMenuModuleItem('MAIN_D01', cFI_FrameClothesIn);
   AddMenuModuleItem('MAIN_D02', cFI_FrameClothesOut);
+  AddMenuModuleItem('MAIN_D03', cFI_FrameClothesDtl);
 end;
 
 //Desc: 清理模块列表

@@ -20,6 +20,7 @@ type
     FUnit: string;
     FWashType: string;
     FNumber: Integer;
+    FNumOut: Integer;
     FPrice: Double;
     FColor: string;
     FMemo: string;
@@ -122,19 +123,40 @@ end;
 
 procedure TfFormWashItem.InitFormData;
 var nIdx: Integer;
+    nBool: Boolean;
 begin
   BtnOK.Enabled := False;
-  LoadBaseInfoByGroup(sFlag_GroupUnit, EditUnit.Properties.Items);
-  LoadBaseInfoByGroup(sFlag_GroupColor, EditColor.Properties.Items);
-  LoadBaseInfoByGroup(sFlag_GroupType, EditWashType.Properties.Items);
-
+  FWashItem.FNumOut := 0;
+  //init flag
+  
   for nIdx:=Low(gWashItems) to High(gWashItems) do
   if gWashItems[nIdx].FSelected then
   begin
     FWashItem := gWashItems[nIdx];
-    LoadUIWashItem;
     Break;
   end;
+
+  LoadUIWashItem;
+  nBool := FWashItem.FNumOut > 0;
+  //取衣时,不可更改数据
+
+  for nIdx:=dxLayout1.ControlCount - 1 downto 0 do
+  begin
+    if dxLayout1.Controls[nIdx] is TcxTextEdit then
+      (dxLayout1.Controls[nIdx] as TcxTextEdit).Properties.ReadOnly := nBool;
+    //xxxxx
+
+    if dxLayout1.Controls[nIdx] is TcxComboBox then
+      (dxLayout1.Controls[nIdx] as TcxComboBox).Properties.ReadOnly := nBool;
+    //xxxxx
+  end;
+
+  EditNum.Properties.ReadOnly := False;
+  //数量可调
+
+  LoadBaseInfoByGroup(sFlag_GroupUnit, EditUnit.Properties.Items);
+  LoadBaseInfoByGroup(sFlag_GroupColor, EditColor.Properties.Items);
+  LoadBaseInfoByGroup(sFlag_GroupType, EditWashType.Properties.Items);
 end;
 
 procedure TfFormWashItem.EditNameKeyPress(Sender: TObject; var Key: Char);
@@ -170,6 +192,7 @@ begin
         FWashType := FieldByName('T_WashType').AsString;
         
         FNumber := 0;
+        FNumOut := 0;
         FPrice := FieldByName('T_Price').AsFloat;
         FColor := '';
         FMemo := '';
@@ -260,6 +283,10 @@ begin
 
     nVal := StrToInt(EditNum.Text);
     Result := nVal > 0;
+    if not Result then Exit;
+
+    Result := (FWashItem.FNumOut = 0) or (FWashItem.FNumOut >= nVal);
+    nHint := '超出可领取件数';
   end else
 
   if Sender = EditUnit then

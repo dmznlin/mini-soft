@@ -102,6 +102,7 @@ ResourceString
   sTable_WashType     = 'W_WashType';                //衣物类型
   sTable_WashData     = 'W_WashData';                //洗衣数据
   sTable_WashDetail   = 'W_WashDetail';              //收衣明细
+  sTable_WashOut      = 'W_WashOut';                 //取衣数据
 
   {*新建表*}
   sSQL_NewSysDict = 'Create Table $Table(D_ID $Inc, D_Name varChar(15),' +
@@ -261,6 +262,26 @@ ResourceString
    *.D_Memo: 备注
   -----------------------------------------------------------------------------}
 
+  sSQL_NewWashOut = 'Create Table $Table(R_ID $Inc, D_ID varChar(16),' +
+       'D_TID varChar(16), D_Name varChar(32), D_Py varChar(32), ' +
+       'D_Unit varChar(16),D_WashType varChar(16), D_Color varChar(16), ' +
+       'D_Number Integer, D_Man varChar(16), D_Date DateTime, D_Memo varChar(100))';
+  {-----------------------------------------------------------------------------
+   取衣明细: WashOut
+   *.R_ID: 编号
+   *.D_ID: 上架号
+   *.D_TID: 类型号
+   *.D_Name: 名称
+   *.D_Py: 拼音
+   *.D_Unit: 单位
+   *.D_WashType: 干/水
+   *.D_Number: 数量
+   *.D_Color: 颜色
+   *.D_Man: 取衣人
+   *.D_Date: 取衣时间
+   *.D_Memo: 备注
+  -----------------------------------------------------------------------------}
+
 implementation
 
 //------------------------------------------------------------------------------
@@ -292,6 +313,7 @@ begin
   AddSysTableItem(sTable_WashType, sSQL_NewWashType);
   AddSysTableItem(sTable_WashData, sSQL_NewWashData);
   AddSysTableItem(sTable_WashDetail, sSQL_NewWashDetail);
+  AddSysTableItem(sTable_WashOut, sSQL_NewWashOut);
 end;
 
 //Desc: 清理系统表

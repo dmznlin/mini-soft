@@ -1,8 +1,8 @@
 {*******************************************************************************
-  作者: dmzn@163.com 2015-06-23
-  描述: 会员管理
+  作者: dmzn@163.com 2015-06-29
+  描述: 取衣明细
 *******************************************************************************}
-unit UFrameClothesIn;
+unit UFrameClothesOut;
 
 interface
 
@@ -17,7 +17,7 @@ uses
   ComCtrls, ToolWin;
 
 type
-  TfFrameClothesIn = class(TfFrameNormal)
+  TfFrameClothesOut = class(TfFrameNormal)
     EditName: TcxButtonEdit;
     dxLayout1Item1: TdxLayoutItem;
     dxLayout1Item2: TdxLayoutItem;
@@ -28,9 +28,6 @@ type
     EditDate: TcxButtonEdit;
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
-    procedure BtnAddClick(Sender: TObject);
-    procedure BtnEditClick(Sender: TObject);
-    procedure BtnDelClick(Sender: TObject);
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
   private
@@ -54,42 +51,43 @@ uses
   UMgrControl, ULibFun, USysDB, USysConst, UDataModule, USysBusiness,
   UFormDateFilter;
   
-class function TfFrameClothesIn.FrameID: integer;
+class function TfFrameClothesOut.FrameID: integer;
 begin
-  Result := cFI_FrameClothesIn;
+  Result := cFI_FrameClothesOut;
 end;
 
-procedure TfFrameClothesIn.OnCreateFrame;
+procedure TfFrameClothesOut.OnCreateFrame;
 begin
   inherited;
   InitDateRange(Name, FStart, FEnd);
 end;
 
-procedure TfFrameClothesIn.OnDestroyFrame;
+procedure TfFrameClothesOut.OnDestroyFrame;
 begin
   SaveDateRange(Name, FStart, FEnd);
   inherited;
 end;
 
-function TfFrameClothesIn.InitFormDataSQL(const nWhere: string): string;
+function TfFrameClothesOut.InitFormDataSQL(const nWhere: string): string;
 begin
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := 'Select ws.*,M_Name,M_Py,M_Phone From $WS ws ' +
+  Result := 'Select wo.*,M_Name,M_Py,M_Phone From $WO wo ' +
+            ' Left Join $WS ws On ws.D_ID=wo.D_ID ' +
             ' Left Join $MM mm On mm.M_ID=ws.D_MID ';
   //xxxxx
 
   if nWhere = '' then
-       Result := Result + ' Where (ws.D_Date>=''$ST'' and ws.D_Date <''$End'')'
+       Result := Result + ' Where (wo.D_Date>=''$ST'' and wo.D_Date <''$End'')'
   else Result := Result + ' Where (' + nWhere + ')';
 
   Result := MacroValue(Result, [MI('$WS', sTable_WashData),
-            MI('$MM', sTable_Member),
+            MI('$WO', sTable_WashOut), MI('$MM', sTable_Member),
             MI('$ST', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
   //xxxxx
 end;
 
-procedure TfFrameClothesIn.cxButtonEdit1PropertiesButtonClick(Sender: TObject;
+procedure TfFrameClothesOut.cxButtonEdit1PropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   if Sender = EditID then
@@ -97,7 +95,7 @@ begin
     EditID.Text := Trim(EditID.Text);
     if EditID.Text = '' then Exit;
 
-    FWhere := 'D_ID Like ''%%%s%%''';
+    FWhere := 'wo.D_ID Like ''%%%s%%''';
     FWhere := Format(FWhere, [EditID.Text]);
     InitFormData(FWhere);
   end else
@@ -123,60 +121,12 @@ begin
   end;
 end;
 
-procedure TfFrameClothesIn.BtnAddClick(Sender: TObject);
-var nP: TFormCommandParam;
-begin
-  nP.FCommand := cCmd_AddData;
-  CreateBaseFormItem(cFI_FormWashData, '', @nP);
-
-  if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
-  begin
-    InitFormData('');
-  end;
-end;
-
-procedure TfFrameClothesIn.BtnEditClick(Sender: TObject);
-var nP: TFormCommandParam;
-begin
-  if cxView1.DataController.GetSelectedCount < 1 then
-  begin
-    ShowMsg('请选择洗衣记录', sHint);
-    Exit;
-  end;
-
-  nP.FCommand := cCmd_EditData;
-  nP.FParamA := SQLQuery.FieldByName('D_ID').AsString;
-  CreateBaseFormItem(cFI_FormWashOut, '', @nP);
-
-  if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
-  begin
-    InitFormData(FWhere);
-  end;
-end;
-
-procedure TfFrameClothesIn.BtnDelClick(Sender: TObject);
-var nStr: string;
-begin
-  if cxView1.DataController.GetSelectedCount > 0 then
-  begin
-    nStr := SQLQuery.FieldByName('D_ID').AsString;
-    nStr := Format('确定要删除编号为[ %s ]记录吗?', [nStr]);
-    if not QueryDlg(nStr, sAsk) then Exit;
-
-    if DeleteWashData(SQLQuery.FieldByName('D_ID').AsString) then
-    begin
-      InitFormData(FWhere);
-      ShowMsg('删除成功', sHint);
-    end;
-  end;
-end;
-
-procedure TfFrameClothesIn.EditDatePropertiesButtonClick(Sender: TObject;
-  AButtonIndex: Integer);
+procedure TfFrameClothesOut.EditDatePropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
 begin
   if ShowDateFilterForm(FStart, FEnd) then InitFormData('');
 end;
 
 initialization
-  gControlManager.RegCtrl(TfFrameClothesIn, TfFrameClothesIn.FrameID);
+  gControlManager.RegCtrl(TfFrameClothesOut, TfFrameClothesOut.FrameID);
 end.

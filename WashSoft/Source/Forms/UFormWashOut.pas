@@ -1,8 +1,8 @@
 {*******************************************************************************
-  作者: dmzn@163.com 2015-06-25
-  描述: 收取衣物
+  作者: dmzn@163.com 2015-06-30
+  描述: 领取衣物
 *******************************************************************************}
-unit UFormWashData;
+unit UFormWashOut;
 
 interface
 
@@ -14,7 +14,7 @@ uses
   cxButtons, cxCheckBox, cxLabel, cxGraphics;
 
 type
-  TfFormWashData = class(TfFormNormal)
+  TfFormWashOut = class(TfFormNormal)
     EditPhone: TcxTextEdit;
     dxLayout1Item4: TdxLayoutItem;
     dxGroup2: TdxLayoutGroup;
@@ -29,39 +29,36 @@ type
     dxLayout1Item9: TdxLayoutItem;
     dxLayout1Group3: TdxLayoutGroup;
     dxGroup3: TdxLayoutGroup;
-    EditYSMoney: TcxTextEdit;
-    dxLayout1Item10: TdxLayoutItem;
     EditSSMoney: TcxTextEdit;
     dxLayout1Item11: TdxLayoutItem;
-    BtnDel: TcxButton;
+    BtnNone: TcxButton;
     dxLayout1Item12: TdxLayoutItem;
-    BtnAdd: TcxButton;
+    BtnAll: TcxButton;
     dxLayout1Item13: TdxLayoutItem;
-    Check1: TcxCheckBox;
-    dxLayout1Item3: TdxLayoutItem;
-    dxLayout1Group5: TdxLayoutGroup;
     cxLabel1: TcxLabel;
     dxLayout1Item6: TdxLayoutItem;
     EditPay: TcxTextEdit;
     dxLayout1Item14: TdxLayoutItem;
     EditMemo: TcxTextEdit;
     dxLayout1Item15: TdxLayoutItem;
+    dxLayout1Group4: TdxLayoutGroup;
     procedure BtnOKClick(Sender: TObject);
-    procedure EditNamePropertiesButtonClick(Sender: TObject;
-      AButtonIndex: Integer);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure BtnAddClick(Sender: TObject);
-    procedure BtnDelClick(Sender: TObject);
+    procedure BtnAllClick(Sender: TObject);
+    procedure BtnNoneClick(Sender: TObject);
     procedure ListGridDblClick(Sender: TObject);
   private
     { Private declarations }
     FMID,FMName: String;
     FMMoney,FMZheKou: Double;
     //会员信息
-    FNum: Integer;
-    FYSMoney,FSSMoney,FSYMoney,FZFMoney: Double;
+    FID: string;
+    FNumAll,FNumSY: Integer;
+    FDFMoney,FZFMoney: Double;
     //合计项
+    procedure InitFormData(const nID: string);
+    //初始化界面
     procedure RefreshWashItems;
     procedure SetUIStatus(const nEnabled: Boolean);
     function LoadMemberInfo(const nMember: string): Boolean;
@@ -80,7 +77,7 @@ uses
   UMgrControl, ULibFun, USysDB, USysConst, UFormCtrl, USysGrid, USysBusiness,
   UFormWashItem;
 
-class function TfFormWashData.CreateForm(const nPopedom: string;
+class function TfFormWashOut.CreateForm(const nPopedom: string;
   const nParam: Pointer): TWinControl;
 var nP: PFormCommandParam;
 begin
@@ -88,9 +85,11 @@ begin
   if not Assigned(nParam) then Exit;
   nP := nParam;
 
-  with TfFormWashData.Create(Application) do
+  with TfFormWashOut.Create(Application) do
   try
-    FMID := '';
+    FID := nP.FParamA;
+    InitFormData(FID);
+    
     nP.FCommand := cCmd_ModalResult;
     nP.FParamA := ShowModal;
   finally
@@ -98,12 +97,12 @@ begin
   end;
 end;
 
-class function TfFormWashData.FormID: integer;
+class function TfFormWashOut.FormID: integer;
 begin
-  Result := cFI_FormWashData;
+  Result := cFI_FormWashOut;
 end;
 
-procedure TfFormWashData.FormCreate(Sender: TObject);
+procedure TfFormWashOut.FormCreate(Sender: TObject);
 begin
   inherited;
   dxGroup1.AlignVert := avTop;
@@ -119,7 +118,7 @@ begin
   LoadcxListViewConfig(Name, ListGrid);
 end;
 
-procedure TfFormWashData.FormClose(Sender: TObject;
+procedure TfFormWashOut.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   inherited;
@@ -129,10 +128,66 @@ begin
   SavecxListViewConfig(Name, ListGrid);
 end;
 
-procedure TfFormWashData.SetUIStatus(const nEnabled: Boolean);
+procedure TfFormWashOut.InitFormData(const nID: string);
+var nStr: string;
+    nIdx: Integer;
 begin
-  BtnAdd.Enabled := nEnabled;
-  BtnDel.Enabled := nEnabled;
+  nStr := 'Select wd.*,D_MID,D_HasMoney,D_MID From $WD wd ' +
+          ' Left Join $WS ws On ws.D_ID=wd.D_ID ' +
+          'Where wd.D_ID=''$ID''';
+  //xxxxx
+
+  nStr := MacroValue(nStr, [MI('$WS', sTable_WashData),
+          MI('$WD', sTable_WashDetail), MI('$ID', nID)]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount < 1 then
+    begin
+      ShowMsg('记录已丢失', sHint);
+      Exit;
+    end;
+
+    SetLength(gWashItems, RecordCount);
+    nIdx := 0;
+    First;
+
+    FMID := FieldByName('D_MID').AsString;
+    FDFMoney:= FieldByName('D_HasMoney').AsFloat;
+    EditSSMoney.Text := Format('%.2f', [FDFMoney]);
+
+    while not Eof do
+    begin
+      with gWashItems[nIdx] do
+      begin
+        FRecord := FieldByName('R_ID').AsString;
+        FTypeID := FieldByName('D_TID').AsString;
+        FName := FieldByName('D_Name').AsString;
+        FUnit := FieldByName('D_Unit').AsString;
+        FWashType := FieldByName('D_WashType').AsString;
+
+        FNumber := FieldByName('D_HasNumber').AsInteger;
+        FNumOut := FNumber;
+        FColor := FieldByName('D_Color').AsString;
+        FMemo := FieldByName('D_Memo').AsString;
+
+        FEnable := True;
+      end;
+
+      Inc(nIdx);
+      Next;
+    end;
+
+    LoadMemberInfo(FMID);
+    //load info
+  end;
+end;
+
+procedure TfFormWashOut.SetUIStatus(const nEnabled: Boolean);
+begin
+  BtnAll.Enabled := nEnabled;
+  BtnNone.Enabled := nEnabled;
   BtnOK.Enabled := nEnabled;
 
   if not nEnabled then
@@ -144,7 +199,7 @@ begin
   end;
 end;
 
-function TfFormWashData.LoadMemberInfo(const nMember: string): Boolean;
+function TfFormWashOut.LoadMemberInfo(const nMember: string): Boolean;
 var nStr: string;
 begin
   Result := False;
@@ -177,41 +232,18 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure TfFormWashData.EditNamePropertiesButtonClick(Sender: TObject;
-  AButtonIndex: Integer);
-var nP: TFormCommandParam;
-begin
-  Visible := False;
-  try
-    SetUIStatus(False);
-    nP.FCommand := cCmd_AddData;
-    nP.FParamA := Trim(EditName.Text);
-
-    CreateBaseFormItem(cFI_FormGetMember, '', @nP);
-    if (nP.FCommand <> cCmd_ModalResult) or (nP.FParamA <> mrOK) then Exit;
-  finally
-    Visible := True;
-  end;
-
-  if LoadMemberInfo(nP.FParamB) then
-  begin
-    EditName.SelectAll;
-    ActiveControl := EditName;
-  end;
-end;
-
 //Desc: 载入明细
-procedure TfFormWashData.RefreshWashItems;
-var nIdx,nInt: Integer;
-    nVal: Double;
+procedure TfFormWashOut.RefreshWashItems;
+var nStr: string;
+    nIdx,nInt: Integer;
 begin
   ListGrid.Items.BeginUpdate;
   try
     nInt := ListGrid.ItemIndex;
     ListGrid.Items.Clear;
 
-    FNum := 0;
-    FYSMoney := 0;
+    FNumAll := 0;
+    FNumSY := 0;
 
     for nIdx:=Low(gWashItems) to High(gWashItems) do
     with gWashItems[nIdx] do
@@ -224,6 +256,7 @@ begin
         Caption := FTypeID;
         SubItems.Add(FName);
         SubItems.Add(FColor);
+        SubItems.Add(IntToStr(FNumOut));
         SubItems.Add(IntToStr(FNumber));
         SubItems.Add(FUnit);
         SubItems.Add(FWashType);
@@ -234,50 +267,38 @@ begin
         Data := Pointer(nIdx);
       end;
 
-      Inc(FNum, FNumber);
-      nVal := Float2Float(FNumber * FPrice, cPercent, True);
-      FYSMoney := FYSMoney + nVal;
+      Inc(FNumAll, FNumOut);
+      Inc(FNumSY, FNumber);
     end;
 
     if nInt >= ListGrid.Items.Count then
       nInt := ListGrid.Items.Count - 1;
     ListGrid.ItemIndex := nInt;
 
-    FSSMoney := Float2Float(FYSMoney * FMZheKou, cPercent, True);
-    EditYSMoney.Text := Format('%.2f', [FYSMoney]);
-    EditSSMoney.Text := Format('%.2f', [FSSMoney]);
-
-    if FNum > 0 then
-         dxGroup2.Caption := Format('衣物明细 合计:共 %d 件', [FNum])
-    else dxGroup2.Caption := '衣物明细';
+    nStr := '衣物明细 合计:剩余 %d 件,领取 %d 件';
+    dxGroup2.Caption := Format(nStr, [FNumAll, FNumSY]);
   finally
     ListGrid.Items.EndUpdate;
   end;   
 end;
 
-procedure TfFormWashData.BtnAddClick(Sender: TObject);
+procedure TfFormWashOut.BtnAllClick(Sender: TObject);
 var nIdx: Integer;
 begin
   for nIdx:=Low(gWashItems) to High(gWashItems) do
-    gWashItems[nIdx].FSelected := False;
-  ShowWashItemEditor;
-end;
-
-procedure TfFormWashData.BtnDelClick(Sender: TObject);
-var nIdx: Integer;
-begin
-  if ListGrid.ItemIndex < 0 then
-  begin
-    ShowMsg('请选择明细项', sHint);
-    Exit;
-  end;
-
-  nIdx := Integer(ListGrid.Items[ListGrid.ItemIndex].Data);
-  gWashItems[nIdx].FEnable := False;
+    gWashItems[nIdx].FNumber := gWashItems[nIdx].FNumOut;
   RefreshWashItems;
 end;
 
-procedure TfFormWashData.ListGridDblClick(Sender: TObject);
+procedure TfFormWashOut.BtnNoneClick(Sender: TObject);
+var nIdx: Integer;
+begin
+  for nIdx:=Low(gWashItems) to High(gWashItems) do
+    gWashItems[nIdx].FNumber := 0;
+  RefreshWashItems;
+end;
+
+procedure TfFormWashOut.ListGridDblClick(Sender: TObject);
 var nIdx,nInt: Integer;
 begin
   if ListGrid.ItemIndex >= 0 then
@@ -291,24 +312,10 @@ begin
   end;
 end;
 
-function TfFormWashData.OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean;
+function TfFormWashOut.OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean;
 var nVal: Double;
 begin
   Result := True;
-
-  if Sender = EditSSMoney then
-  begin
-    Result := IsNumber(EditSSMoney.Text, True);
-    nHint := '金额是>=0的数值';
-    if not Result then Exit;
-
-    nVal := Float2Float(StrToFloat(EditSSMoney.Text), cPercent, True);
-    Result := nVal >= 0;
-
-    if Result then
-      FSSMoney := nVal;
-    //xxxxx 
-  end else
 
   if Sender = EditPay then
   begin
@@ -320,18 +327,14 @@ begin
     Result := FZFMoney >= 0;
     if not Result then Exit;
 
-    FSYMoney := FSSMoney;
-    //剩余=实收
-    if Check1.Checked then Exit;
-    //延迟支付,不计算金额
-    FSYMoney := 0;
-    //剩余=已支付
-
+    if FNumAll > FNumSY then Exit;
+    //未取完,延迟支付,不计算金额
+                            
     FMMoney := GetMemberValidMoney(FMID, True);
     nVal := FZFMoney + FMMoney;
     //总余额: 剩余金 + 本次支付
 
-    Result := FloatRelation(nVal, FSSMoney, rtGE, cPercent);
+    Result := FloatRelation(nVal, FDFMoney, rtGE, cPercent);
     //可用金够用
     if Result then Exit;
 
@@ -339,25 +342,18 @@ begin
              '※.待付: %.2f 元' + #13#10 +
              '※.可用: %.2f 元' + #13#10 +
              '※.需交: %.2f 元';
-    nHint := Format(nHint, [FSSMoney, nVal, FSSMoney-nVal]);
+    nHint := Format(nHint, [FDFMoney, nVal, FDFMoney-nVal]);
 
     ShowDlg(nHint, sHint);
     nHint := '';
   end;
 end;
 
-procedure TfFormWashData.BtnOKClick(Sender: TObject);
-var nStr,nID: string;
+procedure TfFormWashOut.BtnOKClick(Sender: TObject);
+var nStr: string;
     nList: TStrings;
     nIdx: Integer;
 begin
-  if not OnVerifyCtrl(EditSSMoney, nStr) then
-  begin
-    ActiveControl := EditSSMoney;
-    ShowMsg(nStr, sHint);
-    Exit;
-  end;
-
   if not OnVerifyCtrl(EditPay, nStr) then
   begin
     ActiveControl := EditPay;
@@ -374,41 +370,36 @@ begin
 
   nList := TStringList.Create;
   try
-    nID := GetSerailID(sFlag_BusGroup, sFlag_WashData, True);
-    nStr := MakeSQLByStr([
-            SF('D_ID', nID),
-            SF('D_MID', FMID),
-            SF('D_Number', FNum, sfVal),
-            SF('D_HasNumber', FNum, sfVal),
-            SF('D_YSMoney', FYSMoney, sfVal),
-            SF('D_Money', FSSMoney, sfVal),
-            SF('D_HasMoney', FSYMoney, sfVal),
-            SF('D_Man', gSysParam.FUserID),
-            SF('D_Date', sField_SQLServer_Now, sfVal),
-            SF('D_Memo', EditMemo.Text)
-            ], sTable_WashData, '', True);
-    nList.Add(nStr);
-
     for nIdx:=Low(gWashItems) to High(gWashItems) do
     with gWashItems[nIdx] do
     begin
       if not FEnable then Continue;
+      if FNumber < 1 then Continue;
       //valid filter
 
       nStr := MakeSQLByStr([
-              SF('D_ID', nID),
+              SF('D_ID', FID),
               SF('D_TID', FTypeID),
               SF('D_Name', FName),
               SF('D_Py', GetPinYinOfStr(FName)),
               SF('D_Unit', FUnit),
               SF('D_WashType', FWashType),
               SF('D_Number', FNumber, sfVal),
-              SF('D_HasNumber', FNumber, sfVal),
               SF('D_Color', FColor),
+              SF('D_Man', gSysParam.FUserID),
+              SF('D_Date', sField_SQLServer_Now, sfVal),
               SF('D_Memo', FMemo)
-              ], sTable_WashDetail, '', True);
+              ], sTable_WashOut, '', True);
       nList.Add(nStr);
-    end;
+
+      nStr := 'Update %s Set D_HasNumber=D_HasNumber-%d Where D_ID=''%s''';
+      nStr := Format(nStr, [sTable_WashData, FNumber, FID]);
+      nList.Add(nStr);
+
+      nStr := 'Update %s Set D_HasNumber=D_HasNumber-%d Where R_ID=%s';
+      nStr := Format(nStr, [sTable_WashDetail, FNumber, FRecord]);
+      nList.Add(nStr);
+    end; //取衣
 
     if FZFMoney > 0 then
     begin
@@ -417,7 +408,7 @@ begin
       nStr := Format(nStr, [sTable_Member, FZFMoney, FMID]);
       nList.Add(nStr);
 
-      nStr := Format('收衣服时支付[ %s ]', [nID]); 
+      nStr := Format('收衣服时支付[ %s ]', [FID]); 
       nStr := MakeSQLByStr([
               SF('M_ID', FMID),
               SF('M_Type', sFlag_IOType_In),
@@ -426,31 +417,25 @@ begin
               SF('M_Memo', nStr)
               ], sTable_InOutMoney, '', True);
       nList.Add(nStr);
-    end;
+    end; //付款
 
-    if Check1.Checked then
+    if (FNumSY >= FNumAll) and (FDFMoney > 0) then
     begin
-      nStr := 'Update %s Set M_Times=M_Times+1 ' +
+      nStr := 'Update %s Set M_MoneyOut=M_MoneyOut+%.2f ' +
               'Where M_ID=''%s''';
-      nStr := Format(nStr, [sTable_Member, FMID]);
-      nList.Add(nStr);
-    end else
-    begin
-      nStr := 'Update %s Set M_MoneyOut=M_MoneyOut+%.2f,M_Times=M_Times+1 ' +
-              'Where M_ID=''%s''';
-      nStr := Format(nStr, [sTable_Member, FSSMoney, FMID]);
+      nStr := Format(nStr, [sTable_Member, FDFMoney, FMID]);
       nList.Add(nStr);
 
-      nStr := Format('收衣服时消费[ %s ]', [nID]);
+      nStr := Format('收衣服时消费[ %s ]', [FID]);
       nStr := MakeSQLByStr([
               SF('M_ID', FMID),
               SF('M_Type', sFlag_IOType_Out),
-              SF('M_Money', FSSMoney, sfVal),
+              SF('M_Money', FDFMoney, sfVal),
               SF('M_Date', sField_SQLServer_Now, sfVal),
               SF('M_Memo', nStr)
               ], sTable_InOutMoney, '', True);
       nList.Add(nStr);
-    end;
+    end; //消费
     
     FDM.ADOConn.BeginTrans;
     try
@@ -459,7 +444,7 @@ begin
       FDM.ADOConn.CommitTrans;
 
       ModalResult := mrOk;
-      ShowMsg('收取成功', sHint);
+      ShowMsg('领取成功', sHint);
     except
       FDM.ADOConn.RollbackTrans;
       ShowMsg('发生未知错误', sHint);
@@ -470,5 +455,5 @@ begin
 end;
 
 initialization
-  gControlManager.RegCtrl(TfFormWashData, TfFormWashData.FormID);
+  gControlManager.RegCtrl(TfFormWashOut, TfFormWashOut.FormID);
 end.

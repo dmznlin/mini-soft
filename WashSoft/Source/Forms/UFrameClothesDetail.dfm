@@ -1,18 +1,19 @@
-inherited fFrameClothesIn: TfFrameClothesIn
+inherited fFrameClothesDone: TfFrameClothesDone
   Width = 971
   Height = 527
   inherited ToolBar1: TToolBar
     Width = 971
     inherited BtnAdd: TToolButton
-      Caption = #25910#34915#26381
-      OnClick = BtnAddClick
+      Visible = False
     end
     inherited BtnEdit: TToolButton
-      Caption = #21462#34915#26381
-      OnClick = BtnEditClick
+      Visible = False
     end
     inherited BtnDel: TToolButton
-      OnClick = BtnDelClick
+      Visible = False
+    end
+    inherited S1: TToolButton
+      Visible = False
     end
   end
   inherited cxGrid1: TcxGrid
@@ -116,7 +117,7 @@ inherited fFrameClothesIn: TfFrameClothesIn
   inherited TitlePanel1: TZnBitmapPanel
     Width = 971
     inherited TitleBar: TcxLabel
-      Caption = #25910#21462#34915#29289#26126#32454
+      Caption = #34915#29289#26126#32454#21015#34920
       Style.IsFontAssigned = True
       Width = 971
       AnchorX = 486

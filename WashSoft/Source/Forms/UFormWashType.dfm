@@ -52,6 +52,7 @@ inherited fFormWashType: TfFormWashType
       Hint = 'T.T_Unit'
       ParentFont = False
       Properties.ImmediateDropDown = False
+      Properties.IncrementalSearch = False
       Properties.ItemHeight = 22
       Properties.Items.Strings = (
         #20214
@@ -67,6 +68,7 @@ inherited fFormWashType: TfFormWashType
       Hint = 'T.T_WashType'
       ParentFont = False
       Properties.ImmediateDropDown = False
+      Properties.IncrementalSearch = False
       Properties.ItemHeight = 22
       Properties.Items.Strings = (
         #24178#27927
