@@ -1,10 +1,10 @@
 inherited fFormIncInfo: TfFormIncInfo
-  Left = 270
-  Top = 173
+  Left = 261
+  Top = 145
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  ClientHeight = 249
-  ClientWidth = 358
+  ClientHeight = 329
+  ClientWidth = 378
   OldCreateOrder = True
   Position = poMainFormCenter
   PixelsPerInch = 96
@@ -12,51 +12,51 @@ inherited fFormIncInfo: TfFormIncInfo
   object dxLayoutControl1: TdxLayoutControl
     Left = 0
     Top = 0
-    Width = 358
-    Height = 249
+    Width = 378
+    Height = 329
     Align = alClient
     TabOrder = 0
     TabStop = False
-    AutoContentSizes = [acsWidth]
+    AutoContentSizes = [acsWidth, acsHeight]
     LookAndFeel = FDM.dxLayoutWeb1
     object EditName: TcxTextEdit
-      Left = 81
+      Left = 100
       Top = 36
       ParentFont = False
       TabOrder = 0
       Width = 209
     end
     object EditPhone: TcxTextEdit
-      Left = 81
-      Top = 61
+      Left = 100
+      Top = 66
       ParentFont = False
       TabOrder = 1
       Width = 121
     end
     object EditWeb: TcxTextEdit
-      Left = 81
-      Top = 111
+      Left = 100
+      Top = 126
       ParentFont = False
       TabOrder = 3
       Width = 121
     end
     object EditMail: TcxTextEdit
-      Left = 81
-      Top = 86
+      Left = 100
+      Top = 96
       ParentFont = False
       TabOrder = 2
       Width = 121
     end
     object EditAddr: TcxTextEdit
-      Left = 81
-      Top = 136
+      Left = 100
+      Top = 156
       ParentFont = False
       TabOrder = 4
       Width = 121
     end
     object EditMemo: TcxMemo
-      Left = 81
-      Top = 161
+      Left = 100
+      Top = 186
       Align = alClient
       ParentFont = False
       Properties.ScrollBars = ssVertical
@@ -65,8 +65,8 @@ inherited fFormIncInfo: TfFormIncInfo
       Width = 252
     end
     object BtnExit: TButton
-      Left = 272
-      Top = 213
+      Left = 292
+      Top = 296
       Width = 75
       Height = 22
       Caption = #21462#28040
@@ -74,8 +74,8 @@ inherited fFormIncInfo: TfFormIncInfo
       TabOrder = 7
     end
     object BtnOK: TButton
-      Left = 192
-      Top = 213
+      Left = 211
+      Top = 296
       Width = 75
       Height = 22
       Caption = #30830#23450
@@ -87,6 +87,8 @@ inherited fFormIncInfo: TfFormIncInfo
       Hidden = True
       ShowBorder = False
       object dxLayoutControl1Group1: TdxLayoutGroup
+        AutoAligns = [aaHorizontal]
+        AlignVert = avClient
         Caption = #20844#21496#20449#24687
         object dxLayoutControl1Item1: TdxLayoutItem
           Caption = #20844#21496#21517#31216':'
@@ -120,8 +122,9 @@ inherited fFormIncInfo: TfFormIncInfo
         end
       end
       object dxLayoutControl1Group2: TdxLayoutGroup
-        AutoAligns = [aaVertical]
+        AutoAligns = []
         AlignHorz = ahRight
+        AlignVert = avBottom
         ShowCaption = False
         Hidden = True
         LayoutDirection = ldHorizontal

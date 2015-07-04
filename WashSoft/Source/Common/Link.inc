@@ -4,6 +4,9 @@
 {.$DEFINE TrialVersion}
 //试用版本
 
+{$DEFINE AppAtTaskBar}
+//状态栏显示
+
 {$DEFINE UseReport}
 //报表支持
 

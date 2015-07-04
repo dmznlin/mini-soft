@@ -108,7 +108,7 @@ begin
     if not QueryDlg(nStr, sAsk) then Exit;
 
     nStr := 'Delete From %s Where R_ID=%s';
-    nStr := Format(nStr, [sTable_Member, SQLQuery.FieldByName('R_ID').AsString]);
+    nStr := Format(nStr, [sTable_WashType, SQLQuery.FieldByName('R_ID').AsString]);
 
     FDM.ExecuteSQL(nStr);
     InitFormData(FWhere);

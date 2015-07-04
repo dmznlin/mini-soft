@@ -18,6 +18,9 @@ inherited fFrameIOMoney: TfFrameIOMoney
     Top = 187
     Width = 749
     Height = 264
+    inherited cxView1: TcxGridDBTableView
+      PopupMenu = PMenu1
+    end
   end
   inherited dxLayout1: TdxLayoutControl
     Width = 749
@@ -95,6 +98,21 @@ inherited fFrameIOMoney: TfFrameIOMoney
       Width = 749
       AnchorX = 375
       AnchorY = 11
+    end
+  end
+  inherited SQLQuery: TADOQuery
+    Top = 234
+  end
+  inherited DataSource1: TDataSource
+    Top = 234
+  end
+  object PMenu1: TPopupMenu
+    AutoHotkeys = maManual
+    Left = 62
+    Top = 234
+    object N1: TMenuItem
+      Caption = #25171#21360#31080#25454
+      OnClick = N1Click
     end
   end
 end

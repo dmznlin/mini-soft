@@ -23,6 +23,13 @@ function GetMemberValidMoney(const nMemberID: string;
 function DeleteWashData(const nWashID: string): Boolean;
 //删除洗衣记录
 
+//------------------------------------------------------------------------------
+function PrintMemberMoney(const nMID: string; const nAsk: Boolean): Boolean;
+function PrintMemberInMoney(const nRID: string; const nAsk: Boolean): Boolean;
+//打印会员资金
+function PrintWashData(const nID: string; const nAsk: Boolean): Boolean;
+//打印洗衣数据
+
 implementation
 
 //Desc: 记录日志
@@ -251,6 +258,139 @@ begin
   finally
     nList.Free;
   end;   
+end;
+
+//------------------------------------------------------------------------------
+//Desc: 打印会员信息
+function PrintMemberMoney(const nMID: string; const nAsk: Boolean): Boolean;
+var nStr: string;
+    nParam: TReportParamItem;
+begin
+  if nAsk then
+  begin
+    Result := True;
+    nStr := '是否要打印会员信息?';
+    if not QueryDlg(nStr, sAsk) then Exit;
+  end;
+
+  Result := False;
+  nStr := 'Select * From %s Where M_ID=''%s''';
+  nStr := Format(nStr, [sTable_Member, nMID]);
+
+  if FDM.QuerySQL(nStr).RecordCount < 1 then
+  begin
+    nStr := '编号为[ %s ] 的会员已无效!!';
+    nStr := Format(nStr, [nMID]);
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := gPath + sReportDir + 'Member.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nStr := '无法正确加载报表文件';
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nParam.FName := 'YuE';
+  nParam.FValue := GetMemberValidMoney(nMID);
+  FDR.AddParamItem(nParam);
+
+  FDR.Dataset1.DataSet := FDM.SqlQuery;
+  FDR.ShowReport;
+  Result := FDR.PrintSuccess;
+end;
+
+//Desc: 打印充值凭证
+function PrintMemberInMoney(const nRID: string; const nAsk: Boolean): Boolean;
+var nStr: string;
+    nParam: TReportParamItem;
+begin
+  if nAsk then
+  begin
+    Result := True;
+    nStr := '是否要打印充值小票?';
+    if not QueryDlg(nStr, sAsk) then Exit;
+  end;
+
+  Result := False;
+  nStr := 'Select a.*,b.* From %s a' +
+          ' Left Join %s b On b.M_ID=a.M_ID ' +
+          'Where a.R_ID=''%s''';
+  nStr := Format(nStr, [sTable_InOutMoney, sTable_Member, nRID]);
+
+  if FDM.QuerySQL(nStr).RecordCount < 1 then
+  begin
+    nStr := '编号为[ %s ] 的记录已无效!!';
+    nStr := Format(nStr, [nRID]);
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := gPath + sReportDir + 'IOMoney.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nStr := '无法正确加载报表文件';
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nParam.FName := 'YuE';
+  nStr := FDM.SqlQuery.FieldByName('M_ID').AsString;
+  nParam.FValue := GetMemberValidMoney(nStr);
+  FDR.AddParamItem(nParam);
+
+  FDR.Dataset1.DataSet := FDM.SqlQuery;
+  FDR.ShowReport;
+  Result := FDR.PrintSuccess;
+end;
+
+//Desc: 打印收衣服凭证
+function PrintWashData(const nID: string; const nAsk: Boolean): Boolean;
+var nStr: string;
+    nParam: TReportParamItem;
+begin
+  if nAsk then
+  begin
+    Result := True;
+    nStr := '是否要打印衣物小票?';
+    if not QueryDlg(nStr, sAsk) then Exit;
+  end;
+
+  Result := False;
+  nStr := 'Select ws.*,M_Name,M_Py,M_Phone From $WS ws ' +
+          ' Left Join $MM mm On mm.M_ID=ws.D_MID ' +
+          'Where D_ID=''$ID''';
+  //xxxxx
+
+  nStr := MacroValue(nStr, [MI('$WS', sTable_WashData),
+          MI('$MM', sTable_Member), MI('$ID', nID)]);
+  //xxxxx
+
+  if FDM.QuerySQL(nStr).RecordCount < 1 then
+  begin
+    nStr := '编号为[ %s ] 的记录已无效!!';
+    nStr := Format(nStr, [nID]);
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := gPath + sReportDir + 'WashData.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nStr := '无法正确加载报表文件';
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nParam.FName := 'YuE';
+  nStr := FDM.SqlQuery.FieldByName('D_MID').AsString;
+  nParam.FValue := GetMemberValidMoney(nStr);
+  FDR.AddParamItem(nParam);
+
+  nStr := 'Select * From %s Where D_ID=''%s''';
+  nStr := Format(nStr, [sTable_WashDetail, nID]);
+  FDM.QueryTemp(nStr);
+
+  FDR.Dataset1.DataSet := FDM.SqlQuery;
+  FDR.Dataset2.DataSet := FDM.SqlTemp;
+  FDR.ShowReport;
+  Result := FDR.PrintSuccess;
 end;
 
 end.

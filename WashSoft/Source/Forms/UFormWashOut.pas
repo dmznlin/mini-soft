@@ -413,6 +413,7 @@ begin
               SF('M_ID', FMID),
               SF('M_Type', sFlag_IOType_In),
               SF('M_Money', FZFMoney, sfVal),
+              SF('M_Man', gSysParam.FUserID),
               SF('M_Date', sField_SQLServer_Now, sfVal),
               SF('M_Memo', nStr)
               ], sTable_InOutMoney, '', True);
@@ -421,6 +422,10 @@ begin
 
     if (FNumSY >= FNumAll) and (FDFMoney > 0) then
     begin
+      nStr := 'Update %s Set D_HasMoney=0 Where D_ID=''%s''';
+      nStr := Format(nStr, [sTable_WashData, FID]);
+      nList.Add(nStr);
+
       nStr := 'Update %s Set M_MoneyOut=M_MoneyOut+%.2f ' +
               'Where M_ID=''%s''';
       nStr := Format(nStr, [sTable_Member, FDFMoney, FMID]);
@@ -431,6 +436,7 @@ begin
               SF('M_ID', FMID),
               SF('M_Type', sFlag_IOType_Out),
               SF('M_Money', FDFMoney, sfVal),
+              SF('M_Man', gSysParam.FUserID),
               SF('M_Date', sField_SQLServer_Now, sfVal),
               SF('M_Memo', nStr)
               ], sTable_InOutMoney, '', True);

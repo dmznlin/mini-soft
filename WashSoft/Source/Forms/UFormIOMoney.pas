@@ -174,6 +174,7 @@ begin
     nStr := MakeSQLByStr([SF('M_ID', FID),
             SF('M_Type', sFlag_IOType_In),
             SF('M_Money', EditMoney.Text, sfVal),
+            SF('M_Man', gSysParam.FUserID),
             SF('M_Date', sField_SQLServer_Now, sfVal),
             SF('M_Memo', EditMemo.Text)
             ], sTable_InOutMoney, '', True);
@@ -186,6 +187,10 @@ begin
     FDM.ADOConn.CommitTrans;
     ModalResult := mrOk;
     ShowMsg('保存成功', sHint);
+
+    nStr := IntToStr(FDM.GetFieldMax(sTable_InOutMoney, 'R_ID'));
+    PrintMemberInMoney(nStr, True);
+    //打印报表
   except
     FDM.ADOConn.RollbackTrans;
     ShowMsg('保存失败', sHint);

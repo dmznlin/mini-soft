@@ -14,7 +14,7 @@ uses
   cxTextEdit, cxMaskEdit, cxButtonEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin;
+  ComCtrls, ToolWin, Menus;
 
 type
   TfFrameIOMoney = class(TfFrameNormal)
@@ -24,11 +24,14 @@ type
     EditPhone: TcxButtonEdit;
     dxLayout1Item3: TdxLayoutItem;
     EditDate: TcxButtonEdit;
+    PMenu1: TPopupMenu;
+    N1: TMenuItem;
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnAddClick(Sender: TObject);
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure N1Click(Sender: TObject);
   private
     { Private declarations }  
   public
@@ -47,7 +50,8 @@ implementation
 {$R *.dfm}
 
 uses
-  UMgrControl, ULibFun, USysDB, USysConst, UDataModule, UFormDateFilter;
+  UMgrControl, ULibFun, USysDB, USysConst, USysBusiness, UDataModule,
+  UFormDateFilter;
   
 class function TfFrameIOMoney.FrameID: integer;
 begin
@@ -124,6 +128,13 @@ procedure TfFrameIOMoney.EditDatePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   if ShowDateFilterForm(FStart, FEnd) then InitFormData('');
+end;
+
+procedure TfFrameIOMoney.N1Click(Sender: TObject);
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+    PrintMemberInMoney(SQLQuery.FieldByName('R_ID').AsString, False);
+  //xxxxx
 end;
 
 initialization

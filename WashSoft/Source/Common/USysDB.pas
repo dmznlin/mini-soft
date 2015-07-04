@@ -199,13 +199,15 @@ ResourceString
   -----------------------------------------------------------------------------}
 
   sSQL_NewInOutMoney = 'Create Table $Table(R_ID $Inc, M_ID varChar(16),' +
-       'M_Type Char(1), M_Money $Float, M_Date DateTime, M_Memo varChar(100))';
+       'M_Type Char(1), M_Money $Float, M_Man varChar(16), M_Date DateTime,' +
+       'M_Memo varChar(100))';
   {-----------------------------------------------------------------------------
    资金明细: InOutMoney
    *.R_ID: 编号
    *.M_ID: 标识
    *.M_Type: 类型
    *.M_Money: 金额
+   *.M_Man: 收款人
    *.M_Date: 日期
    *.M_Memo: 描述
   -----------------------------------------------------------------------------}
@@ -229,7 +231,7 @@ ResourceString
        'D_YSMoney $Float, D_Money $Float, D_HasMoney $Float,' +
        'D_Man varChar(16), D_Date DateTime, D_Memo varChar(100))';
   {-----------------------------------------------------------------------------
-   洗衣记录: WashType
+   洗衣记录: WashData
    *.R_ID: 编号
    *.D_ID: 标识
    *.D_MID: 会员号

@@ -422,6 +422,7 @@ begin
               SF('M_ID', FMID),
               SF('M_Type', sFlag_IOType_In),
               SF('M_Money', FZFMoney, sfVal),
+              SF('M_Man', gSysParam.FUserID),
               SF('M_Date', sField_SQLServer_Now, sfVal),
               SF('M_Memo', nStr)
               ], sTable_InOutMoney, '', True);
@@ -446,6 +447,7 @@ begin
               SF('M_ID', FMID),
               SF('M_Type', sFlag_IOType_Out),
               SF('M_Money', FSSMoney, sfVal),
+              SF('M_Man', gSysParam.FUserID),
               SF('M_Date', sField_SQLServer_Now, sfVal),
               SF('M_Memo', nStr)
               ], sTable_InOutMoney, '', True);
@@ -460,6 +462,9 @@ begin
 
       ModalResult := mrOk;
       ShowMsg('收取成功', sHint);
+
+      PrintWashData(nID, True);
+      //打印报表
     except
       FDM.ADOConn.RollbackTrans;
       ShowMsg('发生未知错误', sHint);

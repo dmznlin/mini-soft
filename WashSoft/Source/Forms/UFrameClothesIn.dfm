@@ -19,6 +19,9 @@ inherited fFrameClothesIn: TfFrameClothesIn
     Top = 187
     Width = 971
     Height = 340
+    inherited cxView1: TcxGridDBTableView
+      PopupMenu = PMenu1
+    end
   end
   inherited dxLayout1: TdxLayoutControl
     Width = 971
@@ -121,6 +124,32 @@ inherited fFrameClothesIn: TfFrameClothesIn
       Width = 971
       AnchorX = 486
       AnchorY = 11
+    end
+  end
+  inherited SQLQuery: TADOQuery
+    Top = 230
+  end
+  inherited DataSource1: TDataSource
+    Top = 230
+  end
+  object PMenu1: TPopupMenu
+    AutoHotkeys = maManual
+    Left = 62
+    Top = 232
+    object N1: TMenuItem
+      Caption = #25171#21360#31080#25454
+      OnClick = N1Click
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object N3: TMenuItem
+      Caption = #26597#26410#32467#24080
+      OnClick = N3Click
+    end
+    object N4: TMenuItem
+      Caption = #26597#26410#39046#21462
+      OnClick = N4Click
     end
   end
 end

@@ -10,7 +10,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   UFormBase, UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, dxLayoutControl, StdCtrls, cxContainer, cxEdit,
-  cxTextEdit, cxMaskEdit, cxDropDownEdit;
+  cxTextEdit, cxMaskEdit, cxDropDownEdit, UMgrLookupAdapter, cxLookupEdit,
+  cxDBLookupEdit, cxDBLookupComboBox;
 
 type
   TWashItem = record
@@ -32,8 +33,6 @@ type
   TWashItems = array of TWashItem;
 
   TfFormWashItem = class(TfFormNormal)
-    EditName: TcxTextEdit;
-    dxLayout1Item3: TdxLayoutItem;
     EditMemo: TcxTextEdit;
     dxLayout1Item6: TdxLayoutItem;
     EditUnit: TcxComboBox;
@@ -46,18 +45,21 @@ type
     dxLayout1Group2: TdxLayoutGroup;
     dxLayout1Item9: TdxLayoutItem;
     EditColor: TcxComboBox;
+    EditName: TcxLookupComboBox;
+    dxLayout1Item5: TdxLayoutItem;
     procedure BtnOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure EditNameKeyPress(Sender: TObject; var Key: Char);
     procedure EditNumKeyPress(Sender: TObject; var Key: Char);
     procedure EditUnitKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure EditNamePropertiesEditValueChanged(Sender: TObject);
   private
     { Private declarations }
     FWashItem: TWashItem;
     procedure InitFormData;
     procedure LoadUIWashItem;
+    procedure InitComboboxData;
   public
     { Public declarations }
     class function FormID: integer; override;
@@ -116,6 +118,7 @@ procedure TfFormWashItem.FormClose(Sender: TObject;
 begin
   inherited;
   SaveFormConfig(Self);
+  gLookupComboBoxAdapter.DeleteGroup(Name);
 
   Action := caFree; 
   gWashEditor := nil;
@@ -136,7 +139,6 @@ begin
     Break;
   end;
 
-  LoadUIWashItem;
   nBool := FWashItem.FNumOut > 0;
   //取衣时,不可更改数据
 
@@ -151,61 +153,95 @@ begin
     //xxxxx
   end;
 
+  EditName.Properties.ReadOnly := nBool;
   EditNum.Properties.ReadOnly := False;
   //数量可调
 
   LoadBaseInfoByGroup(sFlag_GroupUnit, EditUnit.Properties.Items);
   LoadBaseInfoByGroup(sFlag_GroupColor, EditColor.Properties.Items);
   LoadBaseInfoByGroup(sFlag_GroupType, EditWashType.Properties.Items);
+
+  InitComboboxData;
+  LoadUIWashItem;
 end;
 
-procedure TfFormWashItem.EditNameKeyPress(Sender: TObject; var Key: Char);
-var nStr: string;
+procedure TfFormWashItem.InitComboboxData;
+var nStr,nTmp: string;
+    nDStr: TDynamicStrArray;
+    nItem: TLookupComboBoxItem;
 begin
-  if Key = #13 then
+  if not Assigned(gLookupComboBoxAdapter) then
+    gLookupComboBoxAdapter := TLookupComboBoxAdapter.Create(FDM.ADOConn);
+  //xxxxx
+
+  if not Assigned(EditName.Properties.ListSource) then
   begin
-    Key := #0;
-    BtnOK.Enabled := False;
-    EditNum.Text := '0';
+    nStr := 'Select T_ID,T_Name,T_Py,T_Price From %s ' +
+            'Order By T_Py ASC';
+    nStr := Format(nStr, [sTable_WashType]);
 
-    EditName.Text := Trim(EditName.Text);
-    if EditName.Text = '' then Exit;
+    nTmp := Name + 'MC';
+    SetLength(nDStr, 3);
+    nDStr[0] := 'T_ID';
+    nDStr[1] := 'T_Py';
+    nDStr[2] := 'T_Price';
 
-    nStr := 'Select * From %s Where ' +
-            'T_Name Like ''%%%s%%'' Or T_Py Like ''%%%s%%''';
-    nStr := Format(nStr, [sTable_WashType, EditName.Text, EditName.Text]);
-
-    with FDM.QueryTemp(nStr) do
-    begin
-      if RecordCount < 1 then
-      begin
-        ShowMsg('没有找到该衣物', sHint);
-        Exit;
-      end;
-
-      with FWashItem do
-      begin
-        FRecord := '';
-        FTypeID := FieldByName('T_ID').AsString;
-        FName := FieldByName('T_Name').AsString;
-        FUnit := FieldByName('T_Unit').AsString;
-        FWashType := FieldByName('T_WashType').AsString;
-        
-        FNumber := 0;
-        FNumOut := 0;
-        FPrice := FieldByName('T_Price').AsFloat;
-        FColor := '';
-        FMemo := '';
-
-        FEnable := True;
-        FSelected := False;
-      end;
-    end;
-           
-    ActiveControl := EditNum;
-    EditNum.SelectAll;
-    LoadUIWashItem;
+    nItem := gLookupComboBoxAdapter.MakeItem(Name, nTmp, nStr, 'T_ID', 1,
+             [MI('T_ID', '编号'), MI('T_Name', '名称'),
+              MI('T_Py', '拼音'), MI('T_Price', '价格')], nDStr);
+    gLookupComboBoxAdapter.AddItem(nItem);
+    gLookupComboBoxAdapter.BindItem(nTmp, EditName);
   end;
+end;
+
+procedure TfFormWashItem.EditNamePropertiesEditValueChanged(Sender: TObject);
+var nStr,nTmp: string;
+begin
+  if EditName.Properties.ReadOnly then Exit;
+  //xxxxx
+
+  BtnOK.Enabled := False;
+  EditNum.Text := '0';
+
+  with EditName.Properties.DataController do
+  begin
+    if FocusedRecordIndex < 0 then Exit;
+    nTmp := Values[FocusedRecordIndex, 0];
+  end;
+
+  nStr := 'Select * From %s Where T_ID=''%s''';
+  nStr := Format(nStr, [sTable_WashType, nTmp]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount < 1 then
+    begin
+      ShowMsg('没有找到该衣物', sHint);
+      Exit;
+    end;
+
+    with FWashItem do
+    begin
+      FRecord := '';
+      FTypeID := FieldByName('T_ID').AsString;
+      FName := FieldByName('T_Name').AsString;
+      FUnit := FieldByName('T_Unit').AsString;
+      FWashType := FieldByName('T_WashType').AsString;
+
+      FNumber := 0;
+      FNumOut := 0;
+      FPrice := FieldByName('T_Price').AsFloat;
+      FColor := '';
+      FMemo := '';
+
+      FEnable := True;
+      FSelected := False;
+    end;
+  end;
+
+  ActiveControl := EditNum;
+  EditNum.SelectAll;
+  LoadUIWashItem;
 end;
 
 procedure TfFormWashItem.EditNumKeyPress(Sender: TObject; var Key: Char);

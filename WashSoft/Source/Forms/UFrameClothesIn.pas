@@ -14,7 +14,7 @@ uses
   cxTextEdit, cxMaskEdit, cxButtonEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin;
+  ComCtrls, ToolWin, Menus;
 
 type
   TfFrameClothesIn = class(TfFrameNormal)
@@ -26,6 +26,11 @@ type
     dxLayout1Item4: TdxLayoutItem;
     dxLayout1Item3: TdxLayoutItem;
     EditDate: TcxButtonEdit;
+    PMenu1: TPopupMenu;
+    N1: TMenuItem;
+    N2: TMenuItem;
+    N3: TMenuItem;
+    N4: TMenuItem;
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnAddClick(Sender: TObject);
@@ -33,6 +38,9 @@ type
     procedure BtnDelClick(Sender: TObject);
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure N1Click(Sender: TObject);
+    procedure N3Click(Sender: TObject);
+    procedure N4Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -123,6 +131,18 @@ begin
   end;
 end;
 
+procedure TfFrameClothesIn.N3Click(Sender: TObject);
+begin
+  FWhere := 'D_HasMoney > 0';
+  InitFormData(FWhere);
+end;
+
+procedure TfFrameClothesIn.N4Click(Sender: TObject);
+begin
+  FWhere := 'D_HasNumber > 0';
+  InitFormData(FWhere);
+end;
+
 procedure TfFrameClothesIn.BtnAddClick(Sender: TObject);
 var nP: TFormCommandParam;
 begin
@@ -144,6 +164,12 @@ begin
     Exit;
   end;
 
+  if SQLQuery.FieldByName('D_HasNumber').AsInteger < 1 then
+  begin
+    ShowMsg('该单已经结束', sHint);
+    Exit;
+  end;
+
   nP.FCommand := cCmd_EditData;
   nP.FParamA := SQLQuery.FieldByName('D_ID').AsString;
   CreateBaseFormItem(cFI_FormWashOut, '', @nP);
@@ -159,6 +185,12 @@ var nStr: string;
 begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
+    if SQLQuery.FieldByName('D_HasNumber').AsInteger < 1 then
+    begin
+      ShowMsg('该单已经结束', sHint);
+      Exit;
+    end;
+
     nStr := SQLQuery.FieldByName('D_ID').AsString;
     nStr := Format('确定要删除编号为[ %s ]记录吗?', [nStr]);
     if not QueryDlg(nStr, sAsk) then Exit;
@@ -175,6 +207,13 @@ procedure TfFrameClothesIn.EditDatePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   if ShowDateFilterForm(FStart, FEnd) then InitFormData('');
+end;
+
+procedure TfFrameClothesIn.N1Click(Sender: TObject);
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+    PrintWashData(SQLQuery.FieldByName('D_ID').AsString, False);
+  //xxxxx
 end;
 
 initialization

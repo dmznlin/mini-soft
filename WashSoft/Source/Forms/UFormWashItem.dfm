@@ -2,38 +2,28 @@ inherited fFormWashItem: TfFormWashItem
   Left = 419
   Top = 614
   Caption = #25910#21462#34915#29289
-  ClientHeight = 254
-  ClientWidth = 480
+  ClientHeight = 262
+  ClientWidth = 544
   FormStyle = fsStayOnTop
   OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 16
   inherited dxLayout1: TdxLayoutControl
-    Width = 480
-    Height = 254
+    Width = 544
+    Height = 262
     inherited BtnOK: TButton
-      Left = 329
-      Top = 217
+      Left = 393
+      Top = 225
       TabOrder = 6
     end
     inherited BtnExit: TButton
-      Left = 400
-      Top = 217
+      Left = 464
+      Top = 225
       Caption = #20851#38381
       TabOrder = 7
     end
-    object EditName: TcxTextEdit [2]
-      Left = 108
-      Top = 47
-      Hint = 'T.T_Name'
-      ParentFont = False
-      Properties.MaxLength = 32
-      TabOrder = 0
-      OnKeyPress = EditNameKeyPress
-      Width = 280
-    end
-    object EditMemo: TcxTextEdit [3]
+    object EditMemo: TcxTextEdit [2]
       Left = 108
       Top = 137
       Hint = 'T.T_Memo'
@@ -41,7 +31,7 @@ inherited fFormWashItem: TfFormWashItem
       TabOrder = 5
       Width = 121
     end
-    object EditUnit: TcxComboBox [4]
+    object EditUnit: TcxComboBox [3]
       Left = 312
       Top = 77
       Hint = 'T.T_Unit'
@@ -55,7 +45,7 @@ inherited fFormWashItem: TfFormWashItem
       OnKeyPress = EditNumKeyPress
       Width = 121
     end
-    object EditWashType: TcxComboBox [5]
+    object EditWashType: TcxComboBox [4]
       Left = 312
       Top = 107
       Hint = 'T.T_WashType'
@@ -69,7 +59,7 @@ inherited fFormWashItem: TfFormWashItem
       OnKeyPress = EditNumKeyPress
       Width = 121
     end
-    object EditNum: TcxTextEdit [6]
+    object EditNum: TcxTextEdit [5]
       Left = 108
       Top = 77
       ParentFont = False
@@ -78,7 +68,7 @@ inherited fFormWashItem: TfFormWashItem
       OnKeyPress = EditNumKeyPress
       Width = 121
     end
-    object EditColor: TcxComboBox [7]
+    object EditColor: TcxComboBox [6]
       Left = 108
       Top = 107
       Hint = 'T.T_Unit'
@@ -92,9 +82,18 @@ inherited fFormWashItem: TfFormWashItem
       OnKeyPress = EditNumKeyPress
       Width = 121
     end
+    object EditName: TcxLookupComboBox [7]
+      Left = 108
+      Top = 47
+      ParentFont = False
+      Properties.ListColumns = <>
+      Properties.OnEditValueChanged = EditNamePropertiesEditValueChanged
+      TabOrder = 0
+      Width = 145
+    end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
-        object dxLayout1Item3: TdxLayoutItem
+        object dxLayout1Item5: TdxLayoutItem
           Caption = #34915#29289#21517#31216':'
           Control = EditName
           ControlOptions.ShowBorder = False
