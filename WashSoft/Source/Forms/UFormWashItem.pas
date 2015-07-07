@@ -318,7 +318,7 @@ begin
     if not Result then Exit;
 
     nVal := StrToInt(EditNum.Text);
-    Result := nVal > 0;
+    Result := (nVal > 0) or ((FWashItem.FNumOut > 0) and (nVal >= 0));
     if not Result then Exit;
 
     Result := (FWashItem.FNumOut = 0) or (FWashItem.FNumOut >= nVal);
