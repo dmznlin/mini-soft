@@ -44,6 +44,7 @@ type
     Edit_FteKind: TComboBox;
     Label7: TLabel;
     Edit_FtePosition: TComboBox;
+    Edit_Lang: TLabeledEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnExitClick(Sender: TObject);
@@ -81,6 +82,7 @@ uses
 
 var
   gForm: TfFormDict = nil;
+  gLangID: string;
 
 //------------------------------------------------------------------------------
 //Desc: 添加nEntity的明细
@@ -135,6 +137,7 @@ begin
     SetCtrlData(Edit_Align, IntToStr(Ord(nItem.FAlign)));
     if nItem.FVisible then nStr := '1' else nStr := '2';
     SetCtrlData(Edit_Visible, nStr);
+    Edit_Lang.Text := nItem.FLangID;
 
     Edit_Table.Text := nItem.FDBItem.FTable;
     Edit_Field.Text := nItem.FDBItem.FField;
@@ -192,6 +195,9 @@ end;
 //Desc: 初始化界面
 procedure TfFormDict.InitFormData;
 begin
+  Edit_Lang.Text := gLangID;
+  //default value
+
   GetOrdTypeInfo(TypeInfo(TAlignment), Edit_Align.Items);
   GetOrdTypeInfo(TypeInfo(TFieldType), Edit_Type.Items);
   GetOrdTypeInfo(TypeInfo(TDictFormatStyle), Edit_Style.Items);
@@ -284,6 +290,7 @@ begin
   nItem.FWidth := StrToInt(Edit_Width.Text);
   nItem.FIndex := StrToInt(Edit_Index.Text);
   nItem.FVisible := GetCtrlData(Edit_Visible) = '1';
+  nItem.FLangID := Trim(Edit_Lang.Text);
 
   nItem.FDBItem.FTable := Edit_Table.Text;
   nItem.FDBItem.FField := Edit_Field.Text;
@@ -314,6 +321,8 @@ procedure TfFormDict.BtnOKClick(Sender: TObject);
 begin
   if IsDataValid and SaveData then
   begin
+    if FItemID < 1 then
+      gLangID := Trim(Edit_Lang.Text);
     gSysDataSet.DataChanged;
   end;
 end;

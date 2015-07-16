@@ -29,6 +29,7 @@ type
     Edit_Action: TLabeledEdit;
     Edit_Filter: TLabeledEdit;
     Edit_Order: TLabeledEdit;
+    Edit_Lang: TLabeledEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Edit_ProgIDChange(Sender: TObject);
@@ -67,6 +68,9 @@ var
   gEntity: string = '';
   gPMenu: string = '';
   //上次操作的实体和父级菜单
+
+  gLangID: string = '';
+  //上次操作的语言标识
 
 ResourceString
   sSelectMenu = 'Select * From %s Where M_ProgID=''%s'' and ' +
@@ -162,6 +166,11 @@ begin
     
     if gPMenu <> '' then
       SetCtrlData(Edit_PMenu, gPMenu);
+    //xxxxx
+
+    if gLangID <> '' then
+      SetCtrlData(Edit_Lang, gLangID);
+    //xxxx
   end else
   begin
     LoadItemData;
@@ -283,6 +292,7 @@ begin
     gProgID := GetCtrlData(Edit_ProgID);
     gEntity := GetCtrlData(Edit_Entity);
     gPMenu := GetCtrlData(Edit_PMenu);
+    gLangID := GetCtrlData(Edit_Lang);
     nStr := Format(sSelectMenu, [gMenuTable, gProgID, gEntity, GetCtrlData(Edit_Menu)]);
 
     FDM.SQLTemp.Close;

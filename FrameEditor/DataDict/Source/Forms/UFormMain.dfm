@@ -223,6 +223,12 @@ object fFormMain: TfFormMain
             Position.ColIndex = 5
             Position.RowIndex = 0
           end
+          object ableView1Column21: TcxGridBandedColumn
+            Caption = #35821#35328#26631#35782
+            Position.BandIndex = 0
+            Position.ColIndex = 6
+            Position.RowIndex = 0
+          end
           object ableView1Column7: TcxGridBandedColumn
             Caption = #34920#21517
             Position.BandIndex = 1

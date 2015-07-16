@@ -12,7 +12,8 @@ uses
   cxEdit, DB, cxDBData, cxGridTableView,
   cxGridLevel, cxClasses, cxControls, cxGridCustomView,
   cxGridCustomTableView, cxGridDBTableView, cxGrid, ComCtrls, ToolWin,
-  cxCustomData, cxGraphics, cxFilter, cxData, cxDataStorage;
+  cxCustomData, cxGraphics, cxFilter, cxData, cxDataStorage,
+  cxLookAndFeels, cxLookAndFeelPainters;
 
 type
   TFrmMain = class(TForm)
@@ -323,8 +324,10 @@ begin
 
   if nDS.Active and (nDS.RecordCount > 0) then
   begin
+    gMenuManager.LangID := nDS.FieldByName('M_LangID').AsString;
     nProgID := nDS.FieldByName('M_ProgID').AsString;
     nEntity := nDS.FieldByName('M_Entity').AsString;
+
     if (nEntity <> '') and (nProgID <> '') then
          ShowPreviewForm(gMenuManager, nProgID, nEntity)
     else ShowMsg('该记录无法预览', sHint);

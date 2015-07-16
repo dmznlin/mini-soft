@@ -3,8 +3,8 @@ object FrmNew: TFrmNew
   Top = 273
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  ClientHeight = 371
-  ClientWidth = 340
+  ClientHeight = 401
+  ClientWidth = 372
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,21 +16,21 @@ object FrmNew: TFrmNew
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    340
-    371)
+    372
+    401)
   PixelsPerInch = 96
   TextHeight = 12
   object Label1: TLabel
     Left = 14
-    Top = 320
+    Top = 350
     Width = 246
     Height = 12
     Anchors = [akLeft, akBottom]
     Caption = #25552#31034': '#25353'Shift'#38190#28155#21152'"'#31243#24207#26631#35782'"'#25110'"'#23454#20307#26631#35782'"'
   end
   object BtnSave: TButton
-    Left = 157
-    Top = 339
+    Left = 189
+    Top = 369
     Width = 72
     Height = 22
     Anchors = [akRight, akBottom]
@@ -39,8 +39,8 @@ object FrmNew: TFrmNew
     OnClick = BtnSaveClick
   end
   object BtnExit: TButton
-    Left = 252
-    Top = 339
+    Left = 284
+    Top = 369
     Width = 72
     Height = 22
     Anchors = [akRight, akBottom]
@@ -51,15 +51,15 @@ object FrmNew: TFrmNew
   object Panel1: TPanel
     Left = 12
     Top = 12
-    Width = 312
-    Height = 295
+    Width = 344
+    Height = 325
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
     DesignSize = (
-      312
-      295)
+      344
+      325)
     object Label2: TLabel
       Left = 18
       Top = 20
@@ -84,7 +84,7 @@ object FrmNew: TFrmNew
     object Edit_Menu: TLabeledEdit
       Left = 76
       Top = 69
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_MenuID'
       HelpType = htKeyword
@@ -105,7 +105,7 @@ object FrmNew: TFrmNew
     object Edit_ProgID: TComboBox
       Left = 76
       Top = 15
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_ProgID'
       HelpType = htKeyword
@@ -123,7 +123,7 @@ object FrmNew: TFrmNew
     object Edit_Entity: TComboBox
       Left = 76
       Top = 42
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_Entity'
       HelpType = htKeyword
@@ -139,7 +139,7 @@ object FrmNew: TFrmNew
     object Edit_PMenu: TComboBox
       Left = 76
       Top = 97
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_PMenu'
       BevelKind = bkTile
@@ -151,7 +151,7 @@ object FrmNew: TFrmNew
     object Edit_Title: TLabeledEdit
       Left = 76
       Top = 124
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_Title'
       HelpContext = 1
@@ -170,7 +170,7 @@ object FrmNew: TFrmNew
     object Edit_Img: TLabeledEdit
       Left = 76
       Top = 151
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_ImgIndex'
       HelpKeyword = 'D'
@@ -191,7 +191,7 @@ object FrmNew: TFrmNew
     object Edit_Flag: TLabeledEdit
       Left = 76
       Top = 178
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_Flag'
       Anchors = [akLeft, akTop, akRight]
@@ -209,7 +209,7 @@ object FrmNew: TFrmNew
     object Edit_Action: TLabeledEdit
       Left = 76
       Top = 206
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_Action'
       Anchors = [akLeft, akTop, akRight]
@@ -227,7 +227,7 @@ object FrmNew: TFrmNew
     object Edit_Filter: TLabeledEdit
       Left = 76
       Top = 233
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_Filter'
       Anchors = [akLeft, akTop, akRight]
@@ -245,7 +245,7 @@ object FrmNew: TFrmNew
     object Edit_Order: TLabeledEdit
       Left = 76
       Top = 260
-      Width = 215
+      Width = 247
       Height = 20
       Hint = 'Menu.M_NewOrder'
       HelpKeyword = 'D'
@@ -261,6 +261,23 @@ object FrmNew: TFrmNew
       MaxLength = 7
       TabOrder = 9
       Text = '0'
+      OnKeyDown = Edit_MenuKeyDown
+    end
+    object Edit_Lang: TLabeledEdit
+      Left = 76
+      Top = 288
+      Width = 247
+      Height = 20
+      Hint = 'Menu.M_LangID'
+      Anchors = [akLeft, akTop, akRight]
+      BevelKind = bkTile
+      BorderStyle = bsNone
+      EditLabel.Width = 54
+      EditLabel.Height = 12
+      EditLabel.Caption = #35821#35328#26631#35782':'
+      LabelPosition = lpLeft
+      MaxLength = 12
+      TabOrder = 10
       OnKeyDown = Edit_MenuKeyDown
     end
   end

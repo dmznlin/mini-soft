@@ -121,6 +121,21 @@ object fFormDict: TfFormDict
         '1=1.'#21487#35265
         '2=2.'#38544#34255)
     end
+    object Edit_Lang: TLabeledEdit
+      Left = 300
+      Top = 72
+      Width = 150
+      Height = 20
+      BevelKind = bkTile
+      BorderStyle = bsNone
+      EditLabel.Width = 54
+      EditLabel.Height = 12
+      EditLabel.Caption = #35821#35328#26631#35782':'
+      LabelPosition = lpLeft
+      MaxLength = 8
+      TabOrder = 5
+      OnKeyUp = Edit_FteDisplayKeyUp
+    end
   end
   object GroupBox2: TGroupBox
     Left = 12

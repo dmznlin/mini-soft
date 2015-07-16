@@ -62,6 +62,7 @@ type
     ableView1Column19: TcxGridBandedColumn;
     ableView1Column20: TcxGridBandedColumn;
     cxSplitter1: TcxSplitter;
+    ableView1Column21: TcxGridBandedColumn;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
