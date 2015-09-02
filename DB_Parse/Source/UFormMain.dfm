@@ -51,6 +51,15 @@ object fFormMain: TfFormMain
       TabOrder = 2
       OnClick = BtnSaveClick
     end
+    object BtnEnum: TButton
+      Left = 336
+      Top = 8
+      Width = 75
+      Height = 25
+      Caption = '*.'#26816#32034
+      TabOrder = 3
+      OnClick = BtnEnumClick
+    end
   end
   object MemoSQL: TMemo
     Left = 0
@@ -71,13 +80,13 @@ object fFormMain: TfFormMain
   end
   object ADOConnection1: TADOConnection
     LoginPrompt = False
-    Left = 278
-    Top = 8
+    Left = 594
+    Top = 6
   end
   object Query1: TADOQuery
     Connection = ADOConnection1
     Parameters = <>
-    Left = 306
-    Top = 8
+    Left = 622
+    Top = 6
   end
 end

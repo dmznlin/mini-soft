@@ -16,11 +16,13 @@ type
     BtnSave: TButton;
     ADOConnection1: TADOConnection;
     Query1: TADOQuery;
+    BtnEnum: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnConnClick(Sender: TObject);
     procedure BtnParseClick(Sender: TObject);
     procedure BtnSaveClick(Sender: TObject);
+    procedure BtnEnumClick(Sender: TObject);
   private
     { Private declarations }
     FStep: Integer;
@@ -64,6 +66,8 @@ end;
 procedure TfFormMain.InitUIByStep;
 begin
   BtnConn.Enabled := FStep = 1;
+  BtnEnum.Enabled := FStep = 1;
+  
   BtnParse.Enabled := FStep > 1;
   BtnSave.Enabled := FStep > 2;
 end;
@@ -300,7 +304,7 @@ begin
       end;
 
       MemoSQL.Lines.Add('');
-      if nIdx > 5 then Break;
+      //if nIdx > 5 then Break;
     except
       on E: Exception do
       begin
@@ -394,6 +398,54 @@ begin
     MemoSQL.Lines.SaveToFile(nStr);
   finally
     Free;
+  end;
+end;
+
+procedure TfFormMain.BtnEnumClick(Sender: TObject);
+var nStr: string;
+    nInt: Integer;
+begin
+  try
+    nStr := Trim(ADOConnection1.ConnectionString);
+    if nStr = '' then
+    begin
+      ShowMsg('请点"连接"并设置DB=#', sHint);
+      Exit;
+    end;
+
+    ADOConnection1.Connected := False;
+    ADOConnection1.ConnectionString := StringReplace(nStr, '#', 'master', [rfIgnoreCase]);
+    ADOConnection1.Connected := True;
+
+    Query1.Close;
+    Query1.SQL.Text := 'select dbid as 标识, DB_NAME(dbid) AS 数据库 FROM sysdatabases ' +
+                       'order by dbid';
+    Query1.Open;
+
+    if Query1.RecordCount > 0 then
+    begin
+      nStr := '';
+      for nInt:=0 to Query1.FieldCount - 1 do
+        nStr := nStr + StrWithWidth(Query1.Fields[nInt].FieldName, 25, 1) + '|';
+      MemoSQL.Lines.Add(nStr);
+
+      Query1.First;
+      while not Query1.Eof do
+      begin
+        nStr := '';
+        for nInt:=0 to Query1.FieldCount - 1 do
+          nStr := nStr + StrWithWidth(Query1.Fields[nInt].AsString, 25, 1) + '|';
+        //xxxxx
+        
+        MemoSQL.Lines.Add(nStr);
+        Query1.Next;
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      MemoSQL.Text := E.Message;
+    end;
   end;
 end;
 
