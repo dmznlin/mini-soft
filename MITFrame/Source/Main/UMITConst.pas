@@ -22,6 +22,7 @@ const
   cFI_FrameConfig     = $0006;                       //基本设置
   cFI_FrameParam      = $0007;                       //参数配置
   cFI_FramePlugs      = $0008;                       //插件管理
+  cFI_FrameStatus     = $0009;                       //对象状态
 
   {*Form ID*}
   cFI_FormPack        = $0050;                       //参数包

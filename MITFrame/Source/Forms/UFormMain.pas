@@ -41,6 +41,7 @@ type
     SysService: TdxNavBarItem;
     Timer4: TTimer;
     SysPlugs: TdxNavBarItem;
+    SysStatus: TdxNavBarItem;
     procedure Timer2Timer(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -339,7 +340,9 @@ begin
     if Sender = SysRunParam then
       CreateBaseFrameItem(cFI_FrameParam, PanelWork) else
     if Sender = SysPlugs then
-      CreateBaseFrameItem(cFI_FramePlugs, PanelWork)
+      CreateBaseFrameItem(cFI_FramePlugs, PanelWork) else
+    if Sender = SysStatus then
+      CreateBaseFrameItem(cFI_FrameStatus, PanelWork);
   finally
     LockWindowUpdate(0);
   end;

@@ -14,7 +14,7 @@ uses
   //常规定义
   UBusinessWorker, UBusinessPacker, UMgrDBConn, UMgrParam, UMgrPlug,
   UMgrChannel, UTaskMonitor, UChannelChooser, USAPConnection, USysShareMem,
-  USysLoger;
+  USysLoger, UBaseObject;
   //系统对象
 
 procedure InitSystemObject(const nMainForm: THandle);
@@ -143,6 +143,9 @@ begin
   if gSysParam.FParam <> '' then
     gParamManager.GetParamPack(gSysParam.FParam, True);
   //参数管理器
+
+  gCommonObjectManager := TCommonObjectManager.Create;
+  //通用对象状态管理
 
   {$IFDEF DBPool}
   gDBConnManager := TDBConnManager.Create;
