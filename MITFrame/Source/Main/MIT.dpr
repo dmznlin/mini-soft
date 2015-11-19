@@ -11,12 +11,10 @@ uses
   Forms,
   ULibFun,
   UMITConst,
-  {$IFDEF GenRODL}
   MIT_Service_Intf in '..\Common\MIT_Service_Intf.pas',
   MIT_Service_Invk in '..\Common\MIT_Service_Invk.pas',
   SrvConnection_Impl in '..\Common\SrvConnection_Impl.pas',
   SrvBusiness_Impl in '..\Common\SrvBusiness_Impl.pas',
-  {$ENDIF}
   UROModule in '..\Forms\UROModule.pas' {ROModule: TDataModule},
   UDataModule in '..\Forms\UDataModule.pas' {FDM: TDataModule},
   UFormMain in '..\Forms\UFormMain.pas' {fFormMain},
@@ -31,7 +29,8 @@ uses
   UFormParamSAP in '..\Forms\UFormParamSAP.pas' {fFormParamSAP},
   UFormPerform in '..\Forms\UFormPerform.pas' {fFormPerform},
   UFormServiceURL in '..\Forms\UFormServiceURL.pas' {fFormServiceURL},
-  UFramePlugs in '..\Forms\UFramePlugs.pas' {fFramePlugs: TFrame};
+  UFramePlugs in '..\Forms\UFramePlugs.pas' {fFramePlugs: TFrame},
+  UFrameStatus in '..\Forms\UFrameStatus.pas' {fFrameStatus: TFrame};
 
 {$R *.res}
 {$R RODLFile.RES}
