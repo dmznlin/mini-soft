@@ -222,9 +222,8 @@ end;
 
 procedure TfFormCollect.BtnOKClick(Sender: TObject);
 begin
-  if InitCOMData(False) then
+  if InitCOMData(False) and InitCOMData(True) then
   begin
-    InitCOMData(True);
     Check1.Checked := False;
     ShowMsg('±£´æ³É¹¦', sHint);
   end;
