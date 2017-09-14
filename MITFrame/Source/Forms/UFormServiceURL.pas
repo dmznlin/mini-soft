@@ -12,15 +12,20 @@ uses
 
 type
   TfFormServiceURL = class(TBaseForm)
+    PanelTop: TPanel;
+    Label1: TLabel;
+    MemoLocal: TMemo;
+    PanelMID: TPanel;
+    Label2: TLabel;
+    MemoRemote: TMemo;
+    PanelBTM: TPanel;
     Bevel1: TBevel;
     BtnExit: TButton;
     BtnOK: TButton;
-    Label1: TLabel;
-    MemoLocal: TMemo;
-    Label2: TLabel;
-    MemoRemote: TMemo;
     procedure MemoLocalChange(Sender: TObject);
     procedure BtnOKClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
     procedure InitFormData;
@@ -64,8 +69,21 @@ end;
 
 procedure TfFormServiceURL.InitFormData;
 begin
+  LoadFormConfig(Self);
   MemoLocal.Text := gParamManager.URLLocal.Text;
   MemoRemote.Text := gParamManager.URLRemote.Text;
+end;
+
+procedure TfFormServiceURL.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  SaveFormConfig(Self);
+end;
+
+procedure TfFormServiceURL.FormResize(Sender: TObject);
+var nInt: Integer;
+begin
+  nInt := ClientHeight - PanelBTM.Height;
+  PanelTop.Height := Trunc(nInt / 2);
 end;
 
 procedure TfFormServiceURL.MemoLocalChange(Sender: TObject);

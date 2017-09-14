@@ -1,75 +1,112 @@
 inherited fFormServiceURL: TfFormServiceURL
   Left = 397
   Top = 290
+  Width = 575
+  Height = 501
   BorderIcons = [biSystemMenu, biMinimize]
-  BorderStyle = bsSingle
   Caption = #26381#21153#22320#22336
-  ClientHeight = 319
-  ClientWidth = 444
   OldCreateOrder = True
   Position = poDesktopCenter
-  PixelsPerInch = 120
-  TextHeight = 15
-  object Bevel1: TBevel
-    Left = 5
-    Top = 276
-    Width = 432
-    Height = 6
-    Anchors = [akLeft, akRight, akBottom]
-    Shape = bsBottomLine
-  end
-  object Label1: TLabel
-    Left = 8
-    Top = 20
-    Width = 68
-    Height = 15
-    Caption = #26412#22320#26381#21153':'
-  end
-  object Label2: TLabel
-    Left = 8
-    Top = 155
-    Width = 68
-    Height = 15
-    Caption = #36828#31243#26381#21153':'
-  end
-  object BtnExit: TButton
-    Left = 357
-    Top = 285
-    Width = 75
-    Height = 25
-    Anchors = [akRight, akBottom]
-    Caption = #21462#28040
-    ModalResult = 2
-    TabOrder = 3
-  end
-  object BtnOK: TButton
-    Left = 277
-    Top = 285
-    Width = 75
-    Height = 25
-    Anchors = [akRight, akBottom]
-    Caption = #30830#23450
-    TabOrder = 2
-    OnClick = BtnOKClick
-  end
-  object MemoLocal: TMemo
-    Left = 8
-    Top = 38
-    Width = 423
-    Height = 102
-    Anchors = [akLeft, akTop, akRight]
-    ScrollBars = ssVertical
+  OnClose = FormClose
+  OnResize = FormResize
+  PixelsPerInch = 96
+  TextHeight = 12
+  object PanelTop: TPanel
+    Left = 0
+    Top = 0
+    Width = 567
+    Height = 200
+    Align = alTop
+    BevelOuter = bvNone
     TabOrder = 0
-    OnChange = MemoLocalChange
+    DesignSize = (
+      567
+      200)
+    object Label1: TLabel
+      Left = 6
+      Top = 8
+      Width = 54
+      Height = 12
+      Caption = #26412#22320#26381#21153':'
+    end
+    object MemoLocal: TMemo
+      Left = 5
+      Top = 25
+      Width = 554
+      Height = 170
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      ScrollBars = ssVertical
+      TabOrder = 0
+      OnChange = MemoLocalChange
+    end
   end
-  object MemoRemote: TMemo
-    Left = 8
-    Top = 172
-    Width = 423
-    Height = 102
-    Anchors = [akLeft, akTop, akRight]
-    ScrollBars = ssVertical
+  object PanelMID: TPanel
+    Left = 0
+    Top = 200
+    Width = 567
+    Height = 234
+    Align = alClient
+    BevelOuter = bvNone
     TabOrder = 1
-    OnChange = MemoLocalChange
+    DesignSize = (
+      567
+      234)
+    object Label2: TLabel
+      Left = 6
+      Top = 8
+      Width = 54
+      Height = 12
+      Caption = #36828#31243#26381#21153':'
+    end
+    object MemoRemote: TMemo
+      Left = 5
+      Top = 25
+      Width = 554
+      Height = 204
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      ScrollBars = ssVertical
+      TabOrder = 0
+      OnChange = MemoLocalChange
+    end
+  end
+  object PanelBTM: TPanel
+    Left = 0
+    Top = 434
+    Width = 567
+    Height = 40
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 2
+    DesignSize = (
+      567
+      40)
+    object Bevel1: TBevel
+      Left = 5
+      Top = 2
+      Width = 557
+      Height = 5
+      Anchors = [akLeft, akRight, akBottom]
+      Shape = bsBottomLine
+    end
+    object BtnExit: TButton
+      Left = 490
+      Top = 12
+      Width = 60
+      Height = 20
+      Anchors = [akRight, akBottom]
+      Caption = #21462#28040
+      ModalResult = 2
+      TabOrder = 0
+    end
+    object BtnOK: TButton
+      Left = 427
+      Top = 12
+      Width = 60
+      Height = 20
+      Anchors = [akRight, akBottom]
+      Caption = #30830#23450
+      TabOrder = 1
+      OnClick = BtnOKClick
+    end
   end
 end
