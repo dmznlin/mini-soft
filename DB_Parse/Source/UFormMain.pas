@@ -151,8 +151,8 @@ begin
     MemoSQL.Lines.Add('');
 
     nInfo := 'select column_name,data_type,IS_NULLABLE,character_octet_length,' +
-             'collation_name,domain_name,numeric_precision,numeric_scale' +
-             ' from information_schema.columns ' +
+             'collation_name,domain_name,numeric_precision,numeric_scale,' +
+             'column_default from information_schema.columns ' +
              'where table_name=''%s'' order by ordinal_position';
     //xxxxx
     
@@ -224,7 +224,7 @@ begin
           //xxxxx
 
           nInt := Query1.FieldByName('character_octet_length').AsInteger;
-          if nInt >= 1 then
+          if (nInt >= 1) and (nInt <= 8000) then
             nCreate := nCreate + Format('(%d) ', [nInt]);
           //xxxxx
 
@@ -235,8 +235,13 @@ begin
 
           nStr := Query1.FieldByName('IS_NULLABLE').AsString;
           if CompareText(nStr, 'no') = 0 then
-               nCreate := nCreate + 'NOT NULL'
-          else nCreate := nCreate + 'NULL';
+               nCreate := nCreate + 'NOT NULL '
+          else nCreate := nCreate + 'NULL ';
+
+          nStr := Query1.FieldByName('column_default').AsString;
+          if nStr <> '' then
+            nCreate := nCreate + 'DEFAULT ' + nStr;
+          //default value
 
           Query1.Next;
           if Query1.Eof then
