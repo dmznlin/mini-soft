@@ -10,7 +10,10 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.Controls, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Buttons, Vcl.Graphics, System.Classes, ComPort,
-  UHotKeyManager;
+  UThreadPool, UHotKeyManager, sgcWebSocket_Protocol_MQTT_Message,
+  sgcWebSocket_Types, sgcWebSocket_Classes, sgcWebSocket_Protocol_Base_Client,
+  sgcWebSocket_Protocol_MQTT_Client, sgcWebSocket_Protocols,
+  sgcWebSocket_Classes_Indy, sgcWebSocket_Client, sgcWebSocket;
 
 type
   TfFormMain = class(TForm)
@@ -62,6 +65,11 @@ type
     EditSrvUser: TLabeledEdit;
     EditSrvPwd: TLabeledEdit;
     CheckService: TCheckBox;
+    MQTT1: TsgcWSPClient_MQTT;
+    WSClient1: TsgcWebSocketClient;
+    EditHeat: TLabeledEdit;
+    EditReconn: TLabeledEdit;
+    Timer1: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure BtnPortCfgClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -73,6 +81,17 @@ type
     procedure wPage1Change(Sender: TObject);
     procedure CheckRunClick(Sender: TObject);
     procedure CheckShowLogClick(Sender: TObject);
+    procedure MQTT1MQTTConnect(Connection: TsgcWSConnection;
+      const Session: Boolean; const ReturnCode: TmqttConnReturnCode);
+    procedure MQTT1MQTTDisconnect(Connection: TsgcWSConnection);
+    procedure WSClient1Exception(Connection: TsgcWSConnection; E: Exception);
+    procedure CheckServiceClick(Sender: TObject);
+    procedure MQTT1MQTTSubscribe(Connection: TsgcWSConnection;
+      aPacketIdentifier: Word; aCodes: TsgcWSSUBACKS);
+    procedure MQTT1MQTTPublish(Connection: TsgcWSConnection; aTopic,
+      aText: string);
+    procedure Timer1Timer(Sender: TObject);
+    procedure CheckDetailClick(Sender: TObject);
   private
     { Private declarations }
     FLastLogin: Cardinal;
@@ -86,6 +105,14 @@ type
     //显示日志
     procedure LoadTunnelList(const nKeepPos: Boolean = True);
     //载入通道
+    procedure ActiveService(const nActive: Boolean);
+    //启停服务
+    procedure DoSubscribe(const nConfig: PThreadWorkerConfig;
+      const nThread: TThread);
+    procedure AddSubscribeWorker;
+    //自动订阅主题
+    procedure OnComPortRxChar(Sender: TObject);
+    //串口数据处理
   public
     { Public declarations }
     procedure WMSysCommand(var nMsg: TWMSysCommand); message WM_SYSCOMMAND;
@@ -99,11 +126,11 @@ implementation
 {$R *.dfm}
 
 uses
-  UManagerGroup, ULibFun, USysConst;
+  UManagerGroup, UWaitItem, ULibFun, USysConst;
 
 procedure WriteLog(const nEvent: string);
 begin
-  gMG.FLogManager.AddLog(TfFormMain, 'Hub Main', nEvent);
+  gMG.FLogManager.AddLog(TfFormMain, '', nEvent);
 end;
 
 procedure TfFormMain.FormCreate(Sender: TObject);
@@ -119,15 +146,17 @@ begin
   SysParameter(True);
   with gSysParam do
   begin
-    CheckRun.Checked := FAutoRun;
-    CheckMin.Checked := FMinAfterRun;
-    EditPwd.Text := FAdminPassword;
-    EditHotKey1.Text := FHotKey;
+    CheckRun.Checked  := FAutoRun;
+    CheckMin.Checked  := FMinAfterRun;
+    EditPwd.Text      := FAdminPassword;
+    EditHotKey1.Text  := FHotKey;
 
-    EditSrvIP.Text := FServerIP;
-    EditSrvPort.Text := IntToStr(FServerPort);
-    EditSrvUser.Text := FServerUser;
-    EditSrvPwd.Text := FServerPwd;
+    EditSrvIP.Text    := FServerIP;
+    EditSrvPort.Text  := IntToStr(FServerPort);
+    EditSrvUser.Text  := FServerUser;
+    EditSrvPwd.Text   := FServerPwd;
+    EditHeat.Text     := IntToStr(FHeatBeat);
+    EditReconn.Text   := IntToStr(FReconnect);
 
     FHotKeyHide := TextToHotKey(FHotKey, False);
     FHotKeyManager.AddHotKey(FHotKeyHide);
@@ -149,18 +178,47 @@ begin
     SyncSimple := ShowLog;
     StartService(gPath + 'Logs\');
   end;
+
+  AddSubscribeWorker();
+  //订阅主题
+
+  CheckShowLog.Checked := not gSysParam.FMinAfterRun;
+  if gSysParam.FMinAfterRun then
+  begin
+    Application.ShowMainForm := False;
+    Timer1.Enabled := True;
+  end;
+
+  gSysStatus.FApplicationRunning := True;
+  //run flag
 end;
 
 procedure TfFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  gSysStatus.FApplicationRunning := False;
+  gSysStatus.FShowDetailLog := False;
+  gMG.RunBeforApplicationHalt;
+  //close flag
+
+  ActiveService(False);
+  //停止服务
+
   if gSysParam.FChanged then
     SysParameter(False);
   TApplicationHelper.SaveFormConfig(Self);
 end;
 
+//Desc: 延时启动服务
+procedure TfFormMain.Timer1Timer(Sender: TObject);
+begin
+  Timer1.Enabled := False;
+  CheckService.Checked := True;
+end;
+
 //Desc: 刷新内存
 procedure TfFormMain.BtnFreshMemClick(Sender: TObject);
 begin
+  MemoLog.Lines.Clear;
   gMG.GetManagersStatus(MemoLog.Lines);
 end;
 
@@ -195,8 +253,13 @@ end;
 
 //Desc: 应用变更
 procedure TfFormMain.CheckRunClick(Sender: TObject);
+var nInt: Integer;
 begin
   if not TWinControl(Sender).Focused then Exit;
+  nInt := StrToInt(EditReconn.Text);
+  if nInt < 1 then EditReconn.Text := '3';
+  if nInt > 60 then EditReconn.Text := '60';
+
   with gSysParam do
   begin
     FChanged       := True;
@@ -209,23 +272,41 @@ begin
     FServerPort    := StrToInt(EditSrvPort.Text);
     FServerUser    := EditSrvUser.Text;
     FServerPwd     := EditSrvPwd.Text;
+    FHeatBeat      := StrToInt(EditHeat.Text);
+    FReconnect     := StrToInt(EditReconn.Text);
   end;
 end;
 
+//Desc: 显示日志
 procedure TfFormMain.CheckShowLogClick(Sender: TObject);
 begin
   gMG.FLogManager.SyncMainUI := CheckShowLog.Checked;
+  gSysStatus.FShowDetailLog := CheckShowLog.Checked and CheckDetail.Checked;
 end;
 
+//Desc: 显示明细
+procedure TfFormMain.CheckDetailClick(Sender: TObject);
+begin
+  gSysStatus.FShowDetailLog := CheckShowLog.Checked and CheckDetail.Checked;
+end;
+
+//Desc: 相应热键
 procedure TfFormMain.OnHotKey(HotKey: Cardinal; Index: Word);
 var nStr: string;
     nThread: Thandle;
 begin
   if HotKey = FHotKeyHide then //显示隐藏
   begin
+    if Visible then
+    begin
+      Visible := False;
+      Exit;
+    end;
+
     nStr := InputBox('swtich', 'Please input admin''s password:', '');
     if nStr = gSysParam.FAdminPassword then
     begin
+      FLastLogin := GetTickCount();
       Visible := not Visible;
       Application.ProcessMessages;
 
@@ -416,6 +497,256 @@ begin
 
   LoadTunnelList;
   ShowMessage('保存完毕');
+end;
+
+//------------------------------------------------------------------------------
+//Date: 2019-05-28
+//Parm: 启停标识
+//Desc: 启停转发服务
+procedure TfFormMain.ActiveService(const nActive: Boolean);
+var nIdx: Integer;
+begin
+  gSysStatus.FMQTTConnected := False;
+  gSysStatus.FTopicsSubscribed := False;
+  //init flag
+
+  while COMEventCounter(True, -1) > 0 do
+    Sleep(10);
+  //等待串口处理完毕
+
+  Sheet2.Enabled := not nActive;
+  Sheet3.Enabled := not nActive;
+  //冻结设置项
+    
+  for nIdx := Low(gTunnels) to High(gTunnels) do
+  with gTunnels[nIdx] do
+  begin
+    if not FEnabled then Continue;
+    //invalid
+
+    if not Assigned(FCOMPort) then
+    begin
+      FCOMPort := TComPort.Create(Self);
+      with FCOMPort do
+      begin
+        Tag := nIdx;
+        SynchronizeEvents := False;
+        OnRxChar := OnComPortRxChar;
+
+        Timeouts.ReadConstant := 200;
+        Timeouts.ReadMultiplier := 100;
+        //Timeouts.WriteConstant := 200;
+        //Timeouts.WriteMultiplier := 100;
+      end;
+    end;
+
+    if nActive then
+    begin
+      ApplyConfig(FCOMPort, True, nIdx);
+      FCOMPort.Active := True;
+    end else
+    begin
+      FCOMPort.Active := False;
+      //close comport    
+    end;
+  end;
+    
+  gMG.FThreadPool.WorkerStop(Self);
+  WSClient1.Active := False;
+  if not nActive then Exit;
+  //close all first
+
+  with WSClient1 do
+  begin
+    //Active := False;
+    Host := gSysParam.FServerIP;
+    Port := gSysParam.FServerPort;
+
+    //WatchDog.Interval := gSysParam.FReconnect;
+    WatchDog.Enabled := False;
+    //开启自动重连
+  end;
+
+  with MQTT1 do
+  begin
+    HeartBeat.Interval := gSysParam.FHeatBeat;
+    Authentication.Enabled := gSysParam.FServerUser <> '';
+    Authentication.UserName := gSysParam.FServerUser;
+    Authentication.Password := gSysParam.FServerPwd;
+  end;
+
+  MakeTopicList();
+  //待订阅主题
+  gMG.FThreadPool.WorkerStart(Self);
+  //开启服务
+end;
+
+//Desc: 启停服务
+procedure TfFormMain.CheckServiceClick(Sender: TObject);
+begin
+  ActiveService(CheckService.Checked);
+end;
+
+//Desc: 添加自动订阅主题线程
+procedure TfFormMain.AddSubscribeWorker;
+var nWorker: TThreadWorkerConfig;
+begin
+  gMG.FThreadPool.WorkerInit(nWorker);
+  with nWorker do
+  begin
+    FWorkerName   := 'TfFormMain.Subscribe';
+    FParentObj    := Self;
+    FParentDesc   := 'MQTT Subscribe';
+    FCallTimes    := 0; //暂停
+    FCallInterval := gSysParam.FReconnect * 1000;
+    FProcEvent    := DoSubscribe;
+  end;
+
+  gMG.FThreadPool.WorkerAdd(@nWorker);
+  //添加线程作业
+end;
+
+//Desc: 订阅主题
+procedure TfFormMain.DoSubscribe(const nConfig: PThreadWorkerConfig;
+  const nThread: TThread);
+var nIdx,nNum: Integer;
+begin
+  if not gSysStatus.FApplicationRunning then Exit;
+  //closeing
+
+  if not WSClient1.Active then //连接服务
+    WSClient1.Active := True;
+  if not gSysStatus.FMQTTConnected then Exit;
+
+  if not gSysStatus.FTopicsSubscribed then //订阅主题
+  begin
+    nNum := 0;
+    gSyncLock.Enter;
+    try
+      for nIdx := Low(gTopics) to High(gTopics) do
+      with gTopics[nIdx],TDateTimeHelper do
+      begin
+        if FHasSub or (GetTickCountDiff(FLastSub) < 5 * 1000) then Continue;
+        Inc(nNum);
+
+        FLastSub := GetTickCount();
+        FChannel := MQTT1.Subscribe(FTopic);
+      end;
+    finally
+      gSyncLock.Leave;
+    end;
+
+    if nNum < 1 then
+      gSysStatus.FTopicsSubscribed := True;
+    //xxxxx
+  end;
+end;
+
+//Desc: 异常
+procedure TfFormMain.WSClient1Exception(Connection: TsgcWSConnection;
+  E: Exception);
+begin
+  WriteLog('MQTT Exception:' + E.Message);
+end;
+
+//Desc: 连接成功
+procedure TfFormMain.MQTT1MQTTConnect(Connection: TsgcWSConnection;
+  const Session: Boolean; const ReturnCode: TmqttConnReturnCode);
+begin
+  WriteLog('MQTT Has Connected.');
+  gSysStatus.FMQTTConnected := True;
+  gMG.FThreadPool.WorkerWakeup(Self);
+end;
+
+//Desc: 连接断开
+procedure TfFormMain.MQTT1MQTTDisconnect(Connection: TsgcWSConnection);
+begin
+  WriteLog('MQTT Has Disconnected.');
+  gSysStatus.FMQTTConnected := False;
+  gSysStatus.FTopicsSubscribed := False;
+
+  MakeTopicList(True);
+  gMG.FThreadPool.WorkerWakeup(Self);
+end;
+
+//Desc: 订阅成功
+procedure TfFormMain.MQTT1MQTTSubscribe(Connection: TsgcWSConnection;
+  aPacketIdentifier: Word; aCodes: TsgcWSSUBACKS);
+var nIdx: Integer;
+begin
+  gSyncLock.Enter;
+  try
+    for nIdx := Low(gTopics) to High(gTopics) do
+     with gTopics[nIdx] do
+      if FChannel = aPacketIdentifier then
+      begin
+        FHasSub := True;
+        WriteLog(Format('%s Has Subscribed.', [FTopic]));
+      end;
+  finally
+    gSyncLock.Leave;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+//Desc: 将通道数据转发到指定串口
+procedure TfFormMain.MQTT1MQTTPublish(Connection: TsgcWSConnection; aTopic,
+  aText: string);
+var nStr,nHex: string;
+    nIdx: Integer;
+begin
+  with gSysStatus do
+   if not (FApplicationRunning and FMQTTConnected) then Exit;
+  //xxxxx
+     
+  nStr := TEncodeHelper.DecodeBase64(aText); 
+  if gSysStatus.FShowDetailLog then
+    nHex := TStringHelper.Str2Hex(nStr);
+  //xxxxx
+  
+  for nIdx := Low(gTunnels) to High(gTunnels) do
+  with gTunnels[nIdx] do
+  begin
+    if (not FEnabled) or (FMQIn <> aTopic) then Continue;
+    if gSysStatus.FShowDetailLog then
+      WriteLog(Format('%s.[ %s -> COM ]: %s', [FName, FMQIn, nHex]));
+    //xxxxx
+
+    if gSysStatus.FMQTTConnected then    
+      FCOMPort.WriteAnsiString(nStr);
+    //send data
+  end;
+end;
+
+//Desc: 将串口数据转发到指定通道
+procedure TfFormMain.OnComPortRxChar(Sender: TObject);
+var nStr: string;
+    nComPort: TComPort;
+begin
+  with gSysStatus do
+   if not (FApplicationRunning and FMQTTConnected) then Exit;
+  //xxxxx
+  
+  COMEventCounter(True);
+  try                    
+    nComPort := Sender as TComPort;
+    nStr := nComPort.ReadAnsiString;
+    if nStr = '' then Exit;
+
+    with gTunnels[nComPort.Tag] do
+    begin
+      if gSysStatus.FShowDetailLog then
+        WriteLog(Format('%s.[ COM -> %s ]: %s', [FName,
+          FMQOut, TStringHelper.Str2Hex(nStr)]));
+      //xxxxx
+
+      if gSysStatus.FMQTTConnected then
+        MQTT1.Publish(FMQOut, TEncodeHelper.EncodeBase64(nStr));
+      //send data
+    end; 
+  finally
+    COMEventCounter(False);
+  end;     
 end;
 
 end.

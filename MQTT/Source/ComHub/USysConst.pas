@@ -8,7 +8,8 @@ interface
 
 uses
   Winapi.Windows, System.Classes, System.IniFiles, Vcl.Forms, System.SysUtils,
-  System.Win.Registry, ComPort, UBaseObject, UManagerGroup, ULibFun;
+  System.Win.Registry, System.SyncObjs, ComPort, UBaseObject, UManagerGroup,
+  ULibFun;
 
 type
   TSysParam = record
@@ -32,8 +33,18 @@ type
     FServerPort     : Integer;
     FServerUser     : string;
     FServerPwd      : string;                        //MQTT Server
+    FHeatBeat       : Integer;                       //心跳(秒)
+    FReconnect      : Integer;                       //断线重连(秒)
   end;
   //系统参数
+
+  TSystemStatus = record
+    FMQTTConnected      : Boolean;                   //服务已连接
+    FTopicsSubscribed   : Boolean;                   //主题已订阅
+    FShowDetailLog      : Boolean;                   //显示日志明细
+    FApplicationRunning : Boolean;                   //系统运行中
+    FCOMEventCounter    : Cardinal;                  //串口事件计数
+  end;
 
   PTunnelItem = ^TTunnelItem;
   TTunnelItem = record
@@ -58,9 +69,23 @@ type
   TTunnelItems = array of TTunnelItem;
   //通道列表
 
+  TTopicItem = record
+    FTopic          : string;                        //主题名称
+    FChannel        : Word;                          //订阅编号
+    FHasSub         : Boolean;                       //已订阅
+    FLastSub        : Cardinal;                      //发起订阅
+  end;
+
+  TTopicItems = array of TTopicItem;
+  //订阅列表
+
 var
   gPath: string;                                     //程序所在路径
-  gSysParam:TSysParam;                               //程序环境参数
+  gSysParam: TSysParam;                              //程序环境参数
+  gSysStatus: TSystemStatus;                         //程序运行状态
+  gSyncLock: TCriticalSection;                       //全局同步锁定
+
+  gTopics: TTopicItems;                              //主题列表
   gTunnels: TTunnelItems;                            //通道列表
   gSetupParam: TTunnelItem;                          //设置中通道参数
 
@@ -73,11 +98,15 @@ procedure TunnelConfig(const nLoad: Boolean);
 procedure ApplyConfig(const nCOMPort: TComPort; const nSet: Boolean = True;
  const nCfg: Integer = -1);
 //应用配置
+procedure MakeTopicList(const nOnlyReset: Boolean = False);
+//构建订阅列表
+function COMEventCounter(const nInc: Boolean; const nNum: Integer = 1): Integer;
+//增减串口事件计数
 
 ResourceString
-  sProgID             = 'DMZN';                      //默认标识
-  sAppTitle           = 'DMZN';                      //程序标题
-  sMainCaption        = 'DMZN';                      //主窗口标题
+  sProgID             = 'ComHub';                    //默认标识
+  sAppTitle           = 'ComHub';                    //程序标题
+  sMainCaption        = 'ComHub';                    //主窗口标题
 
   sHint               = '提示';                      //对话框标题
   sWarn               = '警告';                      //==
@@ -109,6 +138,9 @@ begin
     shData := 45;
     shTitle := 90;
   end;
+
+  FillChar(gSysStatus, SizeOf(gSysStatus), #0);
+  //init status
 end;
 
 //Date: 2007-09-13
@@ -138,15 +170,17 @@ begin
       FHintText := ReadString(FProgID, 'HintText', '');
       FCopyRight := ReadString(FProgID, 'CopyRight', '');
 
-      FAutoRun := nReg.ValueExists('Com_Hub');
-      FMinAfterRun := ReadString(FProgID, 'MinAfterRun', '')  = 'Y';
-      FAdminPassword := ReadString(FProgID, 'AdminPwd', '');
-      FHotKey := ReadString(FProgID, 'HotKey', 'Ctrl + Alt + D');
+      FAutoRun        := nReg.ValueExists('Com_Hub');
+      FMinAfterRun    := ReadString(FProgID, 'MinAfterRun', '')  = 'Y';
+      FAdminPassword  := ReadString(FProgID, 'AdminPwd', '');
+      FHotKey         := ReadString(FProgID, 'HotKey', 'Ctrl + Alt + D');
 
-      FServerIP := ReadString(FProgID, 'ServerIP', '118.89.157.37');
-      FServerPort := ReadInteger(FProgID, 'ServerPort', 8030);
-      FServerUser := ReadString(FProgID, 'ServerUser', 'admin');
-      FServerPwd := ReadString(FProgID, 'ServerPwd', 'admin');
+      FServerIP       := ReadString('MQTT', 'ServerIP', '118.89.157.37');
+      FServerPort     := ReadInteger('MQTT', 'ServerPort', 8030);
+      FServerUser     := ReadString('MQTT', 'ServerUser', 'admin');
+      FServerPwd      := ReadString('MQTT', 'ServerPwd', 'admin');
+      FHeatBeat       := ReadInteger('MQTT', 'ServerHeatBeat', 5);
+      FReconnect      := ReadInteger('MQTT', 'ServerReConn', 3);
     end else
     begin
       if FAutoRun then
@@ -160,10 +194,12 @@ begin
       WriteString(FProgID, 'AdminPwd', FAdminPassword);
       WriteString(FProgID, 'HotKey', FHotKey);
 
-      WriteString(FProgID, 'ServerIP', FServerIP);
-      WriteInteger(FProgID, 'ServerPort', FServerPort);
-      WriteString(FProgID, 'ServerUser', FServerUser);
-      WriteString(FProgID, 'ServerPwd', FServerPwd);
+      WriteString('MQTT', 'ServerIP', FServerIP);
+      WriteInteger('MQTT', 'ServerPort', FServerPort);
+      WriteString('MQTT', 'ServerUser', FServerUser);
+      WriteString('MQTT', 'ServerPwd', FServerPwd);
+      WriteInteger('MQTT', 'ServerHeatBeat', FHeatBeat);
+      WriteInteger('MQTT', 'ServerReConn', FReconnect);
     end;
   finally
     gSysParam.FChanged := False;
@@ -199,8 +235,8 @@ begin
         FEnabled        := True;
         FSaveFile       := True;
         FName           := ReadString(nList[nIdx], 'Name', '');
-        FMQIn           := ReadString(nList[nIdx], 'MQIn', '');
-        FMQOut          := ReadString(nList[nIdx], 'MQOut', '');
+        FMQIn           := Trim(ReadString(nList[nIdx], 'MQIn', ''));
+        FMQOut          := Trim(ReadString(nList[nIdx], 'MQOut', ''));
 
         FCOMPort        := nil;
         FPortName       := ReadString(nList[nIdx], 'COMPort', '');
@@ -298,4 +334,76 @@ begin
   end;
 end;
 
+//Date: 2019-05-27
+//Parm: 只重置订阅状态
+//Desc: 构建待订阅主题列表
+procedure MakeTopicList(const nOnlyReset: Boolean = False);
+var i,nIdx,nLen: Integer;
+begin
+  gSyncLock.Enter;
+  try
+    if nOnlyReset then
+    begin
+      for nIdx := Low(gTopics) to High(gTopics) do
+        gTopics[nIdx].FHasSub := False;
+      Exit;
+    end;
+
+    SetLength(gTopics, 0);
+    for nIdx := Low(gTunnels) to High(gTunnels) do
+    with gTunnels[nIdx] do
+    begin
+      if (not FEnabled) or (FMQIn = '') then Continue;
+      //invalid
+
+      for i := Low(gTopics) to High(gTopics) do
+        if gTopics[i].FTopic = FMQIn then Continue;
+      //topic has exists
+
+      nLen := Length(gTopics);
+      SetLength(gTopics, nLen + 1);
+
+      with gTopics[nLen] do
+      begin
+        FTopic   := FMQIn;
+        FChannel := 0;
+        FHasSub  := False;
+        FLastSub := 0;
+      end;
+    end;
+  finally
+    gSyncLock.Leave;
+  end;
+end;
+
+//Date: 2019-05-28
+//Parm: 增减;增量
+//Desc: 变更串口事件计数
+function COMEventCounter(const nInc: Boolean; const nNum: Integer): Integer;
+begin
+  with gSysStatus do
+  try
+    gSyncLock.Enter;
+    if nNum > 0 then
+    begin
+      if nInc then
+           FCOMEventCounter := FCOMEventCounter + nNum
+      else FCOMEventCounter := FCOMEventCounter - nNum;
+    end else
+
+    if nNum = 0 then
+    begin
+      FCOMEventCounter := 0;
+    end;
+
+    Result := FCOMEventCounter;
+  finally
+    gSyncLock.Leave;
+  end;
+end;
+
+initialization
+  gSyncLock := TCriticalSection.Create;
+finalization
+  gSyncLock.Free;
 end.

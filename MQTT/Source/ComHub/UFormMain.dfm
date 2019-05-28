@@ -1329,7 +1329,7 @@ object fFormMain: TfFormMain
     Top = 80
     Width = 584
     Height = 362
-    ActivePage = Sheet3
+    ActivePage = Sheet1
     Align = alClient
     MultiLine = True
     Style = tsFlatButtons
@@ -1367,6 +1367,7 @@ object fFormMain: TfFormMain
           Anchors = [akTop, akRight]
           Caption = 'Show Detail'
           TabOrder = 0
+          OnClick = CheckDetailClick
         end
         object CheckShowLog: TCheckBox
           Left = 393
@@ -1375,8 +1376,6 @@ object fFormMain: TfFormMain
           Height = 17
           Anchors = [akTop, akRight]
           Caption = 'Show Log'
-          Checked = True
-          State = cbChecked
           TabOrder = 1
           OnClick = CheckShowLogClick
         end
@@ -1399,7 +1398,7 @@ object fFormMain: TfFormMain
           Height = 17
           Caption = 'Start Service'
           TabOrder = 3
-          OnClick = CheckShowLogClick
+          OnClick = CheckServiceClick
         end
       end
     end
@@ -1490,8 +1489,8 @@ object fFormMain: TfFormMain
           OnChange = CheckRunClick
         end
         object EditSrvPort: TLabeledEdit
-          Left = 182
-          Top = 38
+          Left = 12
+          Top = 86
           Width = 147
           Height = 20
           EditLabel.Width = 72
@@ -1502,8 +1501,8 @@ object fFormMain: TfFormMain
           OnChange = CheckRunClick
         end
         object EditSrvUser: TLabeledEdit
-          Left = 12
-          Top = 86
+          Left = 182
+          Top = 38
           Width = 147
           Height = 20
           EditLabel.Width = 60
@@ -1524,6 +1523,30 @@ object fFormMain: TfFormMain
           PasswordChar = '*'
           TabOrder = 3
           Text = 'admin'
+          OnChange = CheckRunClick
+        end
+        object EditHeat: TLabeledEdit
+          Left = 352
+          Top = 86
+          Width = 147
+          Height = 20
+          EditLabel.Width = 108
+          EditLabel.Height = 12
+          EditLabel.Caption = 'Heat Beat(second):'
+          TabOrder = 4
+          Text = '300'
+          OnChange = CheckRunClick
+        end
+        object EditReconn: TLabeledEdit
+          Left = 352
+          Top = 38
+          Width = 147
+          Height = 20
+          EditLabel.Width = 108
+          EditLabel.Height = 12
+          EditLabel.Caption = 'Reconnect(second):'
+          TabOrder = 5
+          Text = '5'
           OnChange = CheckRunClick
         end
       end
@@ -1782,5 +1805,75 @@ object fFormMain: TfFormMain
     Width = 584
     Height = 19
     Panels = <>
+  end
+  object MQTT1: TsgcWSPClient_MQTT
+    OnMQTTConnect = MQTT1MQTTConnect
+    OnMQTTPublish = MQTT1MQTTPublish
+    OnMQTTSubscribe = MQTT1MQTTSubscribe
+    OnMQTTDisconnect = MQTT1MQTTDisconnect
+    Client = WSClient1
+    Authentication.Enabled = False
+    HeartBeat.Enabled = True
+    HeartBeat.Interval = 300
+    LastWillTestament.Enabled = False
+    LastWillTestament.QoS = mtqsAtMostOnce
+    LastWillTestament.Retain = False
+    QoS.Level = mtqsAtMostOnce
+    QoS.Interval = 60
+    QoS.Timeout = 300
+    Left = 468
+    Top = 27
+  end
+  object WSClient1: TsgcWebSocketClient
+    Port = 80
+    ConnectTimeout = 0
+    ReadTimeout = -1
+    TLS = False
+    Proxy.Enabled = False
+    Proxy.Port = 8080
+    Proxy.ProxyType = pxyHTTP
+    HeartBeat.Enabled = False
+    HeartBeat.Interval = 300
+    HeartBeat.Timeout = 0
+    IPVersion = Id_IPv4
+    OnException = WSClient1Exception
+    Authentication.Enabled = False
+    Authentication.URL.Enabled = True
+    Authentication.Session.Enabled = False
+    Authentication.Basic.Enabled = True
+    Extensions.DeflateFrame.Enabled = False
+    Extensions.DeflateFrame.WindowBits = 15
+    Extensions.PerMessage_Deflate.Enabled = False
+    Extensions.PerMessage_Deflate.ClientMaxWindowBits = 15
+    Extensions.PerMessage_Deflate.ClientNoContextTakeOver = False
+    Extensions.PerMessage_Deflate.MemLevel = 1
+    Extensions.PerMessage_Deflate.ServerMaxWindowBits = 15
+    Extensions.PerMessage_Deflate.ServerNoContextTakeOver = False
+    Options.FragmentedMessages = frgOnlyBuffer
+    Options.Parameters = '/'
+    Options.RaiseDisconnectExceptions = True
+    Options.ValidateUTF8 = False
+    Specifications.Drafts.Hixie76 = False
+    Specifications.RFC6455 = True
+    NotifyEvents = neAsynchronous
+    LogFile.Enabled = False
+    QueueOptions.Binary.Level = qmNone
+    QueueOptions.Ping.Level = qmNone
+    QueueOptions.Text.Level = qmNone
+    WatchDog.Attempts = 0
+    WatchDog.Enabled = True
+    WatchDog.Interval = 200
+    Throttle.BitsPerSec = 0
+    Throttle.Enabled = False
+    LoadBalancer.Enabled = False
+    LoadBalancer.Port = 0
+    Left = 425
+    Top = 27
+  end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 382
+    Top = 27
   end
 end

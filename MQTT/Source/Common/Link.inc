@@ -3,7 +3,7 @@
 //调试模式
 
 //----------------------------------- 管理器 -----------------------------------
-{$DEFINE TaskMonitor}
+{.$DEFINE TaskMonitor}
 //启用任务管理器
 
 {$DEFINE LogManager}
