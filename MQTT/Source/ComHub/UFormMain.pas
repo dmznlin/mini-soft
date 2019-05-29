@@ -510,9 +510,9 @@ begin
   gSysStatus.FTopicsSubscribed := False;
   //init flag
 
-  while COMEventCounter(True, -1) > 0 do
+  while MainEventCounter(True, -1) > 0 do
     Sleep(10);
-  //等待串口处理完毕
+  //等待核心事件处理完毕
 
   Sheet2.Enabled := not nActive;
   Sheet3.Enabled := not nActive;
@@ -533,10 +533,11 @@ begin
         SynchronizeEvents := False;
         OnRxChar := OnComPortRxChar;
 
-        Timeouts.ReadConstant := 200;
-        Timeouts.ReadMultiplier := 100;
-        //Timeouts.WriteConstant := 200;
-        //Timeouts.WriteMultiplier := 100;
+        Timeouts.ReadConstant := 130;
+        Timeouts.ReadMultiplier := 0;
+        Timeouts.ReadInterval := 0;
+        //Timeouts.WriteConstant := 100;
+        //Timeouts.WriteMultiplier := 10;
       end;
     end;
 
@@ -614,31 +615,35 @@ begin
   if not gSysStatus.FApplicationRunning then Exit;
   //closeing
 
-  if not WSClient1.Active then //连接服务
-    WSClient1.Active := True;
-  if not gSysStatus.FMQTTConnected then Exit;
+  MainEventCounter(True);
+  try
+    if not WSClient1.Active then //连接服务
+      WSClient1.Active := True;
+    if not gSysStatus.FMQTTConnected then Exit;
 
-  if not gSysStatus.FTopicsSubscribed then //订阅主题
-  begin
-    nNum := 0;
-    gSyncLock.Enter;
-    try
+    if not gSysStatus.FTopicsSubscribed then //订阅主题
+    begin
+      nNum := 0;
+      //init
+
       for nIdx := Low(gTopics) to High(gTopics) do
       with gTopics[nIdx],TDateTimeHelper do
       begin
-        if FHasSub or (GetTickCountDiff(FLastSub) < 5 * 1000) then Continue;
+        if FHasSub then Continue;
         Inc(nNum);
+        if GetTickCountDiff(FLastSub) < 5 * 1000 then Continue;
 
         FLastSub := GetTickCount();
         FChannel := MQTT1.Subscribe(FTopic);
+        //订阅主题
       end;
-    finally
-      gSyncLock.Leave;
-    end;
 
-    if nNum < 1 then
-      gSysStatus.FTopicsSubscribed := True;
-    //xxxxx
+      if nNum < 1 then
+        gSysStatus.FTopicsSubscribed := True;
+      //xxxxx
+    end;
+  finally
+    MainEventCounter(False);
   end;
 end;
 
@@ -727,7 +732,7 @@ begin
    if not (FApplicationRunning and FMQTTConnected) then Exit;
   //xxxxx
   
-  COMEventCounter(True);
+  MainEventCounter(True);
   try                    
     nComPort := Sender as TComPort;
     nStr := nComPort.ReadAnsiString;
@@ -745,7 +750,7 @@ begin
       //send data
     end; 
   finally
-    COMEventCounter(False);
+    MainEventCounter(False);
   end;     
 end;
 

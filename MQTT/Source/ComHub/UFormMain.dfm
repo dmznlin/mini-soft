@@ -13,6 +13,7 @@ object fFormMain: TfFormMain
   Font.Height = -12
   Font.Name = #23435#20307
   Font.Style = []
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
@@ -1849,6 +1850,7 @@ object fFormMain: TfFormMain
     Extensions.PerMessage_Deflate.MemLevel = 1
     Extensions.PerMessage_Deflate.ServerMaxWindowBits = 15
     Extensions.PerMessage_Deflate.ServerNoContextTakeOver = False
+    Options.CleanDisconnect = False
     Options.FragmentedMessages = frgOnlyBuffer
     Options.Parameters = '/'
     Options.RaiseDisconnectExceptions = True

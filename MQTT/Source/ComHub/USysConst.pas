@@ -43,7 +43,7 @@ type
     FTopicsSubscribed   : Boolean;                   //主题已订阅
     FShowDetailLog      : Boolean;                   //显示日志明细
     FApplicationRunning : Boolean;                   //系统运行中
-    FCOMEventCounter    : Cardinal;                  //串口事件计数
+    FMainEventCounter   : Cardinal;                  //主要事件计数
   end;
 
   PTunnelItem = ^TTunnelItem;
@@ -100,8 +100,8 @@ procedure ApplyConfig(const nCOMPort: TComPort; const nSet: Boolean = True;
 //应用配置
 procedure MakeTopicList(const nOnlyReset: Boolean = False);
 //构建订阅列表
-function COMEventCounter(const nInc: Boolean; const nNum: Integer = 1): Integer;
-//增减串口事件计数
+function MainEventCounter(const nInc: Boolean; const nNum: Integer = 1): Integer;
+//增减核心事件计数
 
 ResourceString
   sProgID             = 'ComHub';                    //默认标识
@@ -164,6 +164,9 @@ begin
       FillChar(gSysParam, SizeOf(TSysParam), #0);
       FProgID := ReadString('Config', 'ProgID', sProgID);
       //程序标识决定以下所有参数
+
+      FLocalMAC := TGUID.NewGuid.ToString;
+      //程序参考标识
 
       FAppTitle := ReadString(FProgID, 'AppTitle', sAppTitle);
       FMainTitle := ReadString(FProgID, 'MainTitle', sMainCaption);
@@ -379,7 +382,7 @@ end;
 //Date: 2019-05-28
 //Parm: 增减;增量
 //Desc: 变更串口事件计数
-function COMEventCounter(const nInc: Boolean; const nNum: Integer): Integer;
+function MainEventCounter(const nInc: Boolean; const nNum: Integer): Integer;
 begin
   with gSysStatus do
   try
@@ -387,16 +390,16 @@ begin
     if nNum > 0 then
     begin
       if nInc then
-           FCOMEventCounter := FCOMEventCounter + nNum
-      else FCOMEventCounter := FCOMEventCounter - nNum;
+           FMainEventCounter := FMainEventCounter + nNum
+      else FMainEventCounter := FMainEventCounter - nNum;
     end else
 
     if nNum = 0 then
     begin
-      FCOMEventCounter := 0;
+      FMainEventCounter := 0;
     end;
 
-    Result := FCOMEventCounter;
+    Result := FMainEventCounter;
   finally
     gSyncLock.Leave;
   end;
