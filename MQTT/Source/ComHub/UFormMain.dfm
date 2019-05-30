@@ -13,7 +13,6 @@ object fFormMain: TfFormMain
   Font.Height = -12
   Font.Name = #23435#20307
   Font.Style = []
-  FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
@@ -1406,6 +1405,10 @@ object fFormMain: TfFormMain
     object Sheet2: TTabSheet
       Caption = 'Base Param'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         576
         331)
@@ -1555,8 +1558,12 @@ object fFormMain: TfFormMain
     object Sheet3: TTabSheet
       Caption = 'Data Tunnels'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter1: TSplitter
-        Left = 185
+        Left = 155
         Top = 0
         Height = 331
         ExplicitLeft = 256
@@ -1566,7 +1573,7 @@ object fFormMain: TfFormMain
       object Panel2: TPanel
         Left = 0
         Top = 0
-        Width = 185
+        Width = 155
         Height = 331
         Align = alLeft
         BevelOuter = bvNone
@@ -1574,7 +1581,7 @@ object fFormMain: TfFormMain
         object ListTunnels: TListBox
           Left = 0
           Top = 25
-          Width = 185
+          Width = 155
           Height = 306
           Style = lbOwnerDrawFixed
           Align = alClient
@@ -1585,15 +1592,16 @@ object fFormMain: TfFormMain
         object Panel4: TPanel
           Left = 0
           Top = 0
-          Width = 185
+          Width = 155
           Height = 25
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
+          ExplicitWidth = 185
           object Label1: TLabel
             Left = 0
             Top = 0
-            Width = 135
+            Width = 105
             Height = 25
             Align = alClient
             AutoSize = False
@@ -1603,7 +1611,7 @@ object fFormMain: TfFormMain
             ExplicitWidth = 185
           end
           object BtnTAdd: TBitBtn
-            Left = 160
+            Left = 130
             Top = 0
             Width = 25
             Height = 25
@@ -1614,9 +1622,10 @@ object fFormMain: TfFormMain
             NumGlyphs = 2
             TabOrder = 0
             OnClick = BtnTAddClick
+            ExplicitLeft = 160
           end
           object BtnTDel: TBitBtn
-            Left = 135
+            Left = 105
             Top = 0
             Width = 25
             Height = 25
@@ -1626,28 +1635,32 @@ object fFormMain: TfFormMain
             NumGlyphs = 2
             TabOrder = 1
             OnClick = BtnTDelClick
+            ExplicitLeft = 135
           end
         end
       end
       object Panel3: TPanel
-        Left = 188
+        Left = 158
         Top = 0
-        Width = 388
+        Width = 418
         Height = 331
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitLeft = 188
+        ExplicitWidth = 388
         DesignSize = (
-          388
+          418
           331)
         object GroupBox1: TGroupBox
           Left = 5
           Top = 30
-          Width = 377
+          Width = 407
           Height = 105
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Tunnel - Param'
           TabOrder = 0
+          ExplicitWidth = 377
           object EditTName: TLabeledEdit
             Left = 15
             Top = 35
@@ -1686,11 +1699,12 @@ object fFormMain: TfFormMain
         object GroupBox3: TGroupBox
           Left = 5
           Top = 137
-          Width = 377
+          Width = 407
           Height = 185
           Anchors = [akLeft, akTop, akRight]
           Caption = 'COM - Param'
           TabOrder = 1
+          ExplicitWidth = 377
           object EditTPort: TLabeledEdit
             Left = 15
             Top = 35
@@ -1778,13 +1792,14 @@ object fFormMain: TfFormMain
         object Panel5: TPanel
           Left = 0
           Top = 0
-          Width = 388
+          Width = 418
           Height = 25
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 2
+          ExplicitWidth = 388
           object BtnTSave: TBitBtn
-            Left = 339
+            Left = 369
             Top = 0
             Width = 49
             Height = 25
@@ -1795,6 +1810,7 @@ object fFormMain: TfFormMain
             NumGlyphs = 2
             TabOrder = 0
             OnClick = BtnTSaveClick
+            ExplicitLeft = 339
           end
         end
       end
@@ -1807,75 +1823,19 @@ object fFormMain: TfFormMain
     Height = 19
     Panels = <>
   end
-  object MQTT1: TsgcWSPClient_MQTT
-    OnMQTTConnect = MQTT1MQTTConnect
-    OnMQTTPublish = MQTT1MQTTPublish
-    OnMQTTSubscribe = MQTT1MQTTSubscribe
-    OnMQTTDisconnect = MQTT1MQTTDisconnect
-    Client = WSClient1
-    Authentication.Enabled = False
-    HeartBeat.Enabled = True
-    HeartBeat.Interval = 300
-    LastWillTestament.Enabled = False
-    LastWillTestament.QoS = mtqsAtMostOnce
-    LastWillTestament.Retain = False
-    QoS.Level = mtqsAtMostOnce
-    QoS.Interval = 60
-    QoS.Timeout = 300
-    Left = 468
-    Top = 27
-  end
-  object WSClient1: TsgcWebSocketClient
-    Port = 80
-    ConnectTimeout = 0
-    ReadTimeout = -1
-    TLS = False
-    Proxy.Enabled = False
-    Proxy.Port = 8080
-    Proxy.ProxyType = pxyHTTP
-    HeartBeat.Enabled = False
-    HeartBeat.Interval = 300
-    HeartBeat.Timeout = 0
-    IPVersion = Id_IPv4
-    OnException = WSClient1Exception
-    Authentication.Enabled = False
-    Authentication.URL.Enabled = True
-    Authentication.Session.Enabled = False
-    Authentication.Basic.Enabled = True
-    Extensions.DeflateFrame.Enabled = False
-    Extensions.DeflateFrame.WindowBits = 15
-    Extensions.PerMessage_Deflate.Enabled = False
-    Extensions.PerMessage_Deflate.ClientMaxWindowBits = 15
-    Extensions.PerMessage_Deflate.ClientNoContextTakeOver = False
-    Extensions.PerMessage_Deflate.MemLevel = 1
-    Extensions.PerMessage_Deflate.ServerMaxWindowBits = 15
-    Extensions.PerMessage_Deflate.ServerNoContextTakeOver = False
-    Options.CleanDisconnect = False
-    Options.FragmentedMessages = frgOnlyBuffer
-    Options.Parameters = '/'
-    Options.RaiseDisconnectExceptions = True
-    Options.ValidateUTF8 = False
-    Specifications.Drafts.Hixie76 = False
-    Specifications.RFC6455 = True
-    NotifyEvents = neAsynchronous
-    LogFile.Enabled = False
-    QueueOptions.Binary.Level = qmNone
-    QueueOptions.Ping.Level = qmNone
-    QueueOptions.Text.Level = qmNone
-    WatchDog.Attempts = 0
-    WatchDog.Enabled = True
-    WatchDog.Interval = 200
-    Throttle.BitsPerSec = 0
-    Throttle.Enabled = False
-    LoadBalancer.Enabled = False
-    LoadBalancer.Port = 0
-    Left = 425
-    Top = 27
-  end
   object Timer1: TTimer
     Enabled = False
     OnTimer = Timer1Timer
     Left = 382
+    Top = 27
+  end
+  object MQTT1: TTMSMQTTClient
+    KeepAliveSettings.KeepConnectionAlive = False
+    OnConnectedStatusChanged = MQTT1ConnectedStatusChanged
+    OnPublishReceived = MQTT1PublishReceived
+    OnSubscriptionAcknowledged = MQTT1SubscriptionAcknowledged
+    Version = '1.0.9.0'
+    Left = 428
     Top = 27
   end
 end

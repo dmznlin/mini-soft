@@ -10,10 +10,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.Controls, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Buttons, Vcl.Graphics, System.Classes, ComPort,
-  UThreadPool, UHotKeyManager, sgcWebSocket_Protocol_MQTT_Message,
-  sgcWebSocket_Types, sgcWebSocket_Classes, sgcWebSocket_Protocol_Base_Client,
-  sgcWebSocket_Protocol_MQTT_Client, sgcWebSocket_Protocols,
-  sgcWebSocket_Classes_Indy, sgcWebSocket_Client, sgcWebSocket;
+  UThreadPool, UHotKeyManager, TMS.MQTT.Global, TMS.MQTT.Client;
 
 type
   TfFormMain = class(TForm)
@@ -65,11 +62,10 @@ type
     EditSrvUser: TLabeledEdit;
     EditSrvPwd: TLabeledEdit;
     CheckService: TCheckBox;
-    MQTT1: TsgcWSPClient_MQTT;
-    WSClient1: TsgcWebSocketClient;
     EditHeat: TLabeledEdit;
     EditReconn: TLabeledEdit;
     Timer1: TTimer;
+    MQTT1: TTMSMQTTClient;
     procedure FormCreate(Sender: TObject);
     procedure BtnPortCfgClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -81,17 +77,15 @@ type
     procedure wPage1Change(Sender: TObject);
     procedure CheckRunClick(Sender: TObject);
     procedure CheckShowLogClick(Sender: TObject);
-    procedure MQTT1MQTTConnect(Connection: TsgcWSConnection;
-      const Session: Boolean; const ReturnCode: TmqttConnReturnCode);
-    procedure MQTT1MQTTDisconnect(Connection: TsgcWSConnection);
-    procedure WSClient1Exception(Connection: TsgcWSConnection; E: Exception);
-    procedure CheckServiceClick(Sender: TObject);
-    procedure MQTT1MQTTSubscribe(Connection: TsgcWSConnection;
-      aPacketIdentifier: Word; aCodes: TsgcWSSUBACKS);
-    procedure MQTT1MQTTPublish(Connection: TsgcWSConnection; aTopic,
-      aText: string);
     procedure Timer1Timer(Sender: TObject);
     procedure CheckDetailClick(Sender: TObject);
+    procedure CheckServiceClick(Sender: TObject);
+    procedure MQTT1ConnectedStatusChanged(ASender: TObject;
+      const AConnected: Boolean; AStatus: TTMSMQTTConnectionStatus);
+    procedure MQTT1SubscriptionAcknowledged(ASender: TObject; APacketID: Word;
+      ASubscriptions: TTMSMQTTSubscriptions);
+    procedure MQTT1PublishReceived(ASender: TObject; APacketID: Word;
+      ATopic: string; APayload: TArray<System.Byte>);
   private
     { Private declarations }
     FLastLogin: Cardinal;
@@ -303,7 +297,11 @@ begin
       Exit;
     end;
 
+    if gSysStatus.FHotkeyWorking then Exit;
+    gSysStatus.FHotkeyWorking := True;
     nStr := InputBox('swtich', 'Please input admin''s password:', '');
+    gSysStatus.FHotkeyWorking := False;
+    
     if nStr = gSysParam.FAdminPassword then
     begin
       FLastLogin := GetTickCount();
@@ -510,6 +508,7 @@ begin
   gSysStatus.FTopicsSubscribed := False;
   //init flag
 
+  gMG.FThreadPool.WorkerStop(Self);
   while MainEventCounter(True, -1) > 0 do
     Sleep(10);
   //等待核心事件处理完毕
@@ -551,29 +550,27 @@ begin
       //close comport    
     end;
   end;
-    
-  gMG.FThreadPool.WorkerStop(Self);
-  WSClient1.Active := False;
+   
+  MQTT1.Disconnect;
   if not nActive then Exit;
   //close all first
 
-  with WSClient1 do
-  begin
-    //Active := False;
-    Host := gSysParam.FServerIP;
-    Port := gSysParam.FServerPort;
-
-    //WatchDog.Interval := gSysParam.FReconnect;
-    WatchDog.Enabled := False;
-    //开启自动重连
-  end;
-
   with MQTT1 do
   begin
-    HeartBeat.Interval := gSysParam.FHeatBeat;
-    Authentication.Enabled := gSysParam.FServerUser <> '';
-    Authentication.UserName := gSysParam.FServerUser;
-    Authentication.Password := gSysParam.FServerPwd;
+    BrokerHostName := gSysParam.FServerIP;
+    BrokerPort := gSysParam.FServerPort;
+
+    Credentials.Username := gSysParam.FServerUser;
+    Credentials.Password := gSysParam.FServerPwd;
+
+    with KeepAliveSettings do
+    begin
+      AutoReconnect := False;
+      AutoReconnectInterval := gSysParam.FReconnect;
+
+      KeepConnectionAlive := True;
+      KeepAliveInterval := gSysParam.FHeatBeat;
+    end;
   end;
 
   MakeTopicList();
@@ -599,7 +596,7 @@ begin
     FParentObj    := Self;
     FParentDesc   := 'MQTT Subscribe';
     FCallTimes    := 0; //暂停
-    FCallInterval := gSysParam.FReconnect * 1000;
+    FCallInterval := 1000;
     FProcEvent    := DoSubscribe;
   end;
 
@@ -617,9 +614,23 @@ begin
 
   MainEventCounter(True);
   try
-    if not WSClient1.Active then //连接服务
-      WSClient1.Active := True;
+    if not (MQTT1.ConnectionStatus in [csConnected, csConnecting,
+      csReconnecting]) then
+      MQTT1.Connect();
     if not gSysStatus.FMQTTConnected then Exit;
+
+    with TDateTimeHelper,gSysStatus do
+    begin
+      gSyncLock.Enter;
+      nNum := GetTickCountDiff(FMQTTLastPing);
+      gSyncLock.Leave;
+
+      if nNum > gSysParam.FHeatBeat * 1000 then
+      begin
+        MQTT1.Ping;
+        FMQTTLastPing := GetTickCount();
+      end; //MQTT Ping
+    end;
 
     if not gSysStatus.FTopicsSubscribed then //订阅主题
     begin
@@ -647,43 +658,42 @@ begin
   end;
 end;
 
-//Desc: 异常
-procedure TfFormMain.WSClient1Exception(Connection: TsgcWSConnection;
-  E: Exception);
+//Desc: 状态切换
+procedure TfFormMain.MQTT1ConnectedStatusChanged(ASender: TObject;
+  const AConnected: Boolean; AStatus: TTMSMQTTConnectionStatus);
 begin
-  WriteLog('MQTT Exception:' + E.Message);
-end;
+  WriteLog('MQTT Status: ' + TStringHelper.Enum2Str(AStatus));
+  //log status
 
-//Desc: 连接成功
-procedure TfFormMain.MQTT1MQTTConnect(Connection: TsgcWSConnection;
-  const Session: Boolean; const ReturnCode: TmqttConnReturnCode);
-begin
-  WriteLog('MQTT Has Connected.');
-  gSysStatus.FMQTTConnected := True;
-  gMG.FThreadPool.WorkerWakeup(Self);
-end;
+  if AConnected then
+  begin
+    WriteLog('MQTT Has Connected.');
+    gSysStatus.FMQTTLastPing := GetTickCount();
+    gSysStatus.FMQTTConnected := True;
+    gMG.FThreadPool.WorkerWakeup(Self);
+  end;
 
-//Desc: 连接断开
-procedure TfFormMain.MQTT1MQTTDisconnect(Connection: TsgcWSConnection);
-begin
-  WriteLog('MQTT Has Disconnected.');
-  gSysStatus.FMQTTConnected := False;
-  gSysStatus.FTopicsSubscribed := False;
+  if AStatus = csConnectionLost then //连接断开
+  begin
+    WriteLog('MQTT Has Disconnected.');
+    gSysStatus.FMQTTConnected := False;
+    gSysStatus.FTopicsSubscribed := False;
 
-  MakeTopicList(True);
-  gMG.FThreadPool.WorkerWakeup(Self);
+    MakeTopicList(True);
+    gMG.FThreadPool.WorkerWakeup(Self);
+  end;
 end;
 
 //Desc: 订阅成功
-procedure TfFormMain.MQTT1MQTTSubscribe(Connection: TsgcWSConnection;
-  aPacketIdentifier: Word; aCodes: TsgcWSSUBACKS);
+procedure TfFormMain.MQTT1SubscriptionAcknowledged(ASender: TObject;
+  APacketID: Word; ASubscriptions: TTMSMQTTSubscriptions);
 var nIdx: Integer;
 begin
   gSyncLock.Enter;
   try
     for nIdx := Low(gTopics) to High(gTopics) do
      with gTopics[nIdx] do
-      if FChannel = aPacketIdentifier then
+      if (FChannel = APacketID) and (ASubscriptions[0].Accepted) then
       begin
         FHasSub := True;
         WriteLog(Format('%s Has Subscribed.', [FTopic]));
@@ -695,8 +705,8 @@ end;
 
 //------------------------------------------------------------------------------
 //Desc: 将通道数据转发到指定串口
-procedure TfFormMain.MQTT1MQTTPublish(Connection: TsgcWSConnection; aTopic,
-  aText: string);
+procedure TfFormMain.MQTT1PublishReceived(ASender: TObject; APacketID: Word;
+  ATopic: string; APayload: TArray<System.Byte>);
 var nStr,nHex: string;
     nIdx: Integer;
 begin
@@ -704,7 +714,7 @@ begin
    if not (FApplicationRunning and FMQTTConnected) then Exit;
   //xxxxx
      
-  nStr := TEncodeHelper.DecodeBase64(aText); 
+  nStr := TEncodeHelper.DecodeBase64(TEncoding.UTF8.GetString(APayload));
   if gSysStatus.FShowDetailLog then
     nHex := TStringHelper.Str2Hex(nStr);
   //xxxxx
@@ -717,7 +727,7 @@ begin
       WriteLog(Format('%s.[ %s -> COM ]: %s', [FName, FMQIn, nHex]));
     //xxxxx
 
-    if gSysStatus.FMQTTConnected then    
+    if gSysStatus.FMQTTConnected then
       FCOMPort.WriteAnsiString(nStr);
     //send data
   end;
@@ -746,8 +756,14 @@ begin
       //xxxxx
 
       if gSysStatus.FMQTTConnected then
+      begin
         MQTT1.Publish(FMQOut, TEncodeHelper.EncodeBase64(nStr));
-      //send data
+        //send data
+
+        gSyncLock.Enter;
+        gSysStatus.FMQTTLastPing := GetTickCount();
+        gSyncLock.Leave;
+      end;
     end; 
   finally
     MainEventCounter(False);

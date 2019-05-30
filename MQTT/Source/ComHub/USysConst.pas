@@ -40,10 +40,12 @@ type
 
   TSystemStatus = record
     FMQTTConnected      : Boolean;                   //服务已连接
+    FMQTTLastPing       : Cardinal;                  //Ping
     FTopicsSubscribed   : Boolean;                   //主题已订阅
     FShowDetailLog      : Boolean;                   //显示日志明细
     FApplicationRunning : Boolean;                   //系统运行中
-    FMainEventCounter   : Cardinal;                  //主要事件计数
+    FMainEventCounter   : Integer;                   //主要事件计数
+    FHotkeyWorking      : Boolean;                   //热键已出发
   end;
 
   PTunnelItem = ^TTunnelItem;
