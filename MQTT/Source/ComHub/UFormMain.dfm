@@ -1597,7 +1597,6 @@ object fFormMain: TfFormMain
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
-          ExplicitWidth = 185
           object Label1: TLabel
             Left = 0
             Top = 0
@@ -1622,7 +1621,6 @@ object fFormMain: TfFormMain
             NumGlyphs = 2
             TabOrder = 0
             OnClick = BtnTAddClick
-            ExplicitLeft = 160
           end
           object BtnTDel: TBitBtn
             Left = 105
@@ -1635,7 +1633,6 @@ object fFormMain: TfFormMain
             NumGlyphs = 2
             TabOrder = 1
             OnClick = BtnTDelClick
-            ExplicitLeft = 135
           end
         end
       end
@@ -1647,8 +1644,6 @@ object fFormMain: TfFormMain
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitLeft = 188
-        ExplicitWidth = 388
         DesignSize = (
           418
           331)
@@ -1660,7 +1655,6 @@ object fFormMain: TfFormMain
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Tunnel - Param'
           TabOrder = 0
-          ExplicitWidth = 377
           object EditTName: TLabeledEdit
             Left = 15
             Top = 35
@@ -1704,7 +1698,6 @@ object fFormMain: TfFormMain
           Anchors = [akLeft, akTop, akRight]
           Caption = 'COM - Param'
           TabOrder = 1
-          ExplicitWidth = 377
           object EditTPort: TLabeledEdit
             Left = 15
             Top = 35
@@ -1797,7 +1790,6 @@ object fFormMain: TfFormMain
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitWidth = 388
           object BtnTSave: TBitBtn
             Left = 369
             Top = 0
@@ -1810,7 +1802,6 @@ object fFormMain: TfFormMain
             NumGlyphs = 2
             TabOrder = 0
             OnClick = BtnTSaveClick
-            ExplicitLeft = 339
           end
         end
       end

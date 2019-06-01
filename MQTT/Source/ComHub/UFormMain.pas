@@ -532,9 +532,9 @@ begin
         SynchronizeEvents := False;
         OnRxChar := OnComPortRxChar;
 
-        Timeouts.ReadConstant := 130;
-        Timeouts.ReadMultiplier := 0;
-        Timeouts.ReadInterval := 0;
+        Timeouts.ReadConstant := 0;
+        Timeouts.ReadMultiplier := 10;
+        Timeouts.ReadInterval := 100;
         //Timeouts.WriteConstant := 100;
         //Timeouts.WriteMultiplier := 10;
       end;
@@ -616,7 +616,7 @@ begin
   try
     if not (MQTT1.ConnectionStatus in [csConnected, csConnecting,
       csReconnecting]) then
-      MQTT1.Connect();
+          MQTT1.Connect();
     if not gSysStatus.FMQTTConnected then Exit;
 
     with TDateTimeHelper,gSysStatus do
@@ -625,7 +625,7 @@ begin
       nNum := GetTickCountDiff(FMQTTLastPing);
       gSyncLock.Leave;
 
-      if nNum > gSysParam.FHeatBeat * 1000 then
+      if nNum >= gSysParam.FHeatBeat * 1000 then
       begin
         MQTT1.Ping;
         FMQTTLastPing := GetTickCount();
@@ -713,23 +713,30 @@ begin
   with gSysStatus do
    if not (FApplicationRunning and FMQTTConnected) then Exit;
   //xxxxx
-     
-  nStr := TEncodeHelper.DecodeBase64(TEncoding.UTF8.GetString(APayload));
-  if gSysStatus.FShowDetailLog then
-    nHex := TStringHelper.Str2Hex(nStr);
-  //xxxxx
-  
-  for nIdx := Low(gTunnels) to High(gTunnels) do
-  with gTunnels[nIdx] do
-  begin
-    if (not FEnabled) or (FMQIn <> aTopic) then Continue;
+
+  try
+    nStr := TEncodeHelper.DecodeBase64(TEncoding.UTF8.GetString(APayload));
     if gSysStatus.FShowDetailLog then
-      WriteLog(Format('%s.[ %s -> COM ]: %s', [FName, FMQIn, nHex]));
+      nHex := TStringHelper.HexStr(nStr);
     //xxxxx
 
-    if gSysStatus.FMQTTConnected then
-      FCOMPort.WriteAnsiString(nStr);
-    //send data
+    for nIdx := Low(gTunnels) to High(gTunnels) do
+    with gTunnels[nIdx] do
+    begin
+      if (not FEnabled) or (FMQIn <> aTopic) then Continue;
+      if gSysStatus.FShowDetailLog then
+        WriteLog(Format('%s.[ %s -> COM ]: %s', [FName, FMQIn, nHex]));
+      //xxxxx
+
+      if gSysStatus.FMQTTConnected then
+        FCOMPort.WriteBytes(TStringHelper.Str2Bytes(nStr));
+      //send data
+    end;
+  except
+    on nErr: Exception do
+    begin
+      WriteLog('MQTTReceive: ' + nErr.Message);
+    end;
   end;
 end;
 
@@ -741,30 +748,37 @@ begin
   with gSysStatus do
    if not (FApplicationRunning and FMQTTConnected) then Exit;
   //xxxxx
-  
+
   MainEventCounter(True);
-  try                    
-    nComPort := Sender as TComPort;
-    nStr := nComPort.ReadAnsiString;
-    if nStr = '' then Exit;
+  try
+    try
+      nComPort := Sender as TComPort;
+      nStr := TStringHelper.Bytes2Str(nComPort.ReadBytes);
+      if nStr = '' then Exit;
 
-    with gTunnels[nComPort.Tag] do
-    begin
-      if gSysStatus.FShowDetailLog then
-        WriteLog(Format('%s.[ COM -> %s ]: %s', [FName,
-          FMQOut, TStringHelper.Str2Hex(nStr)]));
-      //xxxxx
-
-      if gSysStatus.FMQTTConnected then
+      with gTunnels[nComPort.Tag] do
       begin
-        MQTT1.Publish(FMQOut, TEncodeHelper.EncodeBase64(nStr));
-        //send data
+        if gSysStatus.FShowDetailLog then
+          WriteLog(Format('%s.[ COM -> %s ]: %s', [FName,
+            FMQOut, TStringHelper.HexStr(nStr)]));
+        //xxxxx
 
-        gSyncLock.Enter;
-        gSysStatus.FMQTTLastPing := GetTickCount();
-        gSyncLock.Leave;
+        if gSysStatus.FMQTTConnected then
+        begin
+          MQTT1.Publish(FMQOut, TEncodeHelper.EncodeBase64(nStr));
+          //send data
+
+          gSyncLock.Enter;
+          gSysStatus.FMQTTLastPing := GetTickCount();
+          gSyncLock.Leave;
+        end;
       end;
-    end; 
+    except
+      on nErr: Exception do
+      begin
+        WriteLog('ComPortRx: ' + nErr.Message);
+      end;
+    end;
   finally
     MainEventCounter(False);
   end;     

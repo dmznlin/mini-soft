@@ -1,6 +1,7 @@
 program ComHub;
 
 uses
+  ScaleMM2,
   Winapi.Windows,
   Vcl.Forms,
   UFormMain in 'UFormMain.pas' {fFormMain},
@@ -14,7 +15,6 @@ var
   //»¥³â¾ä±ú
 
 begin
-  ReportMemoryLeaksOnShutdown := True;
   gMutexHwnd := CreateMutex(nil, True, 'RunSoft_ComHub');
   //´´½¨»¥³âÁ¿
   if GetLastError = ERROR_ALREADY_EXISTS then
