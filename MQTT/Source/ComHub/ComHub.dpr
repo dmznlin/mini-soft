@@ -1,7 +1,7 @@
 program ComHub;
 
 uses
-  ScaleMM2,
+  FastMM4,
   Winapi.Windows,
   Vcl.Forms,
   UFormMain in 'UFormMain.pas' {fFormMain},

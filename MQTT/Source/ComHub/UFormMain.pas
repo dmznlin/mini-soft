@@ -532,9 +532,9 @@ begin
         SynchronizeEvents := False;
         OnRxChar := OnComPortRxChar;
 
-        Timeouts.ReadConstant := 0;
-        Timeouts.ReadMultiplier := 10;
-        Timeouts.ReadInterval := 100;
+        Timeouts.ReadInterval := MAXDWORD; //10
+        Timeouts.ReadMultiplier := 0; //3
+        Timeouts.ReadConstant := 0;   //10
         //Timeouts.WriteConstant := 100;
         //Timeouts.WriteMultiplier := 10;
       end;

@@ -360,11 +360,16 @@ begin
     begin
       if (not FEnabled) or (FMQIn = '') then Continue;
       //invalid
+      nLen := -1;
 
       for i := Low(gTopics) to High(gTopics) do
-        if gTopics[i].FTopic = FMQIn then Continue;
-      //topic has exists
+      if gTopics[i].FTopic = FMQIn then
+      begin
+        nLen := i;
+        Break;
+      end; //topic has exists
 
+      if nLen <> -1 then Continue;
       nLen := Length(gTopics);
       SetLength(gTopics, nLen + 1);
 
