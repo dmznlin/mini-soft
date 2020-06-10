@@ -4,12 +4,14 @@
 *******************************************************************************}
 unit UFormJS_Net;
 
+{$I Link.Inc}
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, UFormBase, UMultiJS_Net, UMultiJSCtrl, cxGraphics, cxControls,
-  cxLookAndFeels, cxLookAndFeelPainters, dxStatusBar;
+  Dialogs, UFormBase, UMultiJSCtrl, cxGraphics, cxControls,
+  cxLookAndFeels, cxLookAndFeelPainters, dxStatusBar,
+  {$IFDEF MultiReplay}UMultiJS_Reply{$ELSE}UMultiJS_Net{$ENDIF};
 
 type
   TfFormJS_Net = class(TBaseForm)
@@ -424,7 +426,11 @@ begin
     with (Sender as TMultiJSPanel) do
     begin
       SetData(nData);
+      {$IFDEF MultiReplay}
+      gMultiJSManager.AddJS(Tunnel.FComm, UIData.FTruckNo, '', UIData.FHaveDai, True);
+      {$ELSE}
       gMultiJSManager.AddJS(Tunnel.FComm, UIData.FTruckNo, UIData.FHaveDai, True);
+      {$ENDIF}
     end;
   end;
 end;
@@ -434,7 +440,11 @@ procedure TfFormJS_Net.DoOnStart(Sender: TObject; var nDone: Boolean);
 begin
   with Sender as TMultiJSPanel do
   begin
+    {$IFDEF MultiReplay}
+    gMultiJSManager.AddJS(Tunnel.FComm, UIData.FTruckNo, '', UIData.FHaveDai);
+    {$ELSE}
     gMultiJSManager.AddJS(Tunnel.FComm, UIData.FTruckNo, UIData.FHaveDai);
+    {$ENDIF}
   end;
 end;
 

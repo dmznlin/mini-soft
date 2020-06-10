@@ -17,6 +17,7 @@ type
     ADOConnection1: TADOConnection;
     Query1: TADOQuery;
     BtnEnum: TButton;
+    BtnDiff: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnConnClick(Sender: TObject);
@@ -41,6 +42,19 @@ implementation
 
 uses
   ULibFun, UFormConn;
+
+type
+  TColumnItem = record
+    FTable            : string;     //所在表
+    FColumn           : string;     //列名
+    FType             : string;     //类型
+    FSize             : Integer;    //大小
+    FPrecision        : Integer;    //小数位
+    FScale            : Integer;    //小数精度
+    FIsNull           : string;     //是否允许空
+    FDefault          : string;     //默认值
+  end;
+  TColumnItems = array of TColumnItem;
 
 var
   gPath: string;
@@ -70,6 +84,7 @@ begin
   
   BtnParse.Enabled := FStep > 1;
   BtnSave.Enabled := FStep > 2;
+  BtnDiff.Enabled := FStep > 1;
 end;
 
 function DBConn(const nConnStr: string): Boolean;

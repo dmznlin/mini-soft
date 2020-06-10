@@ -12,7 +12,8 @@ interface
 
 uses
   {$IFDEF NetMode}
-  UFormJS_Net, UMultiJS_Net, UFormBackupSQL, UFormRestoreSQL,
+  UFormJS_Net, {$IFDEF MultiReplay}UMultiJS_Reply{$ELSE}UMultiJS_Net{$ENDIF},
+  UFormBackupSQL, UFormRestoreSQL,
   {$ELSE}
   UFormZTParam_M, UFormJS_M, UFormBackupAccess, UFormRestoreAccess,
   {$ENDIF}
@@ -28,7 +29,7 @@ procedure FreeSystemObject;
 implementation
 
 uses
-  USysLoger, USysConst;
+  UMemDataPool, USysLoger, USysConst;
 
 //Desc: 初始化系统对象
 procedure InitSystemObject;
@@ -37,6 +38,12 @@ begin
   //system loger
 
   {$IFDEF NetMode}
+    {$IFDEF MultiReplay}
+    if not Assigned(gMemDataManager) then
+      gMemDataManager := TMemDataManager.Create;
+    if not Assigned(gMultiJSManager) then
+      gMultiJSManager := TMultiJSManager.Create;
+    {$ENDIF}
   gMultiJSManager.LoadFile(gPath + 'JSQ.xml');
   {$ENDIF}
 end;

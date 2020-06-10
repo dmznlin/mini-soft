@@ -18,7 +18,7 @@ object fFormMain: TfFormMain
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 770
+    Width = 762
     Height = 41
     Align = alTop
     BevelInner = bvRaised
@@ -60,12 +60,21 @@ object fFormMain: TfFormMain
       TabOrder = 3
       OnClick = BtnEnumClick
     end
+    object BtnDiff: TButton
+      Left = 416
+      Top = 8
+      Width = 75
+      Height = 25
+      Caption = '*.'#23545#27604
+      TabOrder = 4
+      OnClick = BtnEnumClick
+    end
   end
   object MemoSQL: TMemo
     Left = 0
     Top = 41
-    Width = 770
-    Height = 457
+    Width = 762
+    Height = 445
     Align = alClient
     ReadOnly = True
     ScrollBars = ssVertical
@@ -73,8 +82,8 @@ object fFormMain: TfFormMain
   end
   object stat1: TStatusBar
     Left = 0
-    Top = 498
-    Width = 770
+    Top = 486
+    Width = 762
     Height = 19
     Panels = <>
   end

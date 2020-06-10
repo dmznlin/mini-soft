@@ -275,8 +275,8 @@ begin
     if not QueryDlg(nStr, sAsk) then Exit;
   end;
 
-  nStr := 'Select * From %s,%s Where L_Stock=S_ID And L_ID=%s';
-  nStr := Format(nStr, [sTable_StockType, sTable_JSLog, nID]);
+  nStr := 'Select * From %s Left Join %s On L_Stock=S_ID Where L_ID=%s';
+  nStr := Format(nStr, [sTable_JSLog, sTable_StockType, nID]);
   
   if FDM.QueryTemp(nStr).RecordCount < 1 then
   begin

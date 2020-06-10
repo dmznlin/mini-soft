@@ -16,5 +16,8 @@
 {$DEFINE NetMode}
 //网络模式支持
 
+{$DEFINE MultiReplay}
+//计数器应答模式
+
 {$DEFINE CardSupport}
 //支持磁卡

@@ -1,9 +1,9 @@
 program Demo;
 
 uses
+  FastMM4,
   Forms,
-  Unit1 in 'Unit1.pas' {Form1},
-  UMgrLang in '..\..\..\..\Program Files\MyVCL\ZnLib\LibFun\UMgrLang.pas';
+  Unit1 in 'Unit1.pas' {Form1};
 
 {$R *.res}
 

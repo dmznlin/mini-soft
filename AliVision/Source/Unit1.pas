@@ -62,6 +62,7 @@ begin
   gVisionManager := TTruckManager.Create;
   gVisionManager.LoadConfig('D:\Program Files\MyVCL\znlib\Hardware\AliVision.xml');
   gVisionManager.OnStatusChangeEvent := DoTruckStatusChange;
+  gVisionManager.EventMode := emMain;
   gVisionManager.StartService;
 end;
 
