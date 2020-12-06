@@ -1,0 +1,10 @@
+连接: Provider=SQLOLEDB.1;Password=sa;Persist Security Info=True;User ID=sa;Initial Catalog=ZXLibrary;Data Source=127.0.0.1
+
+表名：ValveInformation
+字段:
+SiteName  站点名称
+RelateEquipmentNo 设备编码
+GivenValue 阀门给定值
+FeedbackValue 阀门反馈值
+GivenDate 阀门给定时间
+FeedbackDate 阀门反馈时间
