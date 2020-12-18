@@ -52,7 +52,7 @@ type
     Label1: TLabel;
     GroupBox3: TGroupBox;
     Label2: TLabel;
-    Edit1: TEdit;
+    EditPort: TEdit;
     Label3: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -61,6 +61,7 @@ type
     procedure BtnStopClick(Sender: TObject);
     procedure BtnCopyClick(Sender: TObject);
     procedure Check1Click(Sender: TObject);
+    procedure BtnTestClick(Sender: TObject);
   private
     { Private declarations }
     FTrayIcon: TTrayIcon;
@@ -88,6 +89,11 @@ implementation
 uses
   IniFiles, Registry, ULibFun, USysLoger, USysConst, UAdjustForm, UDataModule,
   UFormInputbox, UBase64;
+
+procedure WriteLog(const nEvent: string);
+begin
+  gSysLoger.AddLog(TfFormMain, '服务主模块', nEvent);
+end;
 
 //------------------------------------------------------------------------------
 //Desc: 从nID指定的小节读取nList的配置信息
@@ -192,7 +198,7 @@ begin
     Caption := gSysParam.FMainTitle;
 
   FTrayIcon := TTrayIcon.Create(Self);
-  FTrayIcon.Hint := gSysParam.FAppTitle;
+  FTrayIcon.Hint := HintLabel.Caption;
   FTrayIcon.Visible := True;
   //系统托盘
 
@@ -245,6 +251,17 @@ procedure TfFormMain.Timer1Timer(Sender: TObject);
 begin
   SBar.Panels[0].Text := FormatDateTime('日期:【yyyy-mm-dd】', Now);
   SBar.Panels[1].Text := FormatDateTime('时间:【hh:mm:ss】', Now);
+
+  Timer1.Tag := Timer1.Tag + 1;
+  if Timer1.Tag < 3600 then Exit;
+  Timer1.Tag := 0; //counter
+
+  if IsSystemExpire(gPath + 'Lock.ini') then
+  begin
+    FDM.StopService();
+    CtrlStatus(False);
+    WriteLog('system component: main-service has expired.');
+  end;
 end;
 
 procedure TfFormMain.BtnCopyClick(Sender: TObject);
@@ -255,18 +272,20 @@ end;
 
 procedure TfFormMain.Check1Click(Sender: TObject);
 begin
-  gSysLoger.LogEvent := ShowLog;
+  //gSysLoger.LogEvent := ShowLog;
   gSysLoger.LogSync := Check1.Checked;
 end;
 
 //Desc: 参数配置的读取与保存
 procedure TfFormMain.DoParamConfig(const nRead: Boolean);
-var
-  nIni: TIniFile;
-  nReg: TRegistry;
+const nProgID = 'DTServer';
+var nIni: TIniFile;
+    nReg: TRegistry;
 begin
   nIni := TIniFile.Create(gPath + sConfigFile);
   nReg := TRegistry.Create;
+
+  with nIni do
   try
     nReg.RootKey := HKEY_CURRENT_USER;
     nReg.OpenKey('Software\Microsoft\Windows\CurrentVersion\Run', True);
@@ -274,29 +293,39 @@ begin
 
     if nRead then
     begin
-      CheckAutoRun.Checked := nReg.ValueExists('DFServer');
-      CheckAutoMin.Checked := nIni.ReadBool('Setup', 'AutoMin', False);
+      CheckAutoRun.Checked := nReg.ValueExists(nProgID);
+      CheckAutoMin.Checked := ReadBool('Setup', 'AutoMin', False);
 
-      EditPwd.Text := DecodeBase64(nIni.ReadString('Setup', 'AdminPwd', ''));
-      EditConn.Text := DecodeBase64(nIni.ReadString('Server', 'DBConn', ''));
+      EditPort.Text := ReadString('Setup', 'UDPPort', '8080');
+      EditPwd.Text := DecodeBase64(ReadString('Setup', 'AdminPwd', ''));
 
+      EditConn.Text := DecodeBase64(ReadString('Setup', 'DBConn', ''));
+      EditConn.Modified := False;
+      
       if CheckAutoMin.Checked then
       begin
         BtnRun.Click;
-        WindowState := wsMinimized;
-        FTrayIcon.Minimize;
+        if BtnStop.Enabled then
+        begin
+          WindowState := wsMinimized;
+          FTrayIcon.Minimize;
+        end;
       end;
     end
     else
     begin
-      nIni.WriteBool('Setup', 'AutoMin', CheckAutoMin.Checked);
-      nIni.WriteString('Setup', 'AdminPwd', EncodeBase64(EditPwd.Text));
-      nIni.WriteString('Server', 'DBConn', EncodeBase64(EditConn.Text));
+      WriteBool('Setup', 'AutoMin', CheckAutoMin.Checked);
+      WriteString('Setup', 'AdminPwd', EncodeBase64(EditPwd.Text));
+      WriteString('Setup', 'UDPPort', EditPort.Text);
+
+      if EditConn.Modified then
+        WriteString('Setup', 'DBConn', EncodeBase64(EditConn.Text));
+      //xxxxx
 
       if CheckAutoRun.Checked then
-        nReg.WriteString('DFServer', Application.ExeName)
-      else if nReg.ValueExists('DFServer') then
-        nReg.DeleteValue('DFServer');
+        nReg.WriteString(nProgID, Application.ExeName)
+      else if nReg.ValueExists(nProgID) then
+        nReg.DeleteValue(nProgID);
       //xxxxx
     end;
   finally
@@ -321,7 +350,9 @@ begin
       else if TObject(nList[i]) is TButton then
         TButton(nList[i]).Enabled := not nRun
       else if TObject(nList[i]) is TCheckBox then
-        TCheckBox(nList[i]).Enabled := not nRun;
+        TCheckBox(nList[i]).Enabled := not nRun
+      else if TObject(nList[i]) is TMemo then
+        TMemo(nList[i]).Enabled := not nRun;
     //normal
   finally
     nList.Free;
@@ -333,14 +364,17 @@ end;
 
 //Desc: 验证参数是否有效
 function TfFormMain.IsValidParam: Boolean;
-var
-  nCtrl: TWinControl;
+var nCtrl: TWinControl;
 begin
   Result := False;
   nCtrl := nil;
   try
+    nCtrl := EditConn;
     EditConn.Text := Trim(EditConn.Text);
     Result := EditConn.Text <> '';
+
+    nCtrl := EditPort;
+    Result := IsNumber(EditPort.Text, False);
   finally
     if not Result then
     begin
@@ -350,9 +384,21 @@ begin
   end;
 end;
 
+//Desc: 启动服务
 procedure TfFormMain.BtnRunClick(Sender: TObject);
+var nParam: TServiceParam;
 begin
+  if not IsValidParam then
+  begin
+    ShowMsg('请填写正确的参数', sHint);
+    Exit;
+  end;
 
+  nParam.FSrvPort := StrToInt(EditPort.Text);
+  nParam.FDBConn := EditConn.Text;
+  if FDM.StartService(nParam) then
+       CtrlStatus(True)
+  else ShowMsg('无法启动服务,请查阅日志', sHint);
 end;
 
 //Desc: 停止采集
@@ -368,6 +414,28 @@ begin
     begin
       ShowMsg('密码错误', sHint);
       Exit;
+    end;
+  end;
+
+  FDM.StopService;
+  CtrlStatus(False);
+end;
+
+procedure TfFormMain.BtnTestClick(Sender: TObject);
+begin
+  with FDM.ADOConn1 do
+  try
+    Connected := False;
+    ConnectionString := EditConn.Text;
+    Connected := True;
+
+    Connected := False;
+    ShowMsg('数据库配置成功', sHint);
+  except
+    on nErr: Exception do
+    begin
+      Connected := False;
+      ShowDlg(nErr.Message, '测试失败');
     end;
   end;
 end;

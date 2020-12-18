@@ -1327,7 +1327,7 @@ object fFormMain: TfFormMain
     Top = 80
     Width = 552
     Height = 322
-    ActivePage = SheetStatus
+    ActivePage = SheetDebug
     Align = alClient
     Images = ImageList2
     MultiLine = True
@@ -1438,7 +1438,7 @@ object fFormMain: TfFormMain
         Top = 0
         Width = 544
         Height = 290
-        ActivePage = SheetBase
+        ActivePage = SheetConn
         Align = alClient
         TabOrder = 0
         object SheetBase: TTabSheet
@@ -1586,7 +1586,7 @@ object fFormMain: TfFormMain
                 Anchors = [akTop, akRight]
                 Caption = #27979#35797
                 TabOrder = 1
-                OnClick = BtnCopyClick
+                OnClick = BtnTestClick
               end
             end
           end
@@ -1612,7 +1612,7 @@ object fFormMain: TfFormMain
               Height = 12
               Caption = #22635#20889#26381#21153#30417#25511#31471#21475'.'
             end
-            object Edit1: TEdit
+            object EditPort: TEdit
               Left = 42
               Top = 20
               Width = 100
