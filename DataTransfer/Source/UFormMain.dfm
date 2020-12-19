@@ -1327,7 +1327,7 @@ object fFormMain: TfFormMain
     Top = 80
     Width = 552
     Height = 322
-    ActivePage = SheetDebug
+    ActivePage = SheetStatus
     Align = alClient
     Images = ImageList2
     MultiLine = True
@@ -1335,7 +1335,7 @@ object fFormMain: TfFormMain
     TabOrder = 1
     object SheetStatus: TTabSheet
       Caption = #36816#34892#29366#24577
-      object ListClient: TListView
+      object ListStations: TListView
         Left = 0
         Top = 0
         Width = 544
@@ -1343,13 +1343,17 @@ object fFormMain: TfFormMain
         Align = alClient
         Columns = <
           item
-            Caption = #31449#28857#21517#31216
-            Width = 100
+            Alignment = taCenter
+            Caption = #31449#28857#32534#21495
+            Width = 80
           end
           item
-            Alignment = taCenter
-            Caption = #35774#22791#32534#21495
-            Width = 100
+            Caption = #31449#28857#21517#31216
+            Width = 80
+          end
+          item
+            Caption = #31449#28857#21035#31216
+            Width = 80
           end
           item
             Alignment = taCenter

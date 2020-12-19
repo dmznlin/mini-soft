@@ -59,6 +59,7 @@ ResourceString
   sFormConfig         = 'FormInfo.ini';              //窗体配置
   sSetupSec           = 'Setup';                     //配置小节
   sDBConfig           = 'DBConn.ini';                //数据连接
+  sStations           = 'Stations.xml';              //站点配置
 
   sExportExt          = '.txt';                      //导出默认扩展名
   sExportFilter       = '文本(*.txt)|*.txt|所有文件(*.*)|*.*';

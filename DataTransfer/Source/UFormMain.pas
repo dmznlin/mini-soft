@@ -25,7 +25,7 @@ type
     MemoLog: TMemo;
     Timer1: TTimer;
     ImageList1: TImageList;
-    ListClient: TListView;
+    ListStations: TListView;
     ImageList2: TImageList;
     ParamPage: TPageControl;
     SheetBase: TTabSheet;
@@ -72,6 +72,8 @@ type
     //组件状态
     procedure DoParamConfig(const nRead: Boolean);
     //参数配置
+    procedure LoadStationList(const nLoadFile: Boolean);
+    //载入站点
     procedure ShowLog(const nStr: string);
     //显示日志
     function IsValidParam: Boolean;
@@ -164,7 +166,7 @@ begin
   wPage.ActivePage := SheetSetup;
   ParamPage.ActivePage := SheetBase;
 
-  LoadListViewConfig(Name, ListClient);
+  LoadListViewConfig(Name, ListStations);
   LoadFormConfig(Self);
 end;
 
@@ -205,6 +207,9 @@ begin
   InitFormData;
   //初始化
   DoParamConfig(True);
+  //载入参数
+  LoadStationList(True);
+  //载入站点列表
 end;
 
 procedure TfFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -225,7 +230,7 @@ begin
   end;
   //stop service
 
-  SaveListViewConfig(Name, ListClient);
+  SaveListViewConfig(Name, ListStations);
   SaveFormConfig(Self);
   DoParamConfig(False);
 end;
@@ -334,6 +339,45 @@ begin
   end;
 end;
 
+//Date: 2020-12-18
+//Parm: 是否加载文件
+//Desc: 载入站点列表
+procedure TfFormMain.LoadStationList(const nLoadFile: Boolean);
+var nIdx: Integer;
+    nItem: TListItem;
+    nStation: PStationItem;
+begin
+  if nLoadFile then
+    FDM.LoadStation(gPath + sStations);
+  //xxxxx
+
+  FDM.LockEnter;
+  try
+    ListStations.Items.BeginUpdate;
+    ListStations.Items.Clear;
+
+    for nIdx:=0 to FDM.Stations.Count - 1 do
+    begin
+      nStation := FDM.Stations[nIdx];
+      nItem := ListStations.Items.Add;
+
+      with nItem do
+      begin
+        Caption := nStation.FID;
+        SubItems.Add(nStation.FName);
+        SubItems.Add(nStation.FInnerID);
+        SubItems.Add(IntToStr(nStation.FCommitAll));
+        SubItems.Add(nStation.FLastUpdate);
+
+        nStation.FListItem := nItem;
+      end;
+    end;
+  finally
+    FDM.LockLeave;
+    ListStations.Items.EndUpdate;
+  end;
+end;
+
 //------------------------------------------------------------------------------
 //Desc: 依据运行状态设置组件
 procedure TfFormMain.CtrlStatus(const nRun: Boolean);
@@ -438,6 +482,7 @@ begin
       ShowDlg(nErr.Message, '测试失败');
     end;
   end;
+
 end;
 
 end.
