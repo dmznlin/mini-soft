@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="gb2312"?>
+<stations>
+  <station_plc>
+    <item id="1010">
+      <name>A站点</name>
+      <inner>A01</inner>
+    </item>
+	
+	 <item id="1011">
+      <name>B站点</name>
+      <inner>B01</inner>
+    </item>
+	
+    <item id="1012">
+      <name>C站点</name>
+      <inner>C01</inner>
+    </item>
+  </station_plc>
+</stations>

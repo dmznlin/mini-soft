@@ -11,7 +11,7 @@
 
 {-----------------------------Debugging Options-------------------------------}
 //-
-{.$define NoMessageBoxes}
+{$define NoMessageBoxes}
 {.$undef NoMessageBoxes}
 
 //-
@@ -32,10 +32,10 @@
 
   //+
   {.$define LogMemoryLeakDetailToFile}
-  {.$undef LogMemoryLeakDetailToFile}
+  {$undef LogMemoryLeakDetailToFile}
 
   //-
-  {.$define ClearLogFileOnStartup}
+  {$define ClearLogFileOnStartup}
   {.$undef ClearLogFileOnStartup}
 
   //-
@@ -77,7 +77,7 @@
 
   //+
   {.$define RequireDebuggerPresenceForLeakReporting}
-  {.$undef RequireDebuggerPresenceForLeakReporting}
+  {$undef RequireDebuggerPresenceForLeakReporting}
 
   //-
   {.$define RequireDebugInfoForLeakReporting}
@@ -88,20 +88,20 @@
   {.$undef ManualLeakReportingControl}
 
   //-
-  {.$define HideMemoryLeakHintMessage}
+  {$define HideMemoryLeakHintMessage}
   {.$undef HideMemoryLeakHintMessage}
 
 {-----------------------Memory Manager Sharing Options------------------------}
 //-
-{.$define ShareMM}
+{$define ShareMM}
 {.$undef ShareMM}
 
   //-
-  {.$define ShareMMIfLibrary}
+  {$define ShareMMIfLibrary}
   {.$undef ShareMMIfLibrary}
 
 //-
-{.$define AttemptToUseSharedMM}
+{$define AttemptToUseSharedMM}
 {.$undef AttemptToUseSharedMM}
 
 //+

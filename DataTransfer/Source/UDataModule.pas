@@ -10,7 +10,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, ComCtrls, SyncObjs, UWaitItem, DB, ADODB,
-  IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdContext,
+  IdGlobal, IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdContext,
   IdCustomTCPServer, IdTCPServer;
 
 type
@@ -20,7 +20,7 @@ type
     FName       : string;        //站点名称
     FInnerID    : string;        //内部编号
     FCommitAll  : Cardinal;      //上传次数
-    
+
     FLastUpdate : string;
     FLastActive : Cardinal;      //上次更新
     FListItem   : TListItem;     //列表节点
@@ -99,7 +99,12 @@ implementation
 {$R *.dfm}
 
 uses
-  NativeXml, UMemDataPool, UMgrDBConn, ULibFun, USysLoger;
+  NativeXml, UMemDataPool, UMgrDBConn, ULibFun, USysLoger, UProtocol;
+
+procedure WriteLog(const nEvent: string);
+begin
+  gSysLoger.AddLog(TFDM, '数据服务', nEvent);
+end;
 
 procedure TFDM.DataModuleCreate(Sender: TObject);
 begin
@@ -111,6 +116,7 @@ begin
 
   gMemDataManager := TMemDataManager.Create;
   gDBConnManager := TDBConnManager.Create;
+  gDBConnManager.MaxConn := 5;
 end;
 
 procedure TFDM.DataModuleDestroy(Sender: TObject);
@@ -142,7 +148,7 @@ begin
     nDBConn.FID := FDBName;
     nDBConn.FConn := nParam.FDBConn;
     gDBConnManager.AddParam(nDBConn);
-
+    
     if not Assigned(FDBWriter) then
       FDBWriter := TDBWriter.Create(Self);
     //xxxxx
@@ -157,7 +163,7 @@ begin
     on nErr: Exception do
     begin
       Result := False;
-      gSysLoger.AddLog(TFDM, '数据服务', nErr.Message);
+      WriteLog(nErr.Message);
     end;
   end;
 end;
@@ -342,12 +348,82 @@ end;
 
 procedure TDBWriter.DoWriteDB;
 begin
-  DBWriteLog(Date2Str(now));
+  //do nothing
 end;
 
+//------------------------------------------------------------------------------
 procedure TFDM.IdServerExecute(AContext: TIdContext);
+var nBuf: TIdBytes;
+    nData: TFrameData;
+    nIdx,nInt: Integer;
+    nStation: PStationItem;
 begin
- //
+  with AContext.Connection.IOHandler do
+  try
+    if InputBufferIsEmpty then
+    begin
+      CheckForDataOnSource(0);
+      CheckForDisconnect();
+      if InputBufferIsEmpty then Exit;
+    end;
+
+    ReadBytes(nBuf, 8, False);
+    //读取协议开始定长数据
+
+    if BytesToString(nBuf, 0, 3, Indy8BitEncoding) <> cFrame_Begin then //帧头无效
+    begin
+      InputBuffer.Clear;
+      Exit;
+    end;
+
+    ReadBytes(nBuf, nBuf[7], True);
+    //读取数据
+    ReadBytes(nBuf, 1, True);
+    //读取帧尾
+
+    nInt := Length(nBuf);
+    if Char(nBuf[nInt - 1]) <> cFrame_End then //帧尾无效
+    begin
+      InputBuffer.Clear;
+      Exit;
+    end;
+
+    BytesToRaw(nBuf, nData, nInt);
+    //解析数据结构
+
+    LockEnter;
+    try
+      nInt := -1;
+      for nIdx:=FStations.Count - 1 downto 0 do
+      begin
+        nStation := FStations[nIdx];
+        if nStation.FID = IntToStr(nData.FStation) then
+        begin
+          nInt := nIdx;
+          Break;
+        end;
+      end;
+
+      if nInt < 0 then
+      begin
+        WriteLog('无效的设备标识(PLC ID).');
+        Exit;
+      end;
+
+      Inc(nStation.FCommitAll);
+      nStation.FLastActive := GetTickCount();
+      nStation.FLastUpdate := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now());
+
+      TIdsync
+    finally
+      LockLeave;
+    end;   
+  except
+    on nErr: Exception do
+    begin
+      WriteLog(nErr.Message);
+    end;
+  end;
 end;
 
 end.

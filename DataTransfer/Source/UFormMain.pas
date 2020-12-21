@@ -90,7 +90,7 @@ implementation
 {$R *.dfm}
 uses
   IniFiles, Registry, ULibFun, USysLoger, USysConst, UAdjustForm, UDataModule,
-  UFormInputbox, UBase64;
+  UFormInputbox, UBase64, UProtocol;
 
 procedure WriteLog(const nEvent: string);
 begin
