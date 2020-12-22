@@ -10,8 +10,8 @@ interface
 
 uses
   Windows, SysUtils, Classes, ComCtrls, SyncObjs, UWaitItem, DB, ADODB,
-  IdGlobal, IdBaseComponent, IdComponent, IdUDPBase, IdUDPServer, IdContext,
-  IdCustomTCPServer, IdTCPServer;
+  UObjectList, UProtocol, UMgrDBConn, IdGlobal, IdSync, IdBaseComponent,
+  IdComponent, IdContext, IdCustomTCPServer, IdTCPServer;
 
 type
   PStationItem = ^TStationItem;
@@ -34,6 +34,8 @@ type
     //拥有者
     FWaiter: TWaitObject;
     //等待对象
+    FSyncer: PObjectPoolItem;
+    //同步对象
   protected
     procedure Execute; override;
     procedure DoWriteDB;
@@ -61,6 +63,7 @@ type
     { Private declarations }
     FDBName: string;
     FDBWriter: TDBWriter;
+    FDBWorker: PDBWorker;
     //数据写入
     FParam: TServiceParam;
     //服务参数
@@ -74,6 +77,14 @@ type
     //清理数据
     function FindStation(const nID: string; const nInnerID: Boolean): Integer;
     //检索数据
+    function LockDBWorker: Boolean;
+    //获取数据库对象
+    procedure SaveRunData(AContext: TIdContext; const nStation: PStationItem;
+      const nData: PFrameData);
+    //保存运行数据
+    procedure QueryRunParams(AContext: TIdContext; const nStation: PStationItem;
+      const nData: PFrameData);
+    //查询运行参数
   public
     { Public declarations }
     procedure LockEnter;
@@ -99,13 +110,83 @@ implementation
 {$R *.dfm}
 
 uses
-  NativeXml, UMemDataPool, UMgrDBConn, ULibFun, USysLoger, UProtocol;
+  NativeXml, UMemDataPool, ULibFun, USysLoger, UFormCtrl;
+
+type
+  TSyncUI = class(TIdSync)
+  private
+    FOwner: TFDM;
+    FStations: TList;
+  protected
+    procedure DoSynchronize; override;
+    {*执行同步*}
+  public
+    constructor Create(AOwner: TFDM);
+    destructor Destroy; override;
+    {*创建释放*}
+    procedure AddStation(const nStation: PStationItem);
+    {*添加站点*}
+  end;
 
 procedure WriteLog(const nEvent: string);
 begin
   gSysLoger.AddLog(TFDM, '数据服务', nEvent);
 end;
 
+constructor TSyncUI.Create(AOwner: TFDM);
+begin
+  inherited Create();
+  FOwner := AOwner;
+  FStations := TList.Create;
+end;
+
+destructor TSyncUI.Destroy;
+begin
+  FStations.Free;
+  inherited;
+end;
+
+procedure TSyncUI.DoSynchronize;
+var nIdx: Integer;
+    nStation: PStationItem;
+begin
+  FOwner.LockEnter;
+  try
+    for nIdx:=FStations.Count - 1 downto 0 do
+    begin
+      nStation := FStations[nIdx];
+      if not Assigned(nStation.FListItem) then Continue;
+
+      if nStation.FLastActive < 1 then //超时
+      begin
+        nStation.FListItem.ImageIndex := 0;
+        Continue;
+      end;
+
+      with nStation.FListItem do
+      begin
+        ImageIndex := 1;
+        SubItems[2] := IntToStr(nStation.FCommitAll);
+        SubItems[3] := nStation.FLastUpdate;
+      end;
+    end;
+  finally
+    FOwner.LockLeave;
+    FStations.Clear;
+  end;
+end;
+
+procedure TSyncUI.AddStation(const nStation: PStationItem);
+begin
+  FStations.Add(nStation);
+end;
+
+function NewSyncUI(const nClass: TClass): TObject;
+begin
+  Result := TSyncUI.Create(FDM);
+end;
+
+//------------------------------------------------------------------------------
 procedure TFDM.DataModuleCreate(Sender: TObject);
 begin
   FDBWriter := nil;
@@ -115,6 +196,9 @@ begin
   FSyncLock := TCriticalSection.Create;
 
   gMemDataManager := TMemDataManager.Create;
+  gObjectPoolManager := TObjectPoolManager.Create;
+  gObjectPoolManager.RegClass(TSyncUI, NewSyncUI);
+
   gDBConnManager := TDBConnManager.Create;
   gDBConnManager.MaxConn := 5;
 end;
@@ -300,11 +384,6 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure DBWriteLog(const nEvent: string);
-begin
-  gSysLoger.AddLog(TDBWriter, '数据写入', nEvent);
-end;
-
 constructor TDBWriter.Create(AOwner: TFDM);
 begin
   inherited Create(False);
@@ -337,18 +416,48 @@ begin
     FWaiter.EnterWait;
     if Terminated then Exit;
 
-    DoWriteDB;
+    FSyncer := nil;
+    try
+      DoWriteDB;
+      if Assigned(FSyncer) then
+        (FSyncer.FObject as TSyncUI).Synchronize;
+      //同步界面显示
+    finally
+      gObjectPoolManager.ReleaseObject(FSyncer);
+    end;
   except
     on nErr: Exception do
     begin
-      DBWriteLog(nErr.Message);
+      WriteLog(nErr.Message);
     end;
   end;
 end;
 
 procedure TDBWriter.DoWriteDB;
+var nIdx: Integer;
+    nStation: PStationItem;
 begin
-  //do nothing
+  FOwner.LockEnter;
+  try
+    for nIdx:=FOwner.FStations.Count - 1 downto 0 do
+    begin
+      nStation := FOwner.FStations[nIdx];
+      if nStation.FLastActive < 1 then Continue;
+
+      if GetTickCountDiff(nStation.FLastActive) > 15 * 1000 then
+      begin
+        if not Assigned(FSyncer) then
+          FSyncer := gObjectPoolManager.LockObject(TSyncUI);
+        //xxxxx
+
+        nStation.FLastActive := 0;
+        (FSyncer.FObject as TSyncUI).AddStation(nStation);
+        //超时列表
+      end;
+    end;
+  finally
+    FOwner.LockLeave;
+  end;
 end;
 
 //------------------------------------------------------------------------------
@@ -357,6 +466,7 @@ var nBuf: TIdBytes;
     nData: TFrameData;
     nIdx,nInt: Integer;
     nStation: PStationItem;
+    nSync: PObjectPoolItem;
 begin
   with AContext.Connection.IOHandler do
   try
@@ -394,6 +504,8 @@ begin
     LockEnter;
     try
       nInt := -1;
+      nStation := nil;
+      
       for nIdx:=FStations.Count - 1 downto 0 do
       begin
         nStation := FStations[nIdx];
@@ -413,15 +525,163 @@ begin
       Inc(nStation.FCommitAll);
       nStation.FLastActive := GetTickCount();
       nStation.FLastUpdate := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now());
-
-      TIdsync
     finally
       LockLeave;
-    end;   
+    end;
+           
+    nSync := nil;
+    try
+      nSync := gObjectPoolManager.LockObject(TSyncUI);
+      with nSync.FObject as TSyncUI do
+      begin
+        AddStation(nStation);
+        Synchronize; //同步界面显示
+      end;
+    finally
+      gObjectPoolManager.ReleaseObject(nSync);
+    end;
+
+    FDBWorker := nil;
+    try
+      case nData.FCommand of
+       cFrame_CMD_UpData     : SaveRunData(AContext, nStation, @nData);
+       cFrame_CMD_QueryData  : QueryRunParams(AContext, nStation, @nData);
+      end;
+    finally
+      gDBConnManager.ReleaseConnection(FDBWorker);
+    end;
   except
     on nErr: Exception do
     begin
       WriteLog(nErr.Message);
+    end;
+  end;
+end;
+
+function TFDM.LockDBWorker: Boolean;
+var nErr: Integer;
+begin
+  if not Assigned(FDBWorker) then
+  begin
+    FDBWorker := gDBConnManager.GetConnection(FDBName, nErr);
+    if not Assigned(FDBWorker) then
+      raise Exception.Create(Format('锁定数据库连接失败(Error: %d)', [nErr]));
+    //xxxxx
+  end;
+
+  Result := Assigned(FDBWorker);
+end;
+
+//Date: 2020-12-21
+//Parm: 套接字;站点;帧数据
+//Desc: 保存nData运行数据
+procedure TFDM.SaveRunData(AContext: TIdContext; const nStation: PStationItem;
+  const nData: PFrameData);
+var nStr: string;
+    nRun: TRunData;
+begin
+  if nData.FExtCMD = cFrame_Ext_RunData then //运行时数据
+  begin
+    LockDBWorker;
+    Move(nData.FData[0], nRun, cSize_Frame_RunData);
+
+    nStr := MakeSQLByStr([
+        SF('D_ID', nStation.FID),
+        SF('D_Name', nStation.FName),
+        SF('D_Inner', nStation.FInnerID),
+        SF('D_Date', 'getDate()', sfVal),
+
+        SF('D_I00', nRun.I00, sfVal),
+        SF('D_I01', nRun.I01, sfVal),
+        SF('D_I02', nRun.I02, sfVal),
+
+        SF('D_VD300', GetValFloat(nRun.VD300), sfVal),
+        SF('D_VD304', GetValFloat(nRun.VD304), sfVal),
+        SF('D_VD308', GetValFloat(nRun.VD308), sfVal),
+        SF('D_VD312', GetValFloat(nRun.VD312), sfVal),
+        SF('D_VD316', GetValFloat(nRun.VD316), sfVal),
+        SF('D_VD320', GetValFloat(nRun.VD320), sfVal),
+        SF('D_VD324', GetValFloat(nRun.VD324), sfVal),
+        SF('D_VD328', GetValFloat(nRun.VD328), sfVal),
+        SF('D_VD332', GetValFloat(nRun.VD332), sfVal),
+        SF('D_VD336', GetValFloat(nRun.VD336), sfVal),
+        SF('D_VD340', GetValFloat(nRun.VD340), sfVal),
+        SF('D_VD348', GetValFloat(nRun.VD348), sfVal),
+        SF('D_VD352', GetValFloat(nRun.VD352), sfVal),
+        SF('D_VD356', GetValFloat(nRun.VD356), sfVal),
+
+        SF('D_V3650', nRun.V3650, sfVal),
+        SF('D_V3651', nRun.V3651, sfVal),
+        SF('D_V3652', nRun.V3652, sfVal),
+        SF('D_V3653', nRun.V3653, sfVal),
+        SF('D_V3654', nRun.V3654, sfVal),
+        SF('D_V3655', nRun.V3655, sfVal),
+        SF('D_V3656', nRun.V3656, sfVal),
+        SF('D_V3657', nRun.V3657, sfVal),
+        SF('D_V20000', nRun.V20000, sfVal),
+        SF('D_V20001', nRun.V20001, sfVal),
+        SF('D_V20002', nRun.V20002, sfVal)
+      ], sTable_RunData, '', True);
+    gDBConnManager.WorkerExec(FDBWorker, nStr);
+  end;
+end;
+
+//Date: 2020-12-22
+//Parm: 套接字;站点;帧数据
+//Desc: 查询指定站
+procedure TFDM.QueryRunParams(AContext: TIdContext; const nStation: PStationItem;
+  const nData: PFrameData);
+var nStr: string;
+    nBuf: TIdBytes;
+    nFrame: TFrameData;
+    nParams: TRunParams;
+begin
+  if nData.FExtCMD = cFrame_Ext_RunParam then
+  begin
+    LockDBWorker;
+    SetLength(nBuf, 0);
+    InitFrameData(nFrame);
+
+    with nFrame do
+    begin
+      FStation := nData.FStation;
+      FCommand := cFrame_CMD_QueryData;
+      FExtCMD := cFrame_Ext_RunParam;
+    end;
+
+    nStr := 'Select Top 1 * From %s Where P_ID=''%d'' Order By P_Date DESC';
+    nStr := Format(nStr, [sTable_RunParams, nData.FStation]);
+
+    with gDBConnManager.WorkerQuery(FDBWorker, nStr) do
+    begin
+      if RecordCount < 1 then
+      begin
+        nFrame.FDataLen := 0;
+        nFrame.FData[0] := cFrame_End;
+        
+        nBuf := RawToBytes(nFrame, FrameValidLen(@nFrame));
+        AContext.Connection.IOHandler.Write(nBuf);
+      end;
+
+      InitRunParams(nParams);
+      with nParams do
+      begin
+        PutValFloat(FieldByName('P_VD328').AsFloat, VD328);
+        PutValFloat(FieldByName('P_VD332').AsFloat, VD332);
+        PutValFloat(FieldByName('P_VD336').AsFloat, VD336);
+        PutValFloat(FieldByName('P_VD340').AsFloat, VD340);
+        PutValFloat(FieldByName('P_VD348').AsFloat, VD348);
+        PutValFloat(FieldByName('P_VD352').AsFloat, VD352);
+        PutValFloat(FieldByName('P_VD356').AsFloat, VD356);
+
+        V3650       := FieldByName('P_V3650').AsInteger;
+        V20000      := FieldByName('P_V20000').AsInteger;
+        V20001      := FieldByName('P_V20001').AsInteger;
+        V20002      := FieldByName('P_V20002').AsInteger;
+      end;
+
+      nBuf := BuildRunParams(@nFrame, @nParams);
+      AContext.Connection.IOHandler.Write(nBuf);
     end;
   end;
 end;

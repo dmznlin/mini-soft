@@ -64,7 +64,7 @@ object fFormMain: TfFormMain
     Caption = #25805#20316
     TabOrder = 1
     object BtnSend: TButton
-      Left = 24
+      Left = 120
       Top = 24
       Width = 75
       Height = 25
@@ -73,12 +73,25 @@ object fFormMain: TfFormMain
       OnClick = BtnSendClick
     end
     object BtnQuery: TButton
-      Left = 192
+      Left = 200
       Top = 24
       Width = 75
       Height = 25
       Caption = #26597#35810#25968#25454
       TabOrder = 1
+      OnClick = BtnQueryClick
+    end
+    object EditID: TLabeledEdit
+      Left = 48
+      Top = 27
+      Width = 65
+      Height = 20
+      EditLabel.Width = 18
+      EditLabel.Height = 12
+      EditLabel.Caption = 'ID:'
+      LabelPosition = lpLeft
+      TabOrder = 2
+      Text = '1010'
     end
   end
   object Memo1: TMemo
