@@ -501,6 +501,9 @@ begin
     BytesToRaw(nBuf, nData, nInt);
     //解析数据结构
 
+    nData.FStation := SwapWordHL(nData.FStation);
+    //交换高低位
+
     LockEnter;
     try
       nInt := -1;
@@ -644,7 +647,7 @@ begin
 
     with nFrame do
     begin
-      FStation := nData.FStation;
+      FStation := SwapWordHL(nData.FStation);
       FCommand := cFrame_CMD_QueryData;
       FExtCMD := cFrame_Ext_RunParam;
     end;

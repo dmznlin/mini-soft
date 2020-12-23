@@ -21,7 +21,7 @@ object fFormMain: TfFormMain
   object HintPanel: TPanel
     Left = 0
     Top = 0
-    Width = 552
+    Width = 544
     Height = 80
     Align = alTop
     BevelOuter = bvNone
@@ -31,7 +31,7 @@ object fFormMain: TfFormMain
     object Image1: TImage
       Left = 0
       Top = 0
-      Width = 331
+      Width = 323
       Height = 80
       Align = alClient
       AutoSize = True
@@ -704,7 +704,7 @@ object fFormMain: TfFormMain
       Stretch = True
     end
     object Image2: TImage
-      Left = 331
+      Left = 323
       Top = 0
       Width = 221
       Height = 80
@@ -1325,8 +1325,8 @@ object fFormMain: TfFormMain
   object wPage: TPageControl
     Left = 0
     Top = 80
-    Width = 552
-    Height = 322
+    Width = 544
+    Height = 310
     ActivePage = SheetDebug
     Align = alClient
     Images = ImageList2
@@ -1338,8 +1338,8 @@ object fFormMain: TfFormMain
       object ListStations: TListView
         Left = 0
         Top = 0
-        Width = 544
-        Height = 290
+        Width = 536
+        Height = 278
         Align = alClient
         Columns = <
           item
@@ -1376,8 +1376,8 @@ object fFormMain: TfFormMain
       object MemoLog: TMemo
         Left = 0
         Top = 35
-        Width = 544
-        Height = 255
+        Width = 536
+        Height = 243
         Align = alClient
         ScrollBars = ssBoth
         TabOrder = 0
@@ -1385,7 +1385,7 @@ object fFormMain: TfFormMain
       object Panel1: TPanel
         Left = 0
         Top = 0
-        Width = 544
+        Width = 536
         Height = 35
         Align = alTop
         BevelOuter = bvNone
@@ -1393,12 +1393,12 @@ object fFormMain: TfFormMain
         ParentColor = True
         TabOrder = 1
         DesignSize = (
-          544
+          536
           35)
         object Bevel1: TBevel
           Left = 3
           Top = 27
-          Width = 538
+          Width = 530
           Height = 5
           Align = alBottom
           Shape = bsBottomLine
@@ -1422,7 +1422,7 @@ object fFormMain: TfFormMain
           TabOrder = 1
         end
         object BtnCopy: TButton
-          Left = 499
+          Left = 490
           Top = 6
           Width = 45
           Height = 22
@@ -1439,16 +1439,16 @@ object fFormMain: TfFormMain
       object ParamPage: TPageControl
         Left = 0
         Top = 0
-        Width = 544
-        Height = 290
-        ActivePage = SheetBase
+        Width = 536
+        Height = 278
+        ActivePage = SheetConn
         Align = alClient
         TabOrder = 0
         object SheetBase: TTabSheet
           Caption = #22522#26412#21442#25968
           DesignSize = (
-            536
-            263)
+            528
+            251)
           object GroupBox2: TGroupBox
             Left = 8
             Top = 8
@@ -1531,8 +1531,8 @@ object fFormMain: TfFormMain
           Caption = #25968#25454#26381#21153
           ImageIndex = 2
           DesignSize = (
-            536
-            263)
+            528
+            251)
           object GroupBox5: TGroupBox
             Left = 8
             Top = 65
@@ -1613,7 +1613,7 @@ object fFormMain: TfFormMain
               Top = 24
               Width = 102
               Height = 12
-              Caption = #22635#20889#26381#21153#30417#25511#31471#21475'.'
+              Caption = #22635#20889#26381#21153#30417#21548#31471#21475'.'
             end
             object EditPort: TEdit
               Left = 42
@@ -1630,8 +1630,8 @@ object fFormMain: TfFormMain
   end
   object SBar: TStatusBar
     Left = 0
-    Top = 402
-    Width = 552
+    Top = 390
+    Width = 544
     Height = 21
     Panels = <
       item

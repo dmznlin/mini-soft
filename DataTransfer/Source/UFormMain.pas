@@ -481,8 +481,7 @@ begin
       Connected := False;
       ShowDlg(nErr.Message, '≤‚ ‘ ß∞‹');
     end;
-  end;
-
+  end; 
 end;
 
 end.

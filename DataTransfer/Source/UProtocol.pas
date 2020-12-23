@@ -7,7 +7,7 @@ unit UProtocol;
 interface
 
 uses
-  Classes, SysUtils, IdGlobal, ULibFun;
+  Windows, Classes, SysUtils, IdGlobal, ULibFun;
   
 const
   cFrame_Begin  = Char($FF) + Char($FF) + Char($FF);  //帧头
@@ -22,6 +22,13 @@ const
   cFrame_Ext_RunParam     = $01;              //运行参数数据
   
 type
+  TValFloat = array[0..3] of Char;            //浮点值
+  THexFloat = record                          //IEEE754浮点值转换
+    case Byte of
+      0: (AsHex: TValFloat);
+      1: (AsFloat: Single);
+  end;
+
   PFrameData = ^TFrameData;
   TFrameData = packed record
     FHeader     : array[0..2] of Char;        //帧头
@@ -32,8 +39,6 @@ type
     FData       : array[0..255] of Char;      //数据
     FEnd        : Char;                       //帧尾
   end;
-
-  TValFloat = array[0..3] of Char;            //浮点值
 
   PRunData = ^TRunData;
   TRunData = packed record
@@ -92,6 +97,8 @@ const
   sTable_RunData          = 'D_RunData';
   sTable_RunParams        = 'D_RunParams';
 
+function SwapWordHL(const nVal: Word): Word;
+//双字节
 procedure PutValFloat(const nVal: Single; var nFloat: TValFloat);
 function GetValFloat(const nFloat: TValFloat): Single;
 //转换浮点数
@@ -99,63 +106,64 @@ procedure InitFrameData(var nData: TFrameData);
 procedure InitRunData(var nData: TRunData);
 procedure InitRunParams(var nData: TRunParams);
 //初始化数据
-//构建发送缓冲
 function FrameValidLen(const nData: PFrameData): Integer;
-//帧有效大小
 function BuildRunData(const nFrame: PFrameData; const nRun: PRunData): TIdBytes;
 function BuildRunParams(const nFrame: PFrameData; const nParams: PRunParams): TIdBytes;
+//构建发送缓冲
 
 implementation
+
+//Date: 2020-12-23
+//Desc: 交换Word值的高低字节
+function SwapWordHL(const nVal: Word): Word;
+var nL,nH: Byte;
+begin
+  nL := Lo(nVal);
+  nH := Hi(nVal);
+  Result := MakeWord(nH, nL);
+end;
+
+//Date: 2020-12-23
+//Parm: 4字节浮点数
+//Desc: 交换nFloat的高低字节
+procedure SwapFloatHL(var nFloat: TValFloat);
+var nCH: Char;
+    nL,nH: Integer;
+begin
+  nL := Low(nFloat);
+  nH := High(nFloat);
+  
+  while nL < nH do
+  begin
+    nCH := nFloat[nL];
+    nFloat[nL] := nFloat[nH];
+    nFloat[nH] := nCH;
+
+    Inc(nL);
+    Dec(nH);
+  end;
+end;
 
 //Date: 2020-12-20
 //Parm: 浮点值;浮点结构
 //Desc: 将nVal存入nFloat中
 procedure PutValFloat(const nVal: Single; var nFloat: TValFloat);
-var nStr: string;
-    nIdx,nLen: Integer;
+var nHF: THexFloat;
 begin
-  nStr := FloatToStr(nVal);
-  nLen := Length(nStr);
-
-  while nLen > cSize_Record_ValFloat do //超大,裁剪
-  begin
-    System.Delete(nStr, nLen, 1);
-    //删除最后一位,降低精度
-    Dec(nLen);
-
-    if Pos('.', nStr) = nLen then
-    begin
-      System.Delete(nStr, nLen, 1);
-      //删除小数点
-      Dec(nLen);
-    end;
-  end;
-
-  for nIdx:=High(nFloat) downto Low(nFloat) do
-  begin
-    nFloat[nIdx] := nStr[nLen];
-    Dec(nLen);
-    if nLen < 1 then Break;
-  end;
+  nHF.AsFloat := nVal;
+  nFloat := nHF.AsHex;
+  SwapFloatHL(nFloat);
 end;
 
 //Date: 2020-12-20
 //Parm: 浮点结构
 //Desc: 计算nFloat的值
 function GetValFloat(const nFloat: TValFloat): Single;
-var nStr: string;
-    nIdx: Integer;
+var nHF: THexFloat;
 begin
-  nStr := '';
-  for nIdx:=High(nFloat) downto Low(nFloat) do
-  begin
-    if not (nFloat[nIdx] in ['0'..'9', '.']) then Break;
-    nStr := nFloat[nIdx] + nStr;
-  end;
-
-  if IsNumber(nStr, True) then
-       Result := StrToFloat(nStr)
-  else Result := 0;
+  nHF.AsHex := nFloat;
+  SwapFloatHL(nHF.AsHex);
+  Result := nHF.AsFloat;
 end;
 
 //Date: 2020-12-20
