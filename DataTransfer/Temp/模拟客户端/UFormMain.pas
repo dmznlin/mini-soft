@@ -113,7 +113,7 @@ begin
 
   with nFrame do
   begin
-    FStation := StrToInt(EditID.Text);
+    FStation := SwapWordHL( StrToInt(EditID.Text) );
     FCommand := cFrame_CMD_UpData;
     FExtCMD := cFrame_Ext_RunData;
   end;
@@ -133,10 +133,10 @@ begin
     PutValFloat(1.8, VD328);
     PutValFloat(1.9, VD332);
     PutValFloat(2.0, VD336);
-    PutValFloat(2.1, VD340);
-    PutValFloat(2.2, VD348);
-    PutValFloat(2.3, VD352);
-    PutValFloat(2.4, VD356);
+    PutValFloat(20.1, VD340);
+    PutValFloat(200.2, VD348);
+    PutValFloat(2000.3, VD352);
+    PutValFloat(20000.4, VD356);
 
     V3650   := 4;
     V3651   := 5;
@@ -166,7 +166,7 @@ begin
 
   with nFrame do
   begin
-    FStation := StrToInt(EditID.Text);
+    FStation := SwapWordHL( StrToInt(EditID.Text) );
     FCommand := cFrame_CMD_QueryData;
     FExtCMD := cFrame_Ext_RunParam;
     FDataLen := 0;
@@ -177,7 +177,8 @@ begin
   begin
     nBuf := RawToBytes(nFrame, FrameValidLen(@nFrame));
     Write(nBuf);
-    
+
+    SetLength(nBuf, 0);
     ReadBytes(nBuf, 8, False);
     //读取协议开始定长数据
 
@@ -187,7 +188,8 @@ begin
       Exit;
     end;
 
-    ReadBytes(nBuf, nBuf[7], True);
+    if  nBuf[7] > 0 then
+      ReadBytes(nBuf, nBuf[7], True);
     //读取数据
     ReadBytes(nBuf, 1, True);
     //读取帧尾

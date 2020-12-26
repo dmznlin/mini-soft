@@ -472,11 +472,12 @@ begin
   try
     if InputBufferIsEmpty then
     begin
-      CheckForDataOnSource(0);
-      CheckForDisconnect();
+      CheckForDataOnSource(100);
+      CheckForDisconnect();       
       if InputBufferIsEmpty then Exit;
     end;
 
+    SetLength(nBuf, 0);
     ReadBytes(nBuf, 8, False);
     //读取协议开始定长数据
 
@@ -664,6 +665,7 @@ begin
         
         nBuf := RawToBytes(nFrame, FrameValidLen(@nFrame));
         AContext.Connection.IOHandler.Write(nBuf);
+        Exit;
       end;
 
       InitRunParams(nParams);
