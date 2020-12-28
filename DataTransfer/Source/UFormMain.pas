@@ -257,6 +257,9 @@ begin
   SBar.Panels[0].Text := FormatDateTime('日期:【yyyy-mm-dd】', Now);
   SBar.Panels[1].Text := FormatDateTime('时间:【hh:mm:ss】', Now);
 
+  if not BtnStop.Enabled then Exit;
+  //not run
+
   Timer1.Tag := Timer1.Tag + 1;
   if Timer1.Tag < 3600 then Exit;
   Timer1.Tag := 0; //counter
