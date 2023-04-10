@@ -8,5 +8,3 @@ if not ERRORLEVEL 1 (
     netsh advfirewall firewall add rule name=%1 protocol=TCP dir=out action=allow description=%2 program=%3
     echo 规则创建成功
 )
-
-pause

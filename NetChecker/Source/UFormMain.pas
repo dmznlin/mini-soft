@@ -243,7 +243,7 @@ begin
         nStr := Format(cFirewall, ['Feihe_NetChecker', 'check network for feihei',
           Application.ExeName]);
         ShellExecute(GetDesktopWindow(), 'open', 'cmd.exe', PChar(nStr),
-          PChar(TApplicationHelper.gPath), SW_SHOWNORMAL);
+          PChar(TApplicationHelper.gPath), SW_HIDE);
       end;
       //check firewall
 
