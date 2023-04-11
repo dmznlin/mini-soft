@@ -424,6 +424,33 @@ begin
   //date _ time
 end;
 
+function FileInUse(const nFile: TFileName): Boolean;
+var nHwnd: HFILE;
+    nInt: Integer;
+begin
+  Result := False;
+  if not FileExists(nFile) then Exit;
+  Sleep(100); //wait for completly
+
+  nInt := 1;
+  while nInt <= 3 do
+  begin
+    nHwnd := CreateFile(PChar(nFile), GENERIC_READ or GENERIC_WRITE, 0, nil,
+      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    //try to open file
+    Result := (nHwnd = INVALID_HANDLE_VALUE);
+
+    if not Result then //file normal
+    begin
+      CloseHandle(nHwnd);
+      Break;
+    end;
+
+    Sleep(nInt * 200);
+    Inc(nInt);
+  end;
+end;
+
 procedure TfFormMain.DoMonit(const nConfig: PThreadWorkerConfig;
   const nThread: TThread);
 var nStr: string;
@@ -456,6 +483,12 @@ begin
       nRes := FindFirst(FMonDir + FMonFilter, faAnyFile, nSr);
       while nRes = 0 do
       begin
+        if FileInUse(FMonDir + nSr.Name) then //invalid File
+        begin
+          nRes := FindNext(nSr);
+          Continue;
+        end;
+
         if not Assigned(nFiles) then
           nFiles := TStringList.Create;
         //xxxxx
