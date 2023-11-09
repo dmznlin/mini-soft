@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFormMain;
 
+{$I Link.inc}
 interface
 
 uses
@@ -43,6 +44,7 @@ type
     MenuAbout: TMenuItem;
     N1: TMenuItem;
     MenuExit: TMenuItem;
+    Timer2: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Timer1Timer(Sender: TObject);
@@ -55,6 +57,7 @@ type
     procedure MenuAboutClick(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
     procedure Tray1Click(Sender: TObject);
+    procedure Timer2Timer(Sender: TObject);
   private
     { Private declarations }
     FCanExit: Boolean;
@@ -117,12 +120,14 @@ end;
 
 procedure TfFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  {$IFNDEF Debug}
   if not FCanExit then
   begin
     Visible := False;
     Action := caNone;
     Exit;
   end;
+  {$ENDIF}
 
   ActionSync(False);
   SystemConfig(False);
@@ -134,6 +139,16 @@ begin
   with TDateTimeHelper do
     SBar1.SimpleText := '¡ù.' + DateTime2Str(Now()) + ' ' + Date2Week();
   //xxxxx
+end;
+
+procedure TfFormMain.Timer2Timer(Sender: TObject);
+begin
+  Timer2.Enabled := False;
+  if gSystemParam.FAutoHide then
+  begin
+    CheckSrv.Checked := True;  //Æô¶¯·þÎñ
+    Visible := False;
+  end;
 end;
 
 procedure TfFormMain.Tray1Click(Sender: TObject);

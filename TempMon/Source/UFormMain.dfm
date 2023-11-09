@@ -1524,19 +1524,19 @@ object fFormMain: TfFormMain
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
-    Left = 536
+    Left = 304
     Top = 32
   end
   object Tray1: TTrayIcon
     PopupMenu = PMenu1
     Visible = True
     OnClick = Tray1Click
-    Left = 501
+    Left = 421
     Top = 32
   end
   object PMenu1: TPopupMenu
     AutoHotkeys = maManual
-    Left = 464
+    Left = 456
     Top = 32
     object MenuAbout: TMenuItem
       Caption = #20851#20110'...'
@@ -1549,5 +1549,11 @@ object fFormMain: TfFormMain
       Caption = #36864#20986#31995#32479
       OnClick = MenuExitClick
     end
+  end
+  object Timer2: TTimer
+    Interval = 100
+    OnTimer = Timer2Timer
+    Left = 337
+    Top = 32
   end
 end
