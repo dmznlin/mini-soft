@@ -1355,6 +1355,7 @@ object fFormMain: TfFormMain
         Height = 22
         Align = alTop
         BevelOuter = bvNone
+        PopupMenu = PMenu2
         TabOrder = 0
         DesignSize = (
           564
@@ -1536,7 +1537,7 @@ object fFormMain: TfFormMain
   end
   object PMenu1: TPopupMenu
     AutoHotkeys = maManual
-    Left = 456
+    Left = 458
     Top = 32
     object MenuAbout: TMenuItem
       Caption = #20851#20110'...'
@@ -1555,5 +1556,21 @@ object fFormMain: TfFormMain
     OnTimer = Timer2Timer
     Left = 337
     Top = 32
+  end
+  object PMenu2: TPopupMenu
+    AutoHotkeys = maManual
+    Left = 497
+    Top = 32
+    object MenuCLog: TMenuItem
+      Caption = #28165#31354#26085#24535
+      OnClick = MenuCLogClick
+    end
+    object MenuItem2: TMenuItem
+      Caption = '-'
+    end
+    object MenuMStaus: TMenuItem
+      Caption = #20869#23384#29366#24577
+      OnClick = MenuMStausClick
+    end
   end
 end

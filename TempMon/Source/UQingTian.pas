@@ -11,7 +11,8 @@ interface
 
 uses
   System.Classes, System.SysUtils, IdBaseComponent, IdComponent, IdTCPConnection,
-  IdHTTP, superobject, ULibFun, UWaitItem, UManagerGroup, USysConst;
+  IdHTTP, superobject, Winapi.ActiveX, ULibFun, UWaitItem, UManagerGroup,
+  USysConst;
 
 type
   TDeviceData = record
@@ -32,7 +33,9 @@ type
 
   TDataSync = class(TThread)
   private
-    FHttp: TIdHTTP;
+    FListA: TStrings;
+    {*string list*}
+    FHttpQingTian: TIdHTTP;
     {*http client*}
     FWaiter: TWaitObject;
     {*time counter*}
@@ -42,7 +45,8 @@ type
     {*device update counter*}
   protected
     procedure DoSyncDB;
-    function DoSync(const nPage, nPageSize: Integer): Boolean;
+    function DoSyncQingTian(const nPage, nPageSize: Integer): Boolean;
+    procedure DoSync;
     procedure Execute; override;
     {*执行同步*}
     function FindDevice(const nID: string): Integer;
@@ -71,6 +75,7 @@ begin
   FreeOnTerminate := False;
 
   SetLength(FDevices, 0);
+  FListA := TStringList.Create;
   FWaiter := TWaitObject.Create();
   FWaiter.Interval := gSystemParam.FFreshRate * 1000;
 end;
@@ -78,6 +83,7 @@ end;
 destructor TDataSync.Destroy;
 begin
   FreeAndNil(FWaiter);
+  FreeAndNil(FListA);
   inherited;
 end;
 
@@ -114,20 +120,33 @@ end;
 
 procedure TDataSync.Execute;
 var nStr: string;
-    nPage: Integer;
 begin
-  FHttp := TIdHTTP.Create(nil);
-  with FHttp, gSystemParam do
-  begin
-    Request.CustomHeaders.Clear;
-    Request.CustomHeaders.AddValue('app_id', FAppID);
-    Request.CustomHeaders.AddValue('app_key', FAppKey);
+  CoInitialize(nil);
+  try
+    FHttpQingTian := TIdHTTP.Create(nil);
+    with FHttpQingTian, gSystemParam do
+    begin
+      Request.CustomHeaders.Clear;
+      Request.CustomHeaders.AddValue('app_id', FAppID);
+      Request.CustomHeaders.AddValue('app_key', FAppKey);
 
-    nStr := TEncodeHelper.EncodeMD5(FAppID + '&' + FAppKey);
-    Request.CustomHeaders.AddValue('sign', UpperCase(nStr));
-    Request.ContentType := FContentType;
+      nStr := TEncodeHelper.EncodeMD5(FAppID + '&' + FAppKey);
+      Request.CustomHeaders.AddValue('sign', UpperCase(nStr));
+      Request.ContentType := FContentType;
+    end;
+
+    DoSync;
+    //do sync
+  finally
+    FreeAndNil(FHttpQingTian);
+    CoUninitialize();
   end;
+end;
 
+
+procedure TDataSync.DoSync;
+var nPage: Integer;
+begin
   while not Terminated do
   begin
     try
@@ -135,7 +154,7 @@ begin
       nPage := 1;
       //init
 
-      while DoSync(nPage, 50) do
+      while DoSyncQingTian(nPage, 50) do
         Inc(nPage);
       //sync data
 
@@ -152,8 +171,6 @@ begin
     FWaiter.EnterWait;
     //delay
   end;
-
-  FreeAndNil(FHttp);
 end;
 
 //Date: 2023-11-09
@@ -181,7 +198,7 @@ end;
 //Date: 2023-11-09
 //Parm: 分页页码;分页大小
 //Desc: 更新第nPage页的数据
-function TDataSync.DoSync(const nPage, nPageSize: Integer): Boolean;
+function TDataSync.DoSyncQingTian(const nPage, nPageSize: Integer): Boolean;
 var nStr: string;
     i,nIdx,nLen: Integer;
     nDate: TDateTime;
@@ -194,7 +211,7 @@ begin
   nStr := Format(nStr, [nPage, nPageSize]);
   //4.2 批量查询设备最新数据: 批量查询设备上报平台的最新数据
 
-  nStr := FHttp.Get(gSystemParam.FServerURI + nStr);
+  nStr := FHttpQingTian.Get(gSystemParam.FServerURI + nStr);
   nLen := Length(nStr);
   nIdx := -1;
 
@@ -266,8 +283,39 @@ end;
 //Date: 2023-11-09
 //Desc: 同步写入数据库
 procedure TDataSync.DoSyncDB;
+var nStr: string;
+    nIdx: Integer;
 begin
+  FListA.Clear;
+  //init
 
+  for nIdx := Low(FDevices) to High(FDevices) do
+  begin
+    if not FDevices[nIdx].FNewUpdate then Continue;
+    //no new data
+
+    with TSQLBuilder,FDevices[nIdx] do
+    nStr := MakeSQLByStr([
+        SF('deviceId', FDevice),
+        SF('HeatAcc', FHeatAcc, sfVal),
+        SF('ColdAcc', FColdAcc, sfVal),
+        SF('Heat', FHeat, sfVal),
+        SF('TempInlet', FTempIn, sfVal),
+        SF('TempOutlet', FTempOut, sfVal),
+        SF('TimeAcc', FTimeAcc, sfVal),
+        SF('FlowAcc', FFlowAcc, sfVal),
+        SF('Qflow', FQflow, sfVal),
+        SF('Pressure', FPressure, sfVal),
+        SF('Status', FStatus),
+        SF('UpdateTime', TDateTimeHelper.DateTime2Str(FUpTime)),
+        SF('CreateTime', TDateTimeHelper.DateTime2Str(Now))
+      ], 'nbheat', '', True);
+    FListA.Add(nStr);
+  end;
+
+  if FListA.Count > 0 then
+    gMG.FDBManager.DBExecute(FListA);
+  //do write
 end;
 
 end.

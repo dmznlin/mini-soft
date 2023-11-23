@@ -45,6 +45,10 @@ type
     N1: TMenuItem;
     MenuExit: TMenuItem;
     Timer2: TTimer;
+    PMenu2: TPopupMenu;
+    MenuCLog: TMenuItem;
+    MenuItem2: TMenuItem;
+    MenuMStaus: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Timer1Timer(Sender: TObject);
@@ -58,6 +62,8 @@ type
     procedure MenuExitClick(Sender: TObject);
     procedure Tray1Click(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
+    procedure MenuCLogClick(Sender: TObject);
+    procedure MenuMStausClick(Sender: TObject);
   private
     { Private declarations }
     FCanExit: Boolean;
@@ -165,10 +171,20 @@ begin
   //xxxxx
 end;
 
+procedure TfFormMain.MenuCLogClick(Sender: TObject);
+begin
+  MemoLog.Clear;
+end;
+
 procedure TfFormMain.MenuExitClick(Sender: TObject);
 begin
   FCanExit := True;
   Close;
+end;
+
+procedure TfFormMain.MenuMStausClick(Sender: TObject);
+begin
+  gMG.GetManagersStatus(MemoLog.Lines);
 end;
 
 //Date: 2018-01-11
