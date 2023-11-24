@@ -3,11 +3,11 @@ object fFormMain: TfFormMain
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = #20379#26262#31649#32593#30417#27979
-  ClientHeight = 363
-  ClientWidth = 572
+  ClientHeight = 423
+  ClientWidth = 612
   Color = clBtnFace
-  Constraints.MinHeight = 390
-  Constraints.MinWidth = 580
+  Constraints.MinHeight = 450
+  Constraints.MinWidth = 620
   Font.Charset = GB2312_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
@@ -20,29 +20,32 @@ object fFormMain: TfFormMain
   TextHeight = 12
   object SBar1: TStatusBar
     Left = 0
-    Top = 344
-    Width = 572
+    Top = 404
+    Width = 612
     Height = 19
     Panels = <
       item
         Width = 100
       end>
     SimplePanel = True
+    ExplicitTop = 399
+    ExplicitWidth = 607
   end
   object HintPanel: TPanel
     Left = 0
     Top = 0
-    Width = 572
+    Width = 612
     Height = 80
     Align = alTop
     BevelOuter = bvNone
     Ctl3D = True
     ParentCtl3D = False
     TabOrder = 1
+    ExplicitWidth = 607
     object Image1: TImage
       Left = 0
       Top = 0
-      Width = 351
+      Width = 391
       Height = 80
       Align = alClient
       AutoSize = True
@@ -716,7 +719,7 @@ object fFormMain: TfFormMain
       ExplicitWidth = 717
     end
     object Image2: TImage
-      Left = 351
+      Left = 391
       Top = 0
       Width = 221
       Height = 80
@@ -1338,27 +1341,32 @@ object fFormMain: TfFormMain
   object wPage1: TPageControl
     Left = 0
     Top = 80
-    Width = 572
-    Height = 264
-    ActivePage = Sheet1
+    Width = 612
+    Height = 324
+    ActivePage = Sheet2
     Align = alClient
     MultiLine = True
     Style = tsFlatButtons
     TabOrder = 2
     OnChanging = wPage1Changing
+    ExplicitWidth = 607
+    ExplicitHeight = 319
     object Sheet1: TTabSheet
       Caption = #36816#34892#26085#24535
+      ExplicitWidth = 599
+      ExplicitHeight = 288
       object Panel1: TPanel
         Left = 0
         Top = 0
-        Width = 564
+        Width = 604
         Height = 22
         Align = alTop
         BevelOuter = bvNone
         PopupMenu = PMenu2
         TabOrder = 0
+        ExplicitWidth = 599
         DesignSize = (
-          564
+          604
           22)
         object CheckSrv: TCheckBox
           Left = 2
@@ -1370,7 +1378,7 @@ object fFormMain: TfFormMain
           OnClick = CheckSrvClick
         end
         object CheckShowLog: TCheckBox
-          Left = 484
+          Left = 524
           Top = 2
           Width = 80
           Height = 17
@@ -1380,145 +1388,186 @@ object fFormMain: TfFormMain
           State = cbChecked
           TabOrder = 1
           OnClick = CheckShowLogClick
+          ExplicitLeft = 519
         end
       end
       object MemoLog: TMemo
         Left = 0
         Top = 22
-        Width = 564
-        Height = 211
+        Width = 604
+        Height = 271
         Align = alClient
         ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
         ScrollBars = ssBoth
         TabOrder = 1
+        ExplicitWidth = 599
+        ExplicitHeight = 266
       end
     end
     object Sheet2: TTabSheet
       Caption = #21442#25968#35774#32622
       ImageIndex = 1
-      DesignSize = (
-        564
-        233)
-      object Group1: TGroupBox
-        Left = 3
-        Top = 5
-        Width = 558
-        Height = 80
-        Anchors = [akLeft, akTop, akRight]
-        Caption = #22522#26412
+      OnResize = Sheet2Resize
+      ExplicitWidth = 599
+      ExplicitHeight = 288
+      object PanelBase: TPanel
+        Left = 2
+        Top = 2
+        Width = 595
+        Height = 285
+        BevelOuter = bvNone
         TabOrder = 0
-        object Label1: TLabel
-          Left = 223
-          Top = 54
-          Width = 54
-          Height = 12
-          Caption = #25289#21462#39057#29575':'
-        end
-        object Label2: TLabel
-          Left = 405
-          Top = 54
-          Width = 48
-          Height = 12
-          Caption = #21333#20301': '#31186
-        end
-        object CheckRun: TCheckBox
-          Left = 12
-          Top = 20
-          Width = 97
-          Height = 17
-          Caption = #24320#26426#33258#21551#21160
+        object Group1: TGroupBox
+          Left = 3
+          Top = 3
+          Width = 588
+          Height = 80
+          Caption = #22522#26412
           TabOrder = 0
-          OnClick = CheckRunClick
+          object Label1: TLabel
+            Left = 252
+            Top = 54
+            Width = 54
+            Height = 12
+            Caption = #25289#21462#39057#29575':'
+          end
+          object Label2: TLabel
+            Left = 405
+            Top = 54
+            Width = 48
+            Height = 12
+            Caption = #21333#20301': '#31186
+          end
+          object CheckRun: TCheckBox
+            Left = 12
+            Top = 20
+            Width = 97
+            Height = 17
+            Caption = #24320#26426#33258#21551#21160
+            TabOrder = 0
+            OnClick = CheckRunClick
+          end
+          object CheckMin: TCheckBox
+            Left = 12
+            Top = 51
+            Width = 97
+            Height = 17
+            Caption = #21551#21160#21518#38544#34255
+            TabOrder = 1
+            OnClick = CheckRunClick
+          end
+          object EditPwd: TLabeledEdit
+            Left = 310
+            Top = 19
+            Width = 120
+            Height = 20
+            EditLabel.Width = 54
+            EditLabel.Height = 12
+            EditLabel.Caption = #31649#29702#23494#30721':'
+            LabelPosition = lpLeft
+            PasswordChar = '*'
+            TabOrder = 2
+            OnExit = EditAKeyExit
+          end
+          object EditRate: TSpinEdit
+            Left = 310
+            Top = 49
+            Width = 120
+            Height = 21
+            MaxValue = 0
+            MinValue = 0
+            TabOrder = 3
+            Value = 0
+            OnChange = EditRateChange
+          end
         end
-        object CheckMin: TCheckBox
-          Left = 12
-          Top = 51
-          Width = 97
-          Height = 17
-          Caption = #21551#21160#21518#38544#34255
+        object GroupBox1: TGroupBox
+          Left = 3
+          Top = 90
+          Width = 588
+          Height = 110
+          Caption = #38738#22825#26381#21153' - API'
           TabOrder = 1
-          OnClick = CheckRunClick
+          object EditURI: TLabeledEdit
+            Left = 8
+            Top = 35
+            Width = 285
+            Height = 20
+            EditLabel.Width = 24
+            EditLabel.Height = 12
+            EditLabel.Caption = 'URI:'
+            TabOrder = 0
+            Text = 'http://81.70.1.19:8007'
+            OnExit = EditAKeyExit
+          end
+          object EditCType: TLabeledEdit
+            Left = 8
+            Top = 75
+            Width = 285
+            Height = 20
+            EditLabel.Width = 78
+            EditLabel.Height = 12
+            EditLabel.Caption = 'Content-Type:'
+            TabOrder = 1
+            Text = 'application/json'
+            OnExit = EditAKeyExit
+          end
+          object EditAID: TLabeledEdit
+            Left = 310
+            Top = 35
+            Width = 265
+            Height = 20
+            EditLabel.Width = 42
+            EditLabel.Height = 12
+            EditLabel.Caption = 'app_id:'
+            TabOrder = 2
+            Text = '6d0cf6cc-7e02-4617-9a4d-11ad794758e1'
+            OnExit = EditAKeyExit
+          end
+          object EditAKey: TLabeledEdit
+            Left = 310
+            Top = 75
+            Width = 265
+            Height = 20
+            EditLabel.Width = 48
+            EditLabel.Height = 12
+            EditLabel.Caption = 'app_key:'
+            TabOrder = 3
+            Text = '20231106091814780457'
+            OnExit = EditAKeyExit
+          end
         end
-        object EditPwd: TLabeledEdit
-          Left = 280
-          Top = 19
-          Width = 120
-          Height = 20
-          EditLabel.Width = 54
-          EditLabel.Height = 12
-          EditLabel.Caption = #31649#29702#23494#30721':'
-          LabelPosition = lpLeft
-          PasswordChar = '*'
+        object GroupBox2: TGroupBox
+          Left = 3
+          Top = 208
+          Width = 588
+          Height = 70
+          Caption = #19977#20029#28201#24230' - API'
           TabOrder = 2
-          OnExit = EditAKeyExit
-        end
-        object EditRate: TSpinEdit
-          Left = 280
-          Top = 49
-          Width = 120
-          Height = 21
-          MaxValue = 0
-          MinValue = 0
-          TabOrder = 3
-          Value = 0
-          OnChange = EditRateChange
-        end
-      end
-      object GroupBox1: TGroupBox
-        Left = 3
-        Top = 90
-        Width = 558
-        Height = 110
-        Anchors = [akLeft, akTop, akRight]
-        Caption = #38738#22825#26381#21153' - API'
-        TabOrder = 1
-        object EditURI: TLabeledEdit
-          Left = 8
-          Top = 35
-          Width = 265
-          Height = 20
-          EditLabel.Width = 24
-          EditLabel.Height = 12
-          EditLabel.Caption = 'URI:'
-          TabOrder = 0
-          Text = 'http://81.70.1.19:8007'
-          OnExit = EditAKeyExit
-        end
-        object EditCType: TLabeledEdit
-          Left = 8
-          Top = 75
-          Width = 265
-          Height = 20
-          EditLabel.Width = 78
-          EditLabel.Height = 12
-          EditLabel.Caption = 'Content-Type:'
-          TabOrder = 1
-          Text = 'application/json'
-          OnExit = EditAKeyExit
-        end
-        object EditAID: TLabeledEdit
-          Left = 280
-          Top = 35
-          Width = 265
-          Height = 20
-          EditLabel.Width = 42
-          EditLabel.Height = 12
-          EditLabel.Caption = 'app_id:'
-          TabOrder = 2
-          Text = '6d0cf6cc-7e02-4617-9a4d-11ad794758e1'
-          OnExit = EditAKeyExit
-        end
-        object EditAKey: TLabeledEdit
-          Left = 280
-          Top = 75
-          Width = 265
-          Height = 20
-          EditLabel.Width = 48
-          EditLabel.Height = 12
-          EditLabel.Caption = 'app_key:'
-          TabOrder = 3
-          Text = '20231106091814780457'
-          OnExit = EditAKeyExit
+          object EditURI2: TLabeledEdit
+            Left = 8
+            Top = 35
+            Width = 285
+            Height = 20
+            EditLabel.Width = 24
+            EditLabel.Height = 12
+            EditLabel.Caption = 'URI:'
+            TabOrder = 0
+            Text = 'http://dev.samleetek.com:9006/temp/realData'
+            OnExit = EditAKeyExit
+          end
+          object EditCType2: TLabeledEdit
+            Left = 310
+            Top = 35
+            Width = 265
+            Height = 20
+            EditLabel.Width = 78
+            EditLabel.Height = 12
+            EditLabel.Caption = 'Content-Type:'
+            TabOrder = 1
+            Text = 'application/json;charset=utf-8'
+            OnExit = EditAKeyExit
+          end
         end
       end
     end

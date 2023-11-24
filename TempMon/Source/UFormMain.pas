@@ -27,18 +27,6 @@ type
     CheckSrv: TCheckBox;
     CheckShowLog: TCheckBox;
     MemoLog: TMemo;
-    Group1: TGroupBox;
-    CheckRun: TCheckBox;
-    CheckMin: TCheckBox;
-    EditPwd: TLabeledEdit;
-    GroupBox1: TGroupBox;
-    EditURI: TLabeledEdit;
-    EditCType: TLabeledEdit;
-    EditAID: TLabeledEdit;
-    EditAKey: TLabeledEdit;
-    EditRate: TSpinEdit;
-    Label1: TLabel;
-    Label2: TLabel;
     Tray1: TTrayIcon;
     PMenu1: TPopupMenu;
     MenuAbout: TMenuItem;
@@ -49,6 +37,22 @@ type
     MenuCLog: TMenuItem;
     MenuItem2: TMenuItem;
     MenuMStaus: TMenuItem;
+    PanelBase: TPanel;
+    Group1: TGroupBox;
+    Label1: TLabel;
+    Label2: TLabel;
+    CheckRun: TCheckBox;
+    CheckMin: TCheckBox;
+    EditPwd: TLabeledEdit;
+    EditRate: TSpinEdit;
+    GroupBox1: TGroupBox;
+    EditURI: TLabeledEdit;
+    EditCType: TLabeledEdit;
+    EditAID: TLabeledEdit;
+    EditAKey: TLabeledEdit;
+    GroupBox2: TGroupBox;
+    EditURI2: TLabeledEdit;
+    EditCType2: TLabeledEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Timer1Timer(Sender: TObject);
@@ -64,6 +68,7 @@ type
     procedure Timer2Timer(Sender: TObject);
     procedure MenuCLogClick(Sender: TObject);
     procedure MenuMStausClick(Sender: TObject);
+    procedure Sheet2Resize(Sender: TObject);
   private
     { Private declarations }
     FCanExit: Boolean;
@@ -120,6 +125,7 @@ begin
 
   FCanExit := False;
   wPage1.ActivePage := Sheet1;
+
   SystemConfig(True);
   TApplicationHelper.LoadFormConfig(Self);
 end;
@@ -211,11 +217,16 @@ begin
       //init first
 
       gSystemParam.FAutoHide := ReadBool('Config', 'MinAfterRun', False);
-      gSystemParam.FServerURI := ReadString('Config', 'ServerURI', '');
-      gSystemParam.FContentType := ReadString('Config', 'ContentType', '');
-      gSystemParam.FAppID := ReadString('Config', 'AppID', '');
-      gSystemParam.FAppKey := ReadString('Config', 'AppKey', '');
+      gSystemParam.FServerURI := ReadString('Config', 'ServerURI', EditURI.Text);
+      gSystemParam.FContentType := ReadString('Config', 'ContentType', EditCType.Text);
+      gSystemParam.FAppID := ReadString('Config', 'AppID', EditAID.Text);
+      gSystemParam.FAppKey := ReadString('Config', 'AppKey', EditAKey.Text);
       gSystemParam.FFreshRate := ReadInteger('Config', 'FreshRate', 60);
+      //qingtian
+
+      gSystemParam.FSamleeServer := ReadString('Config', 'ServerURI_SL', EditURI2.Text);
+      gSystemParam.FSamleeCType := ReadString('Config', 'ContentType_SL', EditCType2.Text);
+      //samlee
 
       nStr := ReadString('Config', 'Password', '');
       if nStr <> '' then
@@ -248,6 +259,10 @@ begin
       nIni.WriteString('Config', 'AppKey', gSystemParam.FAppKey);
       nIni.WriteBool('Config', 'MinAfterRun', gSystemParam.FAutoHide);
       nIni.WriteInteger('Config', 'FreshRate', gSystemParam.FFreshRate);
+
+      nIni.WriteString('Config', 'ServerURI_SL', gSystemParam.FSamleeServer);
+      nIni.WriteString('Config', 'ContentType_SL', gSystemParam.FSamleeCType);
+      //samlee
 
       nReg := TRegistry.Create;
       nReg.RootKey := HKEY_CURRENT_USER;
@@ -284,6 +299,20 @@ begin
   finally
     MemoLog.Lines.EndUpdate;
   end;
+end;
+
+//Desc: ²ÎÊý¾ÓÖÐ
+procedure TfFormMain.Sheet2Resize(Sender: TObject);
+const nSpace = 3;
+var nL: Integer;
+begin
+  nL := Trunc((PanelBase.Parent.Width - PanelBase.Width) / 2);
+  if nL < nSpace then
+    nL := nSpace;
+  //central base panel
+
+  PanelBase.Left := nL;
+  PanelBase.Top := nSpace;
 end;
 
 procedure TfFormMain.CheckShowLogClick(Sender: TObject);

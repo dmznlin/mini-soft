@@ -8,16 +8,19 @@ interface
 
 type
   TParamConfig = record
-    FChanged: Boolean; //已改动
-    FAutoRun: Boolean; //自启动
-    FAutoHide: Boolean; //启动后隐藏
-    FAdminPwd: string;  //管理密码
+    FChanged     : Boolean;                //已改动
+    FAutoRun     : Boolean;                //自启动
+    FAutoHide    : Boolean;                //启动后隐藏
+    FAdminPwd    : string;                 //管理密码
 
-    FServerURI: string;  //青天服务器
-    FContentType: string; //ct
-    FAppID: string;  //ai
-    FAppKey: string;  //ak
-    FFreshRate: Integer; //刷新频率(秒)
+    FServerURI   : string;                 //青天服务器
+    FContentType : string;                 //ct
+    FAppID       : string;                 //ai
+    FAppKey      : string;                 //ak
+    FFreshRate   : Integer;                //刷新频率(秒)
+
+    FSamleeServer: string;                 //三丽服务地址
+    FSamleeCType : string;                 //ct
   end;
 
 var

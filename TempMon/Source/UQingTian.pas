@@ -15,20 +15,37 @@ uses
   USysConst;
 
 type
+  TDeviceType = (dtQingTian, dtSamlee);
+  //设备类型
+
   TDeviceData = record
-    FDevice     : string;                        //设备ID
-    FHeatAcc    : Double;                        //累计热量(kW·h)
-    FColdAcc    : Double;                        //累计冷量(kW·h)
-    FHeat       : Double;                        //热功率(kW)
-    FTempIn     : Double;                        //进水温度
-    FTempOut    : Double;                        //回水温度
-    FTimeAcc    : Double;                        //累计工作时间(h)
-    FFlowAcc    : Double;                        //累计流量(m3)
-    FQflow      : Double;                        //瞬时流量(m3/h)
-    FPressure   : Double;                        //压力(MPa)
-    FStatus     : string;                        //状态码
-    FUpTime     : TDateTime;                     //更新时间
-    FNewUpdate  : Boolean;                       //是否新数据
+    FDevice     : string;                  //设备ID
+    FHeatAcc    : Double;                  //累计热量(kW·h)
+    FColdAcc    : Double;                  //累计冷量(kW·h)
+    FHeat       : Double;                  //热功率(kW)
+    FTempIn     : Double;                  //进水温度
+    FTempOut    : Double;                  //回水温度
+    FTimeAcc    : Double;                  //累计工作时间(h)
+    FFlowAcc    : Double;                  //累计流量(m3)
+    FQflow      : Double;                  //瞬时流量(m3/h)
+    FPressure   : Double;                  //压力(MPa)
+    FStatus     : string;                  //状态码
+    FUpTime     : TDateTime;               //更新时间
+    FNewUpdate  : Boolean;                 //是否新数据
+  end;
+
+  TDeviceSamlee = record
+    FDevice     : string;                  //设备ID
+    FRoomTemp   : Double;                  //室内温度 （室温采集器设备使用）
+    FWaterInTemp: Double;                  //进水温度 （管道测温设备使用）
+    FWaterBackTemp: Double;                //回水温度 （管道测温设备使用）
+    FHumidity   : Double;                  //湿度
+    FQos        : Integer;                 //信号质量
+    FBattery    : Integer;                 //电量
+    FUptime     : Integer;                 //上报时间分钟
+    FTempComp   : Double;                  //温度补偿
+    FRectime    : TDateTime;               //更新时间
+    FNewUpdate  : Boolean;                 //是否新数据
   end;
 
   TDataSync = class(TThread)
@@ -36,20 +53,26 @@ type
     FListA: TStrings;
     {*string list*}
     FHttpQingTian: TIdHTTP;
+    FHttpSamlee: TIdHTTP;
     {*http client*}
+    FSamleeList: TStrings;
+    {*samlee id list*}
     FWaiter: TWaitObject;
     {*time counter*}
-    FDevices: array of TDeviceData;
+    FDeviceQT: array of TDeviceData;
+    FDeviceSL: array of TDeviceSamlee;
     {*device buffer*}
     FUpdateCounter: Integer;
     {*device update counter*}
   protected
     procedure DoSyncDB;
     function DoSyncQingTian(const nPage, nPageSize: Integer): Boolean;
+    function DoSyncSamlee(const nPage, nPageSize: Integer): Boolean;
+    {*sync data*}
     procedure DoSync;
     procedure Execute; override;
     {*执行同步*}
-    function FindDevice(const nID: string): Integer;
+    function FindDevice(const nID: string; const nType:TDeviceType): Integer;
     {*检索设备*}
   public
     constructor Create();
@@ -74,7 +97,9 @@ begin
   inherited Create(False);
   FreeOnTerminate := False;
 
-  SetLength(FDevices, 0);
+  SetLength(FDeviceQT, 0);
+  SetLength(FDeviceSL, 0);
+
   FListA := TStringList.Create;
   FWaiter := TWaitObject.Create();
   FWaiter.Interval := gSystemParam.FFreshRate * 1000;
@@ -104,17 +129,30 @@ end;
 //Date: 2023-11-09
 //Parm: 设备id
 //Desc: 检索nID设备索引
-function TDataSync.FindDevice(const nID: string): Integer;
+function TDataSync.FindDevice(const nID: string; const nType:TDeviceType): Integer;
 var nIdx: Integer;
 begin
   Result := -1;
   //init
 
-  for nIdx := Low(FDevices) to High(FDevices) do
-  if FDevices[nIdx].FDevice = nID then
+  if nType = dtQingTian then
   begin
-    Result := nIdx;
-    Break;
+    for nIdx := Low(FDeviceQT) to High(FDeviceQT) do
+    if FDeviceQT[nIdx].FDevice = nID then
+    begin
+      Result := nIdx;
+      Break;
+    end;
+  end else 
+
+  if nType = dtSamlee then
+  begin
+    for nIdx := Low(FDeviceSL) to High(FDeviceSL) do
+    if FDeviceSL[nIdx].FDevice = nID then
+    begin
+      Result := nIdx;
+      Break;
+    end;
   end;
 end;
 
@@ -135,10 +173,37 @@ begin
       Request.ContentType := FContentType;
     end;
 
+    FHttpSamlee := TIdHTTP.Create(nil);
+    with FHttpSamlee, gSystemParam do
+    begin
+      Request.Clear;
+      Request.ContentType := FSamleeCType;
+    end;
+
+    FSamleeList := TStringList.Create;
+    nStr := 'select s_id from sensor ' +
+            'where s_type=''sltemp'' and s_valid=''Y''';
+    //query valid samlee sensor
+    
+    with gMG.FDBManager.DBQuery(nStr) do
+    begin
+      if RecordCount > 0 then
+      begin
+        First;
+        while not Eof do
+        begin
+          FSamleeList.Add(Fields[0].AsString);
+          Next;
+        end;        
+      end;
+    end;
+
     DoSync;
     //do sync
   finally
+    FreeAndNil(FSamleeList);
     FreeAndNil(FHttpQingTian);
+    FreeAndNil(FHttpSamlee);
     CoUninitialize();
   end;
 end;
@@ -156,7 +221,12 @@ begin
 
       while DoSyncQingTian(nPage, 50) do
         Inc(nPage);
-      //sync data
+      //sync qingtian
+
+      nPage := 1;
+      while DoSyncSamlee(nPage, 50) do
+        Inc(nPage);
+      //sync samlee
 
       if FUpdateCounter > 0 then
         DoSyncDB;
@@ -247,20 +317,20 @@ begin
   begin
     nDate := FormatDate(nDataBuf[i].S['UpdateTime']);
     //last update
-    nIdx := FindDevice(nDataBuf[i].S['deviceId']);
+    nIdx := FindDevice(nDataBuf[i].S['deviceId'], dtQingTian);
 
     if nIdx >= 0 then
     begin
-      if nDate <= FDevices[nIdx].FUpTime then Continue;
+      if nDate <= FDeviceQT[nIdx].FUpTime then Continue;
       //旧数据不予处理
     end else
     begin
-      nIdx := Length(FDevices);
-      SetLength(FDevices, nIdx+1);
-      FDevices[nIdx].FDevice := nDataBuf[i].S['deviceId'];
+      nIdx := Length(FDeviceQT);
+      SetLength(FDeviceQT, nIdx+1);
+      FDeviceQT[nIdx].FDevice := nDataBuf[i].S['deviceId'];
     end;
 
-    with FDevices[nIdx] do
+    with FDeviceQT[nIdx] do
     begin
       Inc(FUpdateCounter);
       FUpTime := nDate;
@@ -281,6 +351,114 @@ begin
 end;
 
 //Date: 2023-11-09
+//Parm: 分页页码;分页大小
+//Desc: 更新第nPage页设备列表的数据
+function TDataSync.DoSyncSamlee(const nPage, nPageSize: Integer): Boolean;
+var nStr: string;
+    i,nIdx,nLen: Integer;
+    nDate: TDateTime;
+    
+    nParam: TStringStream;    
+    nParse: ISuperObject;
+    nDataBuf: TSuperArray;
+begin
+  Result := False;
+  i := (nPage - 1) * nPageSize; //开始索引
+  nIdx := nPage * nPageSize - 1; //结束索引
+  
+  if (i > nIdx) or (i >= FSamleeList.Count) then 
+    Exit; 
+  //无效索引范围
+
+  if nIdx >= FSamleeList.Count then
+    nIdx := FSamleeList.Count - 1;
+  //索引列表上限
+    
+  nParam := nil;
+  try
+    FListA.Clear;
+    while nIdx >= i do
+    begin
+      FListA.Add(FSamleeList[nIdx]);  
+      Dec(nIdx);
+      //next
+    end;
+
+    nStr := '{' +
+      '  "devType":1,' +
+      '  "deviceID":[' +
+      '    %s' +
+      '  ]' +
+      '}';
+    nStr := Format(nStr, [TStringHelper.AdjustFormat(FListA, '"', True, ',', 
+      False, True)]);    
+    //build post data
+
+    nParam := TStringStream.Create(nStr);
+    nStr := FHttpSamlee.Post(gSystemParam.FSamleeServer, nParam);
+    nLen := Length(nStr);
+    
+    nIdx := -1;
+    for i := TStringHelper.cFI to nLen do
+    if nStr[i] <> #32 then //过滤前端空格
+    begin
+      if nStr[i] = '{' then
+        nIdx := i;
+      Break;
+    end;
+
+    if nIdx < 0 then
+    begin
+      WriteLog('三丽服务器返回无效json数据: ' + TEncodeHelper.EncodeBase64(nStr));
+      Exit;
+    end;
+  
+    Result := True;
+    nParse := SO(nStr);
+    //parse json
+    
+    nDataBuf := nParse['devList'].AsArray;
+    nLen := nDataBuf.Length - 1;
+
+    for i := 0 to nLen do
+    begin
+      nDate := TDateTimeHelper.Str2DateTime(nDataBuf[i].S['rectime']);
+      //last update
+      nIdx := FindDevice(nDataBuf[i].S['deviceID'], dtSamlee);
+
+      if nIdx >= 0 then
+      begin
+        if nDate <= FDeviceSL[nIdx].FRectime then Continue;
+        //旧数据不予处理
+      end else
+      begin
+        nIdx := Length(FDeviceSL);
+        SetLength(FDeviceSL, nIdx+1);
+        FDeviceSL[nIdx].FDevice := nDataBuf[i].S['deviceID'];
+      end;
+
+      with FDeviceSL[nIdx] do
+      begin
+        Inc(FUpdateCounter);
+        FRectime := nDate;
+        FNewUpdate := True;
+
+        FRoomTemp       := nDataBuf[i].D['roomTemp'];
+        FWaterInTemp    := nDataBuf[i].D['waterInTemp'];
+        FWaterBackTemp  := nDataBuf[i].D['waterBackTemp'];
+        FHumidity       := nDataBuf[i].D['humidity'];
+        FQos            := nDataBuf[i].I['qos'];
+        FBattery        := nDataBuf[i].I['battery'];
+        FUptime         := nDataBuf[i].I['uptime'];
+        FTempComp       := nDataBuf[i].D['tempComp'];
+      end;
+    end;
+  finally
+    nParam.Free;
+  end;
+end;
+
+//Date: 2023-11-09
 //Desc: 同步写入数据库
 procedure TDataSync.DoSyncDB;
 var nStr: string;
@@ -289,12 +467,13 @@ begin
   FListA.Clear;
   //init
 
-  for nIdx := Low(FDevices) to High(FDevices) do
+  for nIdx := Low(FDeviceQT) to High(FDeviceQT) do
   begin
-    if not FDevices[nIdx].FNewUpdate then Continue;
+    if not FDeviceQT[nIdx].FNewUpdate then Continue;
     //no new data
+    FDeviceQT[nIdx].FNewUpdate := False;
 
-    with TSQLBuilder,FDevices[nIdx] do
+    with TSQLBuilder,FDeviceQT[nIdx] do
     nStr := MakeSQLByStr([
         SF('deviceId', FDevice),
         SF('HeatAcc', FHeatAcc, sfVal),
@@ -311,8 +490,41 @@ begin
         SF('CreateTime', TDateTimeHelper.DateTime2Str(Now))
       ], 'nbheat', '', True);
     FListA.Add(nStr);
+
+    nStr := 'IF NOT EXISTS (SELECT * FROM sensor WHERE s_id=''$id'')' +
+      'BEGIN' +
+      '  INSERT INTO sensor (s_id,s_type,s_valid) ' +
+      '  VALUES (''$id'', ''nbheat'', ''Y'');' +
+      'END';
+    //new sensor
+
+    with TStringHelper do
+    nStr := MacroValue(nStr, [MI('$id', FDeviceQT[nIdx].FDevice)]);
+    FListA.Add(nStr);
   end;
 
+  for nIdx := Low(FDeviceSL) to High(FDeviceSL) do
+  begin
+    if not FDeviceSL[nIdx].FNewUpdate then Continue;
+    //no new data
+    FDeviceSL[nIdx].FNewUpdate := False;
+
+    with TSQLBuilder,FDeviceSL[nIdx] do
+    nStr := MakeSQLByStr([
+        SF('sl_id', FDevice),
+        SF('sl_room', FRoomTemp, sfVal),
+        SF('sl_waterIn', FWaterInTemp, sfVal),
+        SF('sl_waterBack', FWaterBackTemp, sfVal),
+        SF('sl_humidity', FHumidity, sfVal),
+        SF('sl_qos', FQos, sfVal),
+        SF('sl_battery', FBattery, sfVal),
+        SF('sl_tempComp', FTempComp, sfVal),
+        SF('sl_update', TDateTimeHelper.DateTime2Str(FRectime)),
+        SF('sl_create', TDateTimeHelper.DateTime2Str(Now))
+      ], 'samlee', '', True);
+    FListA.Add(nStr);
+  end;
+       
   if FListA.Count > 0 then
     gMG.FDBManager.DBExecute(FListA);
   //do write
