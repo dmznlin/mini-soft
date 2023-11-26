@@ -7,6 +7,7 @@
 *******************************************************************************}
 unit UQingTian;
 
+{$I Link.Inc}
 interface
 
 uses
@@ -15,9 +16,6 @@ uses
   USysConst;
 
 type
-  TDeviceType = (dtQingTian, dtSamlee);
-  //设备类型
-
   TDeviceData = record
     FDevice     : string;                  //设备ID
     FHeatAcc    : Double;                  //累计热量(kW·h)
@@ -62,6 +60,8 @@ type
     FDeviceQT: array of TDeviceData;
     FDeviceSL: array of TDeviceSamlee;
     {*device buffer*}
+    FCounterQT: Integer;
+    FCounterSL: Integer;
     FUpdateCounter: Integer;
     {*device update counter*}
   protected
@@ -102,7 +102,7 @@ begin
 
   FListA := TStringList.Create;
   FWaiter := TWaitObject.Create();
-  FWaiter.Interval := gSystemParam.FFreshRate * 1000;
+  FWaiter.Interval := 1 * 1000;
 end;
 
 destructor TDataSync.Destroy;
@@ -171,18 +171,19 @@ begin
       nStr := TEncodeHelper.EncodeMD5(FAppID + '&' + FAppKey);
       Request.CustomHeaders.AddValue('sign', UpperCase(nStr));
       Request.ContentType := FContentType;
-    end;
+    end; //qingtian client
 
     FHttpSamlee := TIdHTTP.Create(nil);
     with FHttpSamlee, gSystemParam do
     begin
       Request.Clear;
       Request.ContentType := FSamleeCType;
-    end;
+    end; //samlee client
 
     FSamleeList := TStringList.Create;
-    nStr := 'select s_id from sensor ' +
-            'where s_type=''sltemp'' and s_valid=''Y''';
+    nStr := 'select s_id from %s ' +
+            'where s_type=''%s'' and s_valid=''Y''';
+    nStr := Format(nStr, [sTable_Sensor, sDeviceType[dtSamlee]]);
     //query valid samlee sensor
     
     with gMG.FDBManager.DBQuery(nStr) do
@@ -196,7 +197,11 @@ begin
           Next;
         end;        
       end;
-    end;
+    end; //init samlee device list
+
+    FCounterQT := gSystemParam.FFreshRateQT;
+    FCounterSL := gSystemParam.FFreshRateSL;
+    //init counter
 
     DoSync;
     //do sync
@@ -214,23 +219,51 @@ var nPage: Integer;
 begin
   while not Terminated do
   begin
+    Inc(FCounterQT);
+    Inc(FCounterSL);
+
+    if (FCounterQT >= gSystemParam.FFreshRateQT) or
+       (FCounterSL >= gSystemParam.FFreshRateSL) then //计时结束
     try
       FUpdateCounter := 0;
       nPage := 1;
       //init
 
-      while DoSyncQingTian(nPage, 50) do
-        Inc(nPage);
-      //sync qingtian
+      if FCounterQT >= gSystemParam.FFreshRateQT then
+      begin
+        FCounterQT := 0;
+        //reset counter
 
-      nPage := 1;
-      while DoSyncSamlee(nPage, 50) do
-        Inc(nPage);
-      //sync samlee
+        while DoSyncQingTian(nPage, 50) do
+          Inc(nPage);
+        //sync qingtian
+
+        {$IFDEF DEBUG}
+        WriteLog(Format('青天数据: %d 条', [FUpdateCounter]));
+        {$ENDIF}
+      end;
+
+      if FCounterSL >= gSystemParam.FFreshRateSL then
+      begin
+        FCounterSL := 0;
+        //reset counter
+        nPage := 1;
+
+        while DoSyncSamlee(nPage, 50) do
+          Inc(nPage);
+        //sync samlee
+
+        {$IFDEF DEBUG}
+        WriteLog(Format('三丽数据: %d 条', [FUpdateCounter]));
+        {$ENDIF}
+      end;
 
       if FUpdateCounter > 0 then
+      begin
         DoSyncDB;
-      //write db
+        //write db
+        WriteLog(Format('更新数据: %d 条', [FUpdateCounter]));
+      end;
     except
       on nErr: Exception do
       begin
@@ -488,18 +521,20 @@ begin
         SF('Status', FStatus),
         SF('UpdateTime', TDateTimeHelper.DateTime2Str(FUpTime)),
         SF('CreateTime', TDateTimeHelper.DateTime2Str(Now))
-      ], 'nbheat', '', True);
+      ], sTable_QingTian, '', True);
     FListA.Add(nStr);
 
-    nStr := 'IF NOT EXISTS (SELECT * FROM sensor WHERE s_id=''$id'')' +
+    nStr := 'IF NOT EXISTS (SELECT * FROM $SS WHERE s_id=''$id'')' +
       'BEGIN' +
-      '  INSERT INTO sensor (s_id,s_type,s_valid) ' +
-      '  VALUES (''$id'', ''nbheat'', ''Y'');' +
+      '  INSERT INTO $SS(s_id,s_type,s_valid) ' +
+      '  VALUES (''$id'', ''$QT'', ''Y'');' +
       'END';
     //new sensor
 
     with TStringHelper do
-    nStr := MacroValue(nStr, [MI('$id', FDeviceQT[nIdx].FDevice)]);
+    nStr := MacroValue(nStr, [MI('$id', FDeviceQT[nIdx].FDevice),
+      MI('$SS', sTable_Sensor),
+      MI('$QT', sDeviceType[dtQingTian])]);
     FListA.Add(nStr);
   end;
 
@@ -521,7 +556,7 @@ begin
         SF('sl_tempComp', FTempComp, sfVal),
         SF('sl_update', TDateTimeHelper.DateTime2Str(FRectime)),
         SF('sl_create', TDateTimeHelper.DateTime2Str(Now))
-      ], 'samlee', '', True);
+      ], sTable_Samlee, '', True);
     FListA.Add(nStr);
   end;
        
