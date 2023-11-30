@@ -98,6 +98,7 @@ type
     procedure BtnDelClick(Sender: TObject);
     procedure TreeDevicesChange(Sender: TObject; Node: TTreeNode);
     procedure TreeDevicesDblClick(Sender: TObject);
+    procedure EditFindKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
     FCanExit: Boolean;
@@ -476,8 +477,11 @@ begin
   with gMG.FDBManager.DBQuery(nStr) do
   if RecordCount > 0 then
   begin
-    SetLength(gDevices, RecordCount);
-    nIdx := 0;
+    SetLength(gDevices, RecordCount + 1);
+    gDevices[0].FDeleted := True;
+    //TreeNode.Data = Pointer(0),索引0无法定位,故抛弃不用
+
+    nIdx := 1;
     First;
 
     while not Eof do
@@ -677,13 +681,25 @@ end;
 //Desc: 查找
 procedure TfFormMain.BtnFindClick(Sender: TObject);
 begin
+  if Length(gDevices) < 1 then
+    LoadDeviceFromDB();
   BuildDeviceTree(UpperCase(EditFind.Text));
+end;
+
+procedure TfFormMain.EditFindKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+  begin
+    Key := #0;
+    BtnFind.Click;
+    EditFind.SelectAll;
+  end;
 end;
 
 //Desc: 刷新列表
 procedure TfFormMain.BtnLoadClick(Sender: TObject);
 begin
-  LoadDeviceFromDB;
+  LoadDeviceFromDB();
   BuildDeviceTree('');
 end;
 
@@ -739,6 +755,7 @@ begin
     begin
       FRecord := '';
       FDevice := EditID.Text;
+      FDeleted := False;
       FType := FindSelectNodeType();
     end;
   end;
@@ -753,9 +770,6 @@ begin
     if FName = '' then
       FName := FDevice;
     //default
-
-    FDeleted := False;
-    //del flag
   end;
 
   //----------------------------------------------------------------------------

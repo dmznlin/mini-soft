@@ -88,7 +88,7 @@ implementation
 
 procedure WriteLog(const nEvent: string);
 begin
-  gMG.FLogManager.AddLog(TDataSync, '青天同步', nEvent);
+  gMG.FLogManager.AddLog(TDataSync, '远程同步服务', nEvent);
 end;
 
 //------------------------------------------------------------------------------
@@ -203,8 +203,26 @@ begin
     FCounterSL := gSystemParam.FFreshRateSL;
     //init counter
 
-    DoSync;
-    //do sync
+    while not Terminated do
+    begin
+      Inc(FCounterQT);
+      Inc(FCounterSL);
+
+      if (FCounterQT >= gSystemParam.FFreshRateQT) or
+         (FCounterSL >= gSystemParam.FFreshRateSL) then //计时结束
+      try
+        DoSync;
+        //do sync
+      except
+        on nErr: Exception do
+        begin
+          WriteLog('同步异常: ' + nErr.Message);
+        end;
+      end;
+
+      FWaiter.EnterWait;
+      //delay
+    end;
   finally
     FreeAndNil(FSamleeList);
     FreeAndNil(FHttpQingTian);
@@ -217,62 +235,54 @@ end;
 procedure TDataSync.DoSync;
 var nPage: Integer;
 begin
-  while not Terminated do
-  begin
-    Inc(FCounterQT);
-    Inc(FCounterSL);
+  FUpdateCounter := 0;
+  nPage := 1;
+  //init
 
-    if (FCounterQT >= gSystemParam.FFreshRateQT) or
-       (FCounterSL >= gSystemParam.FFreshRateSL) then //计时结束
-    try
-      FUpdateCounter := 0;
-      nPage := 1;
-      //init
+  if FCounterQT >= gSystemParam.FFreshRateQT then
+  try
+    FCounterQT := 0;
+    //reset counter
 
-      if FCounterQT >= gSystemParam.FFreshRateQT then
-      begin
-        FCounterQT := 0;
-        //reset counter
+    while DoSyncQingTian(nPage, 50) do
+      Inc(nPage);
+    //sync qingtian
 
-        while DoSyncQingTian(nPage, 50) do
-          Inc(nPage);
-        //sync qingtian
-
-        {$IFDEF DEBUG}
-        WriteLog(Format('青天数据: %d 条', [FUpdateCounter]));
-        {$ENDIF}
-      end;
-
-      if FCounterSL >= gSystemParam.FFreshRateSL then
-      begin
-        FCounterSL := 0;
-        //reset counter
-        nPage := 1;
-
-        while DoSyncSamlee(nPage, 50) do
-          Inc(nPage);
-        //sync samlee
-
-        {$IFDEF DEBUG}
-        WriteLog(Format('三丽数据: %d 条', [FUpdateCounter]));
-        {$ENDIF}
-      end;
-
-      if FUpdateCounter > 0 then
-      begin
-        DoSyncDB;
-        //write db
-        WriteLog(Format('更新数据: %d 条', [FUpdateCounter]));
-      end;
-    except
-      on nErr: Exception do
-      begin
-        WriteLog('同步异常: ' + nErr.Message);
-      end;
+    {$IFDEF DEBUG}
+    WriteLog(Format('青天数据: %d 条', [FUpdateCounter]));
+    {$ENDIF}
+  except
+    on nErr: Exception do
+    begin
+      WriteLog('青天异常: ' + nErr.Message);
     end;
+  end;
 
-    FWaiter.EnterWait;
-    //delay
+  if FCounterSL >= gSystemParam.FFreshRateSL then
+  try
+    FCounterSL := 0;
+    //reset counter
+    nPage := 1;
+
+    while DoSyncSamlee(nPage, 50) do
+      Inc(nPage);
+    //sync samlee
+
+    {$IFDEF DEBUG}
+    WriteLog(Format('三丽数据: %d 条', [FUpdateCounter]));
+    {$ENDIF}
+  except
+    on nErr: Exception do
+    begin
+      WriteLog('三丽异常: ' + nErr.Message);
+    end;
+  end;
+
+  if FUpdateCounter > 0 then
+  begin
+    DoSyncDB;
+    //write db
+    WriteLog(Format('更新数据: %d 条', [FUpdateCounter]));
   end;
 end;
 

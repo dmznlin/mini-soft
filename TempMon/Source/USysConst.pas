@@ -80,11 +80,12 @@ begin
   Result := -1;
 
   for nIdx := Low(gDevices) to High(gDevices) do
-  if CompareText(gDevices[nIdx].FDevice, nID) = 0 then
-  begin
-    Result := nIdx;
-    Break;
-  end;
+   with gDevices[nIdx] do
+    if (not FDeleted) and (CompareText(FDevice, nID) = 0) then
+    begin
+      Result := nIdx;
+      Break;
+    end;
 end;
 
 end.
