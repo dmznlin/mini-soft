@@ -12,7 +12,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, IdBaseComponent, IdComponent, IdTCPConnection,
-  IdHTTP, superobject, Winapi.ActiveX, ULibFun, UWaitItem, UManagerGroup,
+  IdHTTP, superobject, Winapi.ActiveX, Data.DB, ULibFun, UWaitItem, UManagerGroup,
   USysConst;
 
 type
@@ -158,12 +158,14 @@ end;
 
 procedure TDataSync.Execute;
 var nStr: string;
+    nDS: TDataSet;
 begin
   CoInitialize(nil);
   try
     FHttpQingTian := TIdHTTP.Create(nil);
     with FHttpQingTian, gSystemParam do
     begin
+      ConnectTimeout := 5 * 1000;
       Request.CustomHeaders.Clear;
       Request.CustomHeaders.AddValue('app_id', FAppID);
       Request.CustomHeaders.AddValue('app_key', FAppKey);
@@ -176,6 +178,7 @@ begin
     FHttpSamlee := TIdHTTP.Create(nil);
     with FHttpSamlee, gSystemParam do
     begin
+      ConnectTimeout := 5 * 1000;
       Request.Clear;
       Request.ContentType := FSamleeCType;
     end; //samlee client
@@ -185,18 +188,20 @@ begin
             'where s_type=''%s'' and s_valid=''Y''';
     nStr := Format(nStr, [sTable_Sensor, sDeviceType[dtSamlee]]);
     //query valid samlee sensor
-    
-    with gMG.FDBManager.DBQuery(nStr) do
-    begin
-      if RecordCount > 0 then
+
+    nDS := gMG.FDBManager.DBQuery(nStr);
+    try
+      if nDS.RecordCount > 0 then
       begin
-        First;
-        while not Eof do
+        nDS.First;
+        while not nDS.Eof do
         begin
-          FSamleeList.Add(Fields[0].AsString);
-          Next;
+          FSamleeList.Add(nDS.Fields[0].AsString);
+          nDS.Next;
         end;        
       end;
+    finally
+      gMG.FDBManager.ReleaseDBQuery(nDS);
     end; //init samlee device list
 
     FCounterQT := gSystemParam.FFreshRateQT;
@@ -279,11 +284,10 @@ begin
   end;
 
   if FUpdateCounter > 0 then
-  begin
     DoSyncDB;
-    //write db
-    WriteLog(Format('更新数据: %d 条', [FUpdateCounter]));
-  end;
+  //write db
+
+  WriteLog(Format('同步完毕,共更新: %d 条', [FUpdateCounter]));
 end;
 
 //Date: 2023-11-09

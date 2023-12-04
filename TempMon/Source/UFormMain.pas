@@ -123,7 +123,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.IniFiles, System.Win.Registry, Winapi.ShellAPI, UFormInputbox,
+  System.IniFiles, System.Win.Registry, Winapi.ShellAPI, Data.DB, UFormInputbox,
   UFormMessagebox, ULibFun, UManagerGroup, UQingTian;
 
 var
@@ -246,7 +246,7 @@ begin
 
   with gSystemParam do
   try
-    nIni := TIniFile.Create(TApplicationHelper.gSysConfig);
+    nIni := TIniFile.Create(TApplicationHelper.gFormConfig);
     //new obj
 
     if nLoad then
@@ -467,6 +467,7 @@ end;
 procedure LoadDeviceFromDB;
 var nStr: string;
     nIdx: Integer;
+    nDS: TDataSet;
     nDT: TDeviceType;
 begin
   SetLength(gDevices, 0);
@@ -474,9 +475,12 @@ begin
           'order by s_id asc';
   nStr := Format(nStr, [sTable_Sensor]);
 
-  with gMG.FDBManager.DBQuery(nStr) do
-  if RecordCount > 0 then
-  begin
+  nDS := gMG.FDBManager.DBQuery(nStr);
+  with nDS do
+  try
+    if RecordCount < 1 then Exit;
+    //no data
+
     SetLength(gDevices, RecordCount + 1);
     gDevices[0].FDeleted := True;
     //TreeNode.Data = Pointer(0),索引0无法定位,故抛弃不用
@@ -509,6 +513,8 @@ begin
       Inc(nIdx);
       Next;
     end;
+  finally
+    gMG.FDBManager.ReleaseDBQuery(nDS);
   end;
 end;
 
@@ -736,6 +742,7 @@ procedure TfFormMain.BtnSaveClick(Sender: TObject);
 var nStr: string;
     nIdx: Integer;
     nNode: TTreeNode;
+    nDS: TDataSet;
 begin
   EditID.Text := Trim(EditID.Text);
   if EditID.Text = '' then
@@ -787,15 +794,20 @@ begin
     gMG.FDBManager.DBExecute(nStr);
     //do write
 
-    nStr := 'select r_id,s_id from %s where s_id=''%s''';
+    nStr := 'select r_id,s_id from %s where s_id=''%s'' order by r_id desc';
     nStr := Format(nStr, [sTable_Sensor, gDevices[nIdx].FDevice]);
     //try get record
 
-    with gMG.FDBManager.DBQuery(nStr) do
-    if (RecordCount > 0) and
-       (Fields[1].AsString = gDevices[nIdx].FDevice) then
-    begin
-      gDevices[nIdx].FRecord := Fields[0].AsString;
+    nDS := gMG.FDBManager.DBQuery(nStr);
+    with nDS do
+    try
+      if (RecordCount > 0) and
+         (Fields[1].AsString = gDevices[nIdx].FDevice) then
+      begin
+        gDevices[nIdx].FRecord := Fields[0].AsString;
+      end;
+    finally
+      gMG.FDBManager.ReleaseDBQuery(nDS);
     end;
   end else
   begin
