@@ -216,8 +216,14 @@ begin
       if (FCounterQT >= gSystemParam.FFreshRateQT) or
          (FCounterSL >= gSystemParam.FFreshRateSL) then //计时结束
       try
+        FUpdateCounter := 0;
+        //init counter
+
         DoSync;
         //do sync
+
+        WriteLog(Format('同步完毕,共更新: %d 条', [FUpdateCounter]));
+        //write log
       except
         on nErr: Exception do
         begin
@@ -236,18 +242,30 @@ begin
   end;
 end;
 
+//Date: 2023-12-04
+//Parm: nClient: TIdHTTP
+//Desc: 断开nclient连接
+procedure DisconnectHttp(const nClient: TIdHTTP);
+begin
+  try
+    nClient.Disconnect(False);
+    nClient.IOHandler.InputBuffer.Clear;
+  except
+    on nErr: Exception do
+    begin
+      WriteLog('DisconnectHttp: ' + nErr.Message);
+    end;
+  end;
+end;
 
 procedure TDataSync.DoSync;
 var nPage: Integer;
 begin
-  FUpdateCounter := 0;
-  nPage := 1;
-  //init
-
   if FCounterQT >= gSystemParam.FFreshRateQT then
   try
     FCounterQT := 0;
     //reset counter
+    nPage := 1;
 
     while DoSyncQingTian(nPage, 50) do
       Inc(nPage);
@@ -260,6 +278,11 @@ begin
     on nErr: Exception do
     begin
       WriteLog('青天异常: ' + nErr.Message);
+      DisconnectHttp(FHttpQingTian);
+
+      if Pos(sFlag_Err_10054, nErr.Message) > 0 then
+        FCounterQT := gSystemParam.FFreshRateQT - 3;
+      //delay then do-sync
     end;
   end;
 
@@ -280,14 +303,17 @@ begin
     on nErr: Exception do
     begin
       WriteLog('三丽异常: ' + nErr.Message);
+      DisconnectHttp(FHttpSamlee);
+
+      if Pos(sFlag_Err_10054, nErr.Message) > 0 then
+        FCounterSL := gSystemParam.FFreshRateSL - 3;
+      //delay then do-sync
     end;
   end;
 
   if FUpdateCounter > 0 then
     DoSyncDB;
   //write db
-
-  WriteLog(Format('同步完毕,共更新: %d 条', [FUpdateCounter]));
 end;
 
 //Date: 2023-11-09

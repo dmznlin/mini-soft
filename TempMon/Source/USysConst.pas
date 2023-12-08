@@ -19,6 +19,7 @@ const
   sFlag_Yes       = 'Y';
   sFlag_No        = 'N';
   sFlag_Hint      = 'ÌבÊ¾';
+  sFlag_Err_10054 = 'Socket Error # 10054';
 
   {*image index*}
   sImage_QingTian = 4;
