@@ -1,43 +1,43 @@
 {
-    "FixedFileInfo": {
-        "FileVersion": {
-            "Major": 1,
-            "Minor": 0,
-            "Patch": 1,
-            "Build": 0
-        },
-        "ProductVersion": {
-            "Major": 1,
-            "Minor": 0,
-            "Patch": 0,
-            "Build": 0
-        },
-        "FileFlagsMask": "3f",
-        "FileFlags ": "00",
-        "FileOS": "040004",
-        "FileType": "01",
-        "FileSubType": "00"
+  "FixedFileInfo": {
+    "FileVersion": {
+      "Major": 1,
+      "Minor": 0,
+      "Patch": 1,
+      "Build": 0
     },
-    "StringFileInfo": {
-        "Comments": "data exchange for feihe cli.",
-        "CompanyName": "RunSoft(润)工作室",
-        "FileDescription": "飞鹤草料ERP数据流转服务",
-        "FileVersion": "",
-        "InternalName": "",
-        "LegalCopyright": "GPL公共许可",
-        "LegalTrademarks": "RunSoft(润)工作室",
-        "OriginalFilename": "Feihe_cli.exe",
-        "PrivateBuild": "",
-        "ProductName": "Feihe_cli",
-        "ProductVersion": "0.0.1.0",
-        "SpecialBuild": ""
+    "ProductVersion": {
+      "Major": 1,
+      "Minor": 0,
+      "Patch": 0,
+      "Build": 0
     },
-    "VarFileInfo": {
-        "Translation": {
-            "LangID": "0409",
-            "CharsetID": "04B0"
-        }
-    },
-    "IconPath": "../res/main.ico",
-    "ManifestPath": ""
+    "FileFlagsMask": "3f",
+    "FileFlags ": "00",
+    "FileOS": "040004",
+    "FileType": "01",
+    "FileSubType": "00"
+  },
+  "StringFileInfo": {
+    "Comments": "data exchange for feihe cli.",
+    "CompanyName": "RunSoft(润)工作室",
+    "FileDescription": "飞鹤草料ERP数据流转服务",
+    "FileVersion": "",
+    "InternalName": "",
+    "LegalCopyright": "GPL公共许可",
+    "LegalTrademarks": "RunSoft(润)工作室",
+    "OriginalFilename": "Feihe_cli.exe",
+    "PrivateBuild": "",
+    "ProductName": "Feihe_cli",
+    "ProductVersion": "0.0.1.0",
+    "SpecialBuild": ""
+  },
+  "VarFileInfo": {
+    "Translation": {
+      "LangID": "0409",
+      "CharsetID": "04B0"
+    }
+  },
+  "IconPath": "../res/main.ico",
+  "ManifestPath": ""
 }

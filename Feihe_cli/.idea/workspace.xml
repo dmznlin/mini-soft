@@ -14,31 +14,43 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Go Application" />
+        <option value="HTTP Request" />
+        <option value="HTTP Private Environment File" />
+        <option value="Go File" />
       </list>
     </option>
   </component>
   <component name="GOROOT" url="file://C:/Go" />
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/../../../Program Files/go/pkg/mod/github.com/danbai225/!we!chat!ferry-go@v1.39.0/wcf/wcf.go" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="HttpClientSelectedEnvironments">
+    <file url="file://$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" environment="dev" />
+    <file url="file://$PROJECT_DIR$/tmp/test_http.http" environment="dev" />
+    <file url="jar://$APPLICATION_HOME_DIR$/plugins/restClient/lib/restClient.jar!/com/intellij/ws/rest/client/requests/collection/post-requests.http" environment="test" />
+  </component>
   <component name="ProjectId" id="2aAnOB8tqz6HpPSM8b3xrp8OaRn" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultGoTemplateProperty": "Go Application",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "go.import.settings.migrated": "true",
-    "last_opened_file_path": "C:/Users/Administrator",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "settings.editor.selected.configurable": "reference.settings.ide.settings.new.ui"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Administrator&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;rest.client.default.execution.environment&quot;: &quot;dev&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
-  <component name="RunManager">
+}</component>
+  <component name="RunManager" selected="Go Build.go build Feihe_cli/src">
     <configuration name="go build Feihe_cli/src" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="Feihe_cli" />
       <working_directory value="$PROJECT_DIR$" />
@@ -49,6 +61,51 @@
       <filePath value="$PROJECT_DIR$/src/main.go" />
       <method v="2" />
     </configuration>
+    <configuration name="go build Feihe_cli/wechat" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="Feihe_cli" />
+      <working_directory value="$PROJECT_DIR$" />
+      <go_parameters value="-o ../bin/fh_cli.exe" />
+      <parameters value="-list" />
+      <kind value="PACKAGE" />
+      <package value="Feihe_cli/src" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/src/main.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test_http | 标准 URL 参数" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" index="2" requestIdentifier="标准 URL 参数" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_http | 验证 URL 传参缺失" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" requestIdentifier="验证 URL 传参缺失" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_http | 验证 URL 传参缺失" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" requestIdentifier="验证 URL 传参缺失" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_http | ERP 数据" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" index="4" requestIdentifier="ERP 数据" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_http | #2" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" index="2" requestIdentifier="#2" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_http | 验证无效路由" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" requestIdentifier="验证无效路由" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Go Build.go build Feihe_cli/src" />
+      <item itemvalue="Go Build.go build Feihe_cli/wechat" />
+      <item itemvalue="HTTP Request.test_http | #2" />
+      <item itemvalue="HTTP Request.test_http | ERP 数据" />
+      <item itemvalue="HTTP Request.test_http | 验证 URL 传参缺失" />
+      <item itemvalue="HTTP Request.test_http | 验证无效路由" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="HTTP Request.test_http | ERP 数据" />
+        <item itemvalue="HTTP Request.test_http | 验证 URL 传参缺失" />
+        <item itemvalue="HTTP Request.test_http | 验证无效路由" />
+        <item itemvalue="HTTP Request.test_http | #2" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
@@ -61,5 +118,16 @@
       </map>
     </environment>
     <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/../../../Program Files/go/pkg/mod/github.com/danbai225/!we!chat!ferry-go@v1.39.0/wcf/wcf.go</url>
+          <line>707</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

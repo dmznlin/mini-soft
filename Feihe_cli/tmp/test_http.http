@@ -1,0 +1,18 @@
+### 验证无效路由
+GET http://{{host}}:80/invalid
+
+### 验证 URL 传参缺失
+POST http://{{host}}:80/cli?verify=erp&id=222
+
+### 标准 URL 参数
+POST http://{{host}}:80/cli?verify=erp_cli&id=1122
+
+### ERP 数据
+POST http://{{host}}:80/cli?verify=erp_cli&id=1122
+Content-Type: application/json
+
+{
+  "time": "2022-06-30 17:06:39",
+  "event": "事件标识",
+  "data": {}
+}
