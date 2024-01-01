@@ -20,13 +20,15 @@ import (
 var _ = znlib.InitLib(nil, nil)
 
 var cfg = struct {
-	bindIP    string //服务地址
-	bindPort  int    //服务端口
-	erpVerify string //ERP Key
+	bindIP       string //服务地址
+	bindPort     int    //服务端口
+	erpVerify    string //ERP Key
+	scanInterval int    //数据库扫描间隔，单位：秒
 }{
 	"",
 	80,
 	"erp_cli",
+	3,
 }
 
 // 载入系统配置
@@ -41,6 +43,7 @@ func loadcfg() {
 	cfg.bindIP = sec.Key("host").MustString(cfg.bindIP)
 	cfg.bindPort = sec.Key("port").MustInt(cfg.bindPort)
 	cfg.erpVerify = sec.Key("verify").MustString(cfg.erpVerify)
+	cfg.scanInterval = sec.Key("scanInterval").MustInt(cfg.scanInterval)
 
 	wechat.host = sec.Key("wcfHost").MustString(wechat.host)
 	wechat.port = sec.Key("wcfPort").MustInt(wechat.port)
@@ -56,7 +59,7 @@ func main() {
 	//load config first
 
 	var list bool
-	flag.BoolVar(&list, "list", false, "打印微信联系人 或 群成员列表")
+	flag.BoolVar(&list, "list", false, "打印微信联系人列表")
 	flag.Parse()
 
 	if list {
@@ -79,7 +82,10 @@ func main() {
 		}
 	}()
 
+	//扫描数据库并发送微信
+	go ScanDataToWechat()
 	znlib.Info("服务已启动,主配置：" + fmt.Sprintf("%v", cfg))
+
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-signalCh
@@ -100,6 +106,7 @@ func main() {
 		return
 	}
 
+	stopScanData(ctxTimeout)
 	// 正确执行优雅关闭服务器
 	znlib.Info("Server shutdown gracefully")
 }

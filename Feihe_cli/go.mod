@@ -7,6 +7,7 @@ require (
 	github.com/danbai225/WeChatFerry-go v1.39.0
 	github.com/dmznlin/znlib-go v0.0.3-0.20221101050743-47e8c06990a6
 	github.com/go-ini/ini v1.66.4
+	github.com/go-sql-driver/mysql v1.6.0
 )
 
 require (
