@@ -251,12 +251,25 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 			panic(err)
 		}
 
-		if !wechat.init() {
+		if !wechat.init() { //需保证微信在线
 			return false
 		}
 
-		// 发送内容
-		wechat.cli.SendTxt(buf.String(), dataEvent.WxID, wxData.at)
+		at_str := ""
+		for _, v := range wxData.at {
+			alias := wechat.cli.CmdClient.GetAliasInChatRoom(v, dataEvent.WxID)
+			if alias == "" {
+				alias = v
+			}
+			at_str = at_str + fmt.Sprintf("@%s ", alias)
+		}
+
+		if at_str != "" {
+			at_str = "\n\n" + at_str
+		}
+		wechat.cli.CmdClient.SendTxt(buf.String()+at_str, dataEvent.WxID, strings.Join(wxData.at, ","))
+		//发送微信消息，并 @ 主要人员
+		Info(fmt.Sprintf("SendMessage: %s.%s -> %s", dataEvent.Table, dataEvent.Record, dataEvent.WxID))
 	}
 
 	return true

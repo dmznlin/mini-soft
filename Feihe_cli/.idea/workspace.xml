@@ -46,7 +46,7 @@
     &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Administrator&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/MyWork/mini-soft.git/Feihe_cli&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
@@ -55,14 +55,6 @@
   }
 }</component>
   <component name="RunManager" selected="Go Build.go build Feihe_cli/src">
-    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
-      <module name="Feihe_cli" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
     <configuration name="go build Feihe_cli/src" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="Feihe_cli" />
       <working_directory value="$PROJECT_DIR$" />
@@ -77,29 +69,20 @@
       <module name="Feihe_cli" />
       <working_directory value="$PROJECT_DIR$" />
       <go_parameters value="-o ../bin/fh_cli.exe" />
-      <parameters value="-list" />
+      <parameters value="-room=21022766247@chatroom" />
       <kind value="PACKAGE" />
       <package value="Feihe_cli/src" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$/src/main.go" />
       <method v="2" />
     </configuration>
-    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="Feihe_cli" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <method v="2" />
-    </configuration>
-    <configuration name="test_http | 验证 URL 传参缺失" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" requestIdentifier="验证 URL 传参缺失" runType="Run single request">
-      <method v="2" />
-    </configuration>
-    <configuration name="test_http | 验证 URL 传参缺失" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" requestIdentifier="验证 URL 传参缺失" runType="Run single request">
-      <method v="2" />
-    </configuration>
     <configuration name="test_http | 标准 URL 参数" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" index="2" requestIdentifier="标准 URL 参数" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_http | 验证 URL 传参缺失" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" requestIdentifier="验证 URL 传参缺失" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_http | 验证 URL 传参缺失" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" requestIdentifier="验证 URL 传参缺失" runType="Run single request">
       <method v="2" />
     </configuration>
     <configuration name="test_http | ERP 数据" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/tmp/test_http.http" index="4" requestIdentifier="ERP 数据" runType="Run single request">
@@ -114,7 +97,7 @@
     <list>
       <item itemvalue="Go Build.go build Feihe_cli/src" />
       <item itemvalue="Go Build.go build Feihe_cli/wechat" />
-      <item itemvalue="HTTP Request.test_http | 标准 URL 参数" />
+      <item itemvalue="HTTP Request.test_http | 验证 URL 传参缺失" />
       <item itemvalue="HTTP Request.test_http | #2" />
       <item itemvalue="HTTP Request.test_http | ERP 数据" />
       <item itemvalue="HTTP Request.test_http | 验证无效路由" />
@@ -138,5 +121,21 @@
       </map>
     </environment>
     <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/../../../Program Files/go/pkg/mod/github.com/opentdp/wechat-rest@v0.4.8/wcferry/cmd_client.go</url>
+          <line>335</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="GoApplicationRunConfiguration">
+        <watch expression="*(*&quot;github.com/opentdp/wechat-rest/wcferry.Request_Txt&quot;)(824637423912)" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

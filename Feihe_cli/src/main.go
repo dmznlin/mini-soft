@@ -47,23 +47,37 @@ func loadcfg() {
 
 	wechat.host = sec.Key("wcfHost").MustString(wechat.host)
 	wechat.port = sec.Key("wcfPort").MustInt(wechat.port)
-
-	if znlib.StrPos(wechat.host, "//") < 1 {
-		wechat.host = "tcp://" + wechat.host
-		//add protocol
-	}
 }
 
 func main() {
 	loadcfg()
 	//load config first
 
-	var list bool
+	var (
+		list bool
+		room string
+		pass string
+	)
+
 	flag.BoolVar(&list, "list", false, "打印微信联系人列表")
+	flag.StringVar(&room, "room", "", "打印群成员列表")
+	flag.StringVar(&pass, "pass", "", "生成数据库密码")
 	flag.Parse()
 
-	if list {
-		wechat.listContact()
+	if list || room != "" {
+		wechat.listContact(room)
+		return
+	}
+
+	if pass != "" {
+		buf, err := znlib.NewEncrypter(znlib.EncryptDES_ECB,
+			[]byte(znlib.DefaultEncryptKey)).Encrypt([]byte(pass), true)
+		if err == nil {
+			fmt.Println(string(buf))
+		} else {
+			znlib.Error(err)
+		}
+
 		return
 	}
 

@@ -9,22 +9,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/danbai225/WeChatFerry-go/wcf"
 	. "github.com/dmznlin/znlib-go/znlib"
-	"strconv"
+	"github.com/opentdp/wechat-rest/wcferry"
 )
 
 // wechat proxy: 微信代理
 type wcProxy struct {
-	cli  *wcf.Client //客户端对象
-	host string      //wcf地址
-	port int         //wcf端口
+	cli  *wcferry.Client //客户端对象
+	host string          //wcf地址
+	port int             //wcf端口
 }
 
 // 代理对象
 var wechat = wcProxy{
 	nil,
-	"tcp://127.0.0.1",
+	"127.0.0.1",
 	10086,
 }
 
@@ -38,7 +37,7 @@ func (wp *wcProxy) init() (isok bool) {
 	//default
 
 	if wp.cli != nil {
-		isok = wp.cli.IsLogin()
+		isok = wp.cli.CmdClient.IsLogin()
 		if isok {
 			return
 		} //proxy ok
@@ -47,22 +46,28 @@ func (wp *wcProxy) init() (isok bool) {
 		wp.cli = nil
 		//reset
 
-		if err := cli.Close(); err != nil {
+		if err := cli.CmdClient.Destroy(); err != nil {
 			Error("关闭微信代理失败：", LogFields{"wcf.Close": err})
 			return
 		}
 	}
 
-	var err error
-	wp.cli, err = wcf.NewWCF(wp.host + ":" + strconv.Itoa(wp.port))
-	if err != nil {
-		Error("初始化微信代理失败：", LogFields{"wcf.NewWCF": err})
+	wp.cli = &wcferry.Client{
+		ListenAddr: wechat.host,
+		ListenPort: wechat.port,
+		SdkLibrary: "",
+		WeChatAuto: false,
+	}
+
+	if err := wp.cli.Connect(); err != nil {
+		Error("初始化微信代理失败：", LogFields{"wcf.Connect: ": err})
 		return
 	}
 
-	isok = wp.cli.IsLogin()
+	wp.cli.EnrollReceiver(true, wcferry.MsgPrinter)
+	isok = wp.cli.CmdClient.IsLogin()
 	if isok {
-		Info(fmt.Sprintf("用户 %s 已登录微信", wp.cli.GetSelfWXID()))
+		Info(fmt.Sprintf("用户 %s 已登录微信", wp.cli.CmdClient.GetSelfWxid()))
 	} else {
 		Error("未检测到 已登录 的微信")
 	}
@@ -74,13 +79,19 @@ listContact 2023-12-30 10:13:30
 对象: wp
 描述: 打印群联系人列表
 */
-func (wp *wcProxy) listContact() {
+func (wp *wcProxy) listContact(room string) {
 	if !wp.init() {
 		return
 	}
 
 	var name string
-	cts := wp.cli.GetContacts()
+	var cts []*wcferry.RpcContact
+	if room == "" {
+		cts = wp.cli.CmdClient.GetContacts()
+	} else {
+		cts = wp.cli.CmdClient.GetChatRoomMembers(room)
+	}
+
 	for i, v := range cts {
 		if v.Remark == "" {
 			name = v.Name
@@ -88,6 +99,7 @@ func (wp *wcProxy) listContact() {
 			name = v.Remark
 		}
 
+		name = wp.cli.CmdClient.GetAliasInChatRoom(v.Wxid, room)
 		fmt.Println(fmt.Sprintf("%-3d.%25s - %s", i, v.Wxid, name))
 	}
 }
