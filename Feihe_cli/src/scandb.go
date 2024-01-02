@@ -124,6 +124,11 @@ func doScan() {
 		"",
 	}
 
+	var doUpdate = func() {
+		str := fmt.Sprintf("update %s set e_valid=false where r_id=%d", tableEvent, dataEvent.Rid)
+		db.MustExec(str)
+	}
+
 	for rows.Next() {
 		err := rows.StructScan(&dataEvent)
 		if err != nil {
@@ -131,13 +136,13 @@ func doScan() {
 		}
 
 		if dataEvent.Record == status.lastRecord {
+			doUpdate()
 			continue
 		} //重复记录不予处理
 
 		status.lastRecord = dataEvent.Record
 		if doSendWechat(db) {
-			str := fmt.Sprintf("update %s set e_valid=false where r_id=%d", tableEvent, dataEvent.Rid)
-			db.MustExec(str)
+			doUpdate()
 		}
 	}
 }

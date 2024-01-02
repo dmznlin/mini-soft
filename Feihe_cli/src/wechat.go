@@ -8,9 +8,9 @@ Package main
 package main
 
 import (
+	"Feihe_cli/src/wcferry"
 	"fmt"
 	. "github.com/dmznlin/znlib-go/znlib"
-	"github.com/opentdp/wechat-rest/wcferry"
 )
 
 // wechat proxy: 微信代理
@@ -38,18 +38,10 @@ func (wp *wcProxy) init() (isok bool) {
 
 	if wp.cli != nil {
 		isok = wp.cli.CmdClient.IsLogin()
-		if isok {
-			return
-		} //proxy ok
-
-		cli := wp.cli
-		wp.cli = nil
-		//reset
-
-		if err := cli.CmdClient.Destroy(); err != nil {
-			Error("关闭微信代理失败：", LogFields{"wcf.Close": err})
-			return
+		if !isok {
+			Error("微信代理已离线.")
 		}
+		return isok
 	}
 
 	wp.cli = &wcferry.Client{
