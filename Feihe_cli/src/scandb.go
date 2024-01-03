@@ -153,6 +153,10 @@ doSendWechat 2023-12-31 22:43:38
 */
 func doSendWechat(db *sqlx.DB) (isok bool) {
 	isok = false
+	if !wechat.init() { //需保证微信在线
+		return false
+	}
+
 	defer func() {
 		err := recover()
 		if err != nil {
@@ -162,12 +166,14 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 	}() //捕获异常
 
 	var wxData = struct {
-		query string   //查询
-		temp  string   //模板
-		at    []string //@列表
+		query  string   //查询
+		temp   string   //模板
+		atRoom []string //群@列表
+		atCts  []string //指定联系人
 	}{
 		"",
 		"",
+		make([]string, 0),
 		make([]string, 0),
 	}
 
@@ -230,8 +236,10 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 		// 需@ID列表,字段 或 $wxid,逗号分割
 
 		for _, v := range list {
-			if StrPos(v, "$") == 0 { //微信ID
-				wxData.at = append(wxData.at, StrDel(v, 0, 0))
+			if StrPos(v, "$") == 0 { //指定微信ID
+				id := StrDel(v, 0, 0)
+				wxData.atRoom = append(wxData.atRoom, id)
+				wxData.atCts = append(wxData.atCts, id)
 				continue
 			}
 
@@ -239,7 +247,20 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 			if val != nil {
 				id := val.(string)
 				if id != "" { //无对应字段
-					wxData.at = append(wxData.at, id)
+					cts, isok := wechat.matchContact(id)
+					if isok { //匹配人名和微信联系人
+						for _, v := range cts {
+							if v.room == dataEvent.WxID { //群匹配
+								wxData.atRoom = append(wxData.atRoom, v.wxID)
+							}
+
+							if v.room == "" && !StrIn(v.wxID, wxData.atCts...) { //特定联系人
+								wxData.atCts = append(wxData.atCts, v.wxID)
+							}
+						}
+					} else {
+						wxData.atRoom = append(wxData.atRoom, id)
+					}
 				}
 			}
 		}
@@ -256,12 +277,8 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 			panic(err)
 		}
 
-		if !wechat.init() { //需保证微信在线
-			return false
-		}
-
 		at_str := ""
-		for _, v := range wxData.at {
+		for _, v := range wxData.atRoom {
 			alias := wechat.cli.CmdClient.GetAliasInChatRoom(v, dataEvent.WxID)
 			if alias == "" {
 				alias = v
@@ -272,8 +289,16 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 		if at_str != "" {
 			at_str = "\n\n" + at_str
 		}
-		wechat.cli.CmdClient.SendTxt(buf.String()+at_str, dataEvent.WxID, strings.Join(wxData.at, ","))
+
+		wechat.cli.CmdClient.SendTxt(buf.String()+at_str, dataEvent.WxID, strings.Join(wxData.atRoom, ","))
 		//发送微信消息，并 @ 主要人员
+
+		for _, v := range wxData.atCts {
+			wechat.cli.CmdClient.SendTxt(buf.String(), v, "")
+			//发送给特定微信号
+			Info(fmt.Sprintf("SendMessage: %s.%s -> %s", dataEvent.Table, dataEvent.Record, v))
+		}
+
 		Info(fmt.Sprintf("SendMessage: %s.%s -> %s", dataEvent.Table, dataEvent.Record, dataEvent.WxID))
 	}
 

@@ -1,3 +1,5 @@
+github.com/Lofanmi/pinyin-golang v0.0.0-20211114132645-1db892057f20 h1:QUwRV0ZgSjXBJnKOJh0T5rqe1jLWxlR5AvBLWSYJ7qg=
+github.com/Lofanmi/pinyin-golang v0.0.0-20211114132645-1db892057f20/go.mod h1:J7A5UW8HA8b8lsEO/OshykiGGfmdQEnbDE53D23JsXE=
 github.com/Microsoft/go-winio v0.4.11/go.mod h1:VhR8bwka0BXejwEJY73c50VrPtXAaKcyvVC4A4RozmA=
 github.com/Microsoft/go-winio v0.5.2/go.mod h1:WpS1mjBmmwHBEWmogvA2mj8546UReBk4v8QkMxJ6pZY=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
@@ -26,6 +28,8 @@ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/r
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/dmznlin/znlib-go v0.0.3-0.20221101050743-47e8c06990a6 h1:DMy72oJZgxf1VE3yXDC7Gnzv52JxDVlbaOey/G+secc=
 github.com/dmznlin/znlib-go v0.0.3-0.20221101050743-47e8c06990a6/go.mod h1:ZnYPuArp/JB9Yrzz8XKtzW/JqKqmsOlhHDPQ84IqEW0=
+github.com/dmznlin/znlib-go v0.0.3-0.20240103075716-4e877557eacb h1:EjExwYFoYA4ayffOG2yPDAOakr84S0PtPNWJxkGLKGc=
+github.com/dmznlin/znlib-go v0.0.3-0.20240103075716-4e877557eacb/go.mod h1:ZnYPuArp/JB9Yrzz8XKtzW/JqKqmsOlhHDPQ84IqEW0=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 h1:Ghm4eQYC0nEPnSJdVkTrXpu9KtoVCSo1hg7mtI7G9KU=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239/go.mod h1:Gdwt2ce0yfBxPvZrHkprdPPTTS3N5rwmLE8T22KBXlw=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
@@ -85,8 +89,6 @@ github.com/onsi/gomega v1.20.0 h1:8W0cWlwFkflGPLltQvLRB7ZVD5HuP6ng320w2IS245Q=
 github.com/onsi/gomega v1.20.0/go.mod h1:DtrZpjmvpn2mPm4YWQa0/ALMDj9v4YxLgojwPeREyVo=
 github.com/opentdp/go-helper v0.5.4 h1:OA+CcXpqMokVdjPsZwNAhQfG6SjLqNdds72A3DXy9qc=
 github.com/opentdp/go-helper v0.5.4/go.mod h1:9m+t/2x1CmjZ9YQP37+xECCO84eqMnsxnRE/7y37GjE=
-github.com/opentdp/wechat-rest v0.4.8 h1:mxArxYyzcmX6JQrZWCA0Hv56NjTY03BwRNTxP9G5TY0=
-github.com/opentdp/wechat-rest v0.4.8/go.mod h1:epR2c8pGnkUJpv+z+u6IEnrsDUTABTIjf95iTYrqh8w=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
