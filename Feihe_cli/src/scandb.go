@@ -32,6 +32,7 @@ type erpEvent struct {
 	At     string `db:"e_at"`
 	Temp   string `db:"e_template"`
 	Fields string `db:"e_fields"`
+	Query  string `db:"e_query"`
 }
 
 var (
@@ -125,7 +126,7 @@ func doScan() {
 	}
 
 	var doUpdate = func() {
-		str := fmt.Sprintf("update %s set e_valid=false where r_id=%d", tableEvent, dataEvent.Rid)
+		str := fmt.Sprintf("update %s set e_valid=false,e_update=now() where r_id=%d", tableEvent, dataEvent.Rid)
 		db.MustExec(str)
 	}
 
@@ -157,13 +158,11 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 		return false
 	}
 
-	defer func() {
-		err := recover()
+	defer DeferHandle(false, "ScanDataToWechat.doSendWechat", func(err any) {
 		if err != nil {
 			isok = false
-			Error(err, LogFields{"caller": "ScanDataToWechat.doSendWechat"})
 		}
-	}() //捕获异常
+	}) //捕获异常
 
 	var wxData = struct {
 		query  string   //查询
@@ -201,9 +200,14 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 	}
 
 	//  ---------------------------------------------------------------------------
-	wxData.query = fmt.Sprintf("select %s from %s where record_id=%s",
-		dataEvent.Fields, dataEvent.Table, dataEvent.Record)
-	//xxxxx
+	if dataEvent.Query != "" {
+		wxData.query = dataEvent.Query
+		//自定义查询优先
+	} else {
+		wxData.query = fmt.Sprintf("select %s from %s where record_id=%s",
+			dataEvent.Fields, dataEvent.Table, dataEvent.Record)
+		//xxxxx
+	}
 
 	rows, err := db.Queryx(wxData.query)
 	if err != nil {
@@ -212,18 +216,18 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 
 	defer rows.Close()
 	for rows.Next() {
-		cur := make(map[string]interface{})
-		err := rows.MapScan(cur)
+		row := make(map[string]interface{})
+		err := rows.MapScan(row)
 		if err != nil {
 			panic(err)
 		}
 
-		for k, v := range cur { //将value转为字符串
+		for k, v := range row { //将value转为字符串
 			t := reflect.TypeOf(v)
 			if t != nil {
 				switch t.Kind() {
 				case reflect.Slice:
-					cur[k] = fmt.Sprintf("%s", v)
+					row[k] = fmt.Sprintf("%s", v)
 
 				default:
 					// do nothing
@@ -243,7 +247,7 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 				continue
 			}
 
-			val := cur[v]
+			val := row[v]
 			if val != nil {
 				id := val.(string)
 				if id != "" { //无对应字段
@@ -272,7 +276,7 @@ func doSendWechat(db *sqlx.DB) (isok bool) {
 		}
 
 		buf := new(bytes.Buffer)
-		err = tmp.Execute(buf, cur)
+		err = tmp.Execute(buf, row)
 		if err != nil {
 			panic(err)
 		}

@@ -30,6 +30,8 @@ github.com/dmznlin/znlib-go v0.0.3-0.20221101050743-47e8c06990a6 h1:DMy72oJZgxf1
 github.com/dmznlin/znlib-go v0.0.3-0.20221101050743-47e8c06990a6/go.mod h1:ZnYPuArp/JB9Yrzz8XKtzW/JqKqmsOlhHDPQ84IqEW0=
 github.com/dmznlin/znlib-go v0.0.3-0.20240103075716-4e877557eacb h1:EjExwYFoYA4ayffOG2yPDAOakr84S0PtPNWJxkGLKGc=
 github.com/dmznlin/znlib-go v0.0.3-0.20240103075716-4e877557eacb/go.mod h1:ZnYPuArp/JB9Yrzz8XKtzW/JqKqmsOlhHDPQ84IqEW0=
+github.com/dmznlin/znlib-go v0.0.3-0.20240105014718-8bdfd550b887 h1:Ho2TMPtertpJGmgfr9DXg4Lk1P/hlC8cj3chYoaGkc8=
+github.com/dmznlin/znlib-go v0.0.3-0.20240105014718-8bdfd550b887/go.mod h1:ZnYPuArp/JB9Yrzz8XKtzW/JqKqmsOlhHDPQ84IqEW0=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 h1:Ghm4eQYC0nEPnSJdVkTrXpu9KtoVCSo1hg7mtI7G9KU=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239/go.mod h1:Gdwt2ce0yfBxPvZrHkprdPPTTS3N5rwmLE8T22KBXlw=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=

@@ -5,7 +5,7 @@ go 1.21.1
 require (
 	github.com/Lofanmi/pinyin-golang v0.0.0-20211114132645-1db892057f20
 	github.com/bytedance/sonic v1.10.2
-	github.com/dmznlin/znlib-go v0.0.3-0.20240103075716-4e877557eacb
+	github.com/dmznlin/znlib-go v0.0.3-0.20240105014718-8bdfd550b887
 	github.com/go-ini/ini v1.66.4
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jmoiron/sqlx v1.3.5
