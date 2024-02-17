@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<znlib>
+    <logger>
+        <!-- 日志目录:$path表示exe路径 -->
+        <filePath>$path/logs</filePath>
+        <!-- 日志文件名称 -->
+        <filename>app_</filename>
+        <!-- 日志级别 trace,debug,info,warning,error,fatal,panic -->
+        <loglevel>info</loglevel>
+        <!-- 使用彩色终端 -->
+        <colorful>true</colorful>
+        <!-- 最长保存多少天 -->
+        <max_age>30</max_age>
+    </logger>
+
+    <!-- mqtt服务 -->
+    <mqtt enable="true">
+        <!-- 服务器(集群),多地址逗号分割 -->
+        <broker>mqtt://broker.emqx.io:1883</broker>
+        <!-- 身份验证 -->
+        <auth>
+            <!-- value:前缀;auto:自动增加n位随机id -->
+            <clientID auto="0">anyssh_client_01</clientID>
+            <!-- 用户名 -->
+            <user/>
+            <!-- 登录密码(des) -->
+            <password/>
+        </auth>
+        <!-- 使用tls证书 -->
+        <tls use="false">
+            <ca/>
+            <crt/>
+            <key/>
+        </tls>
+        <!-- znlib.mqttutils辅助对象 -->
+        <utils>
+            <!-- 消息验证密钥(DES) -->
+            <encryptKey>7ogre9OS20I=</encryptKey>
+            <!-- 默认是否验证数据合法性 -->
+            <verifyMsg>true</verifyMsg>
+            <!-- 工作对象个数 -->
+            <workerNum>2</workerNum>
+            <!-- 消息延迟警告(秒) -->
+            <delayWarn>1</delayWarn>
+            <!--  压缩数据:长度超过min启用压缩 -->
+            <zipData min="200">true</zipData>
+        </utils>
+        <!-- 订阅主题:只读不写,$id自动替换为clientID -->
+        <subTopic/>
+        <!-- 发布主题:只写不读,$id自动替换为clientID -->
+        <pubTopics/>
+    </mqtt>
+
+    <!-- 基于mqtt的ssh服务 -->
+    <mqttSSH enable="false">
+        <!-- 身份验证 -->
+        <auth>
+            <!-- 主机地址,一般为localhost -->
+            <host/>
+            <!-- 用户名 -->
+            <user/>
+            <!-- 登录密码(des) -->
+            <password/>
+        </auth>
+        <!-- 超时设置 -->
+        <timeout>
+            <!-- 连接超时(毫秒ms) -->
+            <conn>3200</conn>
+            <!-- 超时自动注销(秒s) -->
+            <exit>60</exit>
+        </timeout>
+        <mqtt>
+            <!-- mqtt.Cmd:传输ssh的指令代码 -->
+            <command>1</command>
+            <!-- mqtt.ssh通道:传输ssh的数据通道 -->
+            <channel>
+                <chan qos="0">/anyssh/tunnel/ssh/$id</chan>
+            </channel>
+        </mqtt>
+    </mqttSSH>
+</znlib>
