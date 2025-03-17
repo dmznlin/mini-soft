@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta id="viewport" name="viewport" content="width=device-width,user-scalable=no" />
+		<script type="text/javascript" src="21.js"></script>
+        <title>像素小鸟</title>
+		<style type="text/css">
+			body {
+				margin:0px;
+			}
+		</style>
+		</head>
+	<body>
+		<div style="text-align:center;">
+			<canvas id="linkScreen">
+				很遗憾，您的浏览器不支持HTML5，请使用支持HTML5的浏览器。
+			</canvas>
+		</div>
+        <div id="mask_container" align="center" style="width: 100%; height: 100%; position: absolute; left: 0px; top: 0px; display: none; z-index: 100000; background-color: rgb(255, 255, 255);">
+                <img id="p2l" src="img/p2l.jpg" style="position: absolute;left: 50%;top: 50%;-webkit-transform:translateX(-50%) translateY(-50%);transform:translateX(-50%) translateY(-50%)" >
+        </div>
+		<div id=share style="display:none">
+		<img  width=100% src="2000.png"  style="position:absolute;top:0;left:0;display:" onclick="document.getElementById('share').style.display='none';">
+		</div>		
+	</body>
+</html>

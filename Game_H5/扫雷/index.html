@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.1">
+<title>扫雷</title>
+<link rel="stylesheet" type="text/css" media="screen" href="css/styles.css" />
+</head>
+<body>
+<div class="wrapper" style="padding-left: 1px;padding-right: 1px;">
+<h1>蜜雪冰城</h1>
+<div style="font-size: 0.1em;margin-top:10.0em;margin-bottom:10.0em;text-align:center;">
+1、双指放大 或 缩小.<br>
+2、点击 笑脸 开始.&emsp;<br>
+3、长按插旗 或 拔旗.
+</div>
+<div id="minesweeper">
+  <ul class="level-select">
+	<li><button data-level="easy">简单</button></li>
+	<li><button data-level="mid">中等</button></li>
+	<li><button data-level="hard">困难</button></li>
+  </ul>
+  <div class="menu">
+	<ul>
+	  <li class="timer">000</li>
+	  <li class="reset"><button> :) </button></li>
+	  <li class="mine-count">010</li>
+	</ul>
+  </div>
+  <div id="mine-grid"></div>
+</div>
+</div>
+<script src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/JSweeper.js"></script>
+</body>
+</html>
