@@ -31,9 +31,10 @@ type
     procedure BtnMakeClick(Sender: TObject);
   private
     { Private declarations }
-    FMList: TStrings;
-    FWList: TStrings;
-    FRemote: TStrings;
+    FMList: TStrings; //黑名单列表
+    FWList: TStrings; //白名单列表
+    FRemote: TStrings;//远程黑名单
+    FIsFollow: Boolean;//是否关注列表
     procedure LoadRemoteBlackList();
   public
     { Public declarations }
@@ -111,7 +112,12 @@ begin
     Filter := '黑名单(*.txt)|*.txt';
     
     if Execute then
+    begin
       EditFile.Text := FileName;
+      FIsFollow := Pos('export_uids', LowerCase(ExtractFileName(FileName))) > 0;
+      //关注列表的格式与黑名单不同,需单独处理
+    end;
+
     Free;
   end;
 end;
@@ -162,6 +168,10 @@ begin
   FMList.LoadFromFile(EditFile.Text);
   //载入本地黑名单
 
+  if FIsFollow then
+    SplitStr(FMList.Text, FMList, 0, ',');
+  //格式: id,id
+
   ListBlack.Items.Clear;
   //清空当前列表
 
@@ -171,16 +181,24 @@ begin
     if nStr = '' then Continue;
     //invalid
 
-    nOK := False;
-    for i:=0 to FMList.Count - 1 do
-    if nStr = GetMID(FMList[i]) then
+    if FIsFollow then //关注列表
     begin
-      nOK := True;
-      Break;
-    end;
+      if FMList.IndexOf(nStr) < 0 then
+        Continue;
+      //黑名单成员不在关注列表中,不用处理
+    end else
+    begin
+      nOK := False;
+      for i:=0 to FMList.Count - 1 do
+      if nStr = GetMID(FMList[i]) then
+      begin
+        nOK := True;
+        Break;
+      end;
 
-    if nOK then Continue;
-    //已经存在
+      if nOK then Continue;
+      //已经存在
+    end;
 
     with ListBlack.Items.Add do
     begin
@@ -211,7 +229,7 @@ end;
 
 procedure TfFormMain.BtnMakeClick(Sender: TObject);
 var nStr,nRes: string;
-    nIdx: Integer;
+    nIdx,i: Integer;
     nOK: Boolean;
 begin
   nRes := '';
@@ -225,11 +243,18 @@ begin
       if nRes = '' then
            nRes := nStr
       else nRes := nRes + ',' + nStr;
-    end else //白名单成员
+
+      i := FWlist.IndexOf(nStr);
+      if i >= 0 then
+      begin
+        FWList.Delete(nIdx); //移出白名单
+        nOK := True;
+      end;
+    end else
     begin
       if FWList.IndexOf(nStr) < 0 then
       begin
-        FWList.Add(nStr);
+        FWList.Add(nStr); //加入白名单
         nOK := True;
       end;
     end;

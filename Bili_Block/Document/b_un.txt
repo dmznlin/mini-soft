@@ -1,0 +1,35 @@
+﻿function startUnfollowProcess(nextButtonName) {
+    function unfollowUsers() {
+        const btns = document.querySelectorAll('.gray');
+        console.log(`找到 ${btns.length} 个已关注按钮`);
+
+        if (btns.length === 0) {
+            console.log("没有可取消的用户，停止执行");
+            return; // 直接停止，不再翻页
+        }
+
+        btns.forEach((btn, index) => {
+            setTimeout(() => {
+                btn.click();
+                console.log(`已取消关注UP主 ${index + 1}`);
+                if (index === btns.length - 1) setTimeout(goToNextPage, 1000); // 最后一个取消后翻页
+            }, index * 1000);
+        });
+    }
+
+    function goToNextPage() {
+        const nextButton = [...document.querySelectorAll('BUTTON')].find(el => el.textContent.includes(nextButtonName));
+        if (nextButton) {
+            nextButton.click();
+            console.log(`点击了“${nextButtonName}”，继续取消关注`);
+            setTimeout(unfollowUsers, 3000); // 翻页后等待加载
+        } else {
+            console.log("没有上一页，操作完成");
+        }
+    }
+
+    unfollowUsers(); // 开始执行
+}
+
+// **调用函数**
+startUnfollowProcess("上一页");

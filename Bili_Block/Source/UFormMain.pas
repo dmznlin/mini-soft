@@ -217,7 +217,7 @@ begin
     if nPos < 2 then Continue;
 
     nPic := TrimRight(Copy(nStr, 1, nPos));
-    nRes := nRes + Format('%s: %s' + #13#10 + '![](%s)' + #13#10, [nID, nName, nPic]);
+    nRes := nRes + Format('![](%s =32x32) %s &emsp;', [nPic, nName]);
   end;
 
   Clipboard.AsText := nRes;

@@ -1,0 +1,207 @@
+﻿// ==UserScript==
+// @name         bilibili批量导出黑名单
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  在哔哩哔哩搜索页批量管理黑名单。
+// @match        https://account.bilibili.com/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=bilibili.com
+// @grant        none
+// @license      MIT
+// ==/UserScript==
+
+
+(function () {
+    'use strict';
+    // 搜索列表结果页用户的className常量
+    const BLACK_LIST_CLASSNAME = '.security-right-title';
+
+    class AddBlacklist {
+        constructor() {
+            this.init();
+        }
+
+        init() {
+            // 判断当前页是否在用户下
+            if (!location.pathname.slice().includes("blacklist")) {
+                return;
+            }
+            // 创建管理按钮
+            this.createTopBtnElement();
+        }
+
+        /**
+         * 根据字段获取对应cookie值
+         * @param {string} cookieName
+         * @returns {string}
+         */
+        getCookieValue(cookieName) {
+            let name = cookieName + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let cookieArray = decodedCookie.split(';');
+            for (let i = 0; i < cookieArray.length; i++) {
+                let cookie = cookieArray[i].trim();
+                if (cookie.indexOf(name) == 0) {
+                    return cookie.substring(name.length, cookie.length);
+                }
+            }
+            return "";
+        }
+
+        /**
+         * bilibili黑名单api
+         * @param {string} fid 用户id
+         * @param {string} action 行为类型
+         * @returns {Promise}
+         */
+        controlBlackListfetch(fid, action = 'add') {
+            if (!fid) {
+                return;
+            }
+            const act = {
+                add: 5,
+                remove: 6
+            }[action];
+            const csrf = this.getCookieValue('bili_jct');
+            return fetch("https://api.bilibili.com/x/relation/modify", {
+                "headers": {
+                    "content-type": "application/x-www-form-urlencoded",
+                },
+                "body": `fid=${fid}&act=${act}&re_src=11&gaia_source=web_main&csrf=${csrf}`,
+                "method": "POST",
+                "mode": "cors",
+                "credentials": "include"
+            });
+        }
+
+        json_to_str(jsonData) {
+            // 确保对象包含所需的字段，如果字段不存在则使用空字符串
+            //const mid = jsonData.mid !== undefined ? jsonData.mid * 23 + 114514233: '';
+            const mid = jsonData.mid !== undefined ? jsonData.mid : '';
+            const uname = jsonData.uname !== undefined ? jsonData.uname : '';
+            const face = jsonData.face !== undefined ? jsonData.face : '';
+            // 使用制表符分隔字段，并在末尾添加换行符
+            return `${mid}\t${uname}\t${face}\n`;
+        }
+
+        /**
+         * bilibili获取黑名单api
+         * @param {string} fid 用户id
+         * @param {string} action 行为类型
+         * @returns {Promise}
+         */
+        async getBlackListfetch() {
+            const csrf = this.getCookieValue('bili_jct');
+            var mids = "";
+            var pn = 1;//初始页码
+            var ps = 50;//每页数量
+            while (true) {
+                const response = await fetch("https://api.bilibili.com/x/relation/blacks?ps=" + ps + "&pn=" + pn, {
+                    "headers": {
+                        "content-type": "application/x-www-form-urlencoded",
+                    },
+                    "method": "GET",
+                    "mode": "cors",
+                    "credentials": "include"
+                });
+                const text = await response.text();
+                const jsonData = JSON.parse(text);
+                const total = jsonData.data.total
+                //mids +=jsonData.data.list.map(item => item.mid * 23 + 114514233);
+                mids += jsonData.data.list.map(this.json_to_str).join('');
+                if (pn * ps > total) {
+                    break;
+                }
+                //mids +=","
+                pn++
+            }
+            //导出黑名单
+            this.saveTextToFile(mids, "黑名单.txt");
+        }
+
+        saveTextToFile(text, filename) {
+            const blob = new Blob([text], {type: 'text/plain'});
+            const elem = window.document.createElement('a');
+            elem.href = window.URL.createObjectURL(blob);
+            elem.download = filename;
+            document.body.appendChild(elem);
+            elem.click();
+            document.body.removeChild(elem);
+        }
+
+        /**
+         * 添加用户到黑名单
+         * @param {string} fid 用户id
+         * @returns {Promise}
+         */
+        addToBlack(fid = '') {
+            return this.controlBlackListfetch(fid, 'add');
+        }
+
+        /**
+         * 创建 批量控制黑名单 按钮
+         */
+        createTopBtnElement() {
+            const _this = this;
+            const btnDom = document.createElement('button');
+            btnDom.innerHTML = `导出黑名单`;
+            btnDom.onclick = function (e) {
+                _this.getBlackListfetch();
+            }
+            const btnDom2 = document.createElement('button');
+            btnDom2.innerHTML = `导入黑名单`;
+            btnDom2.onclick = function (e) {
+                var userInput = prompt("导入黑名单：", "");
+                var userList = userInput.split(",");
+
+                // 使用setTimeout来实现延迟
+                function processUserList(index) {
+                    if (index < userList.length) {
+                        //var mid =(userList[index]-114514233)/23
+                        var mid = userList[index]
+                        _this.addToBlack(mid);
+                        setTimeout(function () {
+                            processUserList(index + 1); // 递归调用，每次延迟1000毫秒
+                        }, 1000);
+                    } else {
+                        alert('执行完毕！'); // 当所有用户处理完毕后弹出提示
+                    }
+                }
+
+                processUserList(0); // 开始处理用户列表
+            }
+            document.querySelectorAll(BLACK_LIST_CLASSNAME)[0].appendChild(btnDom)
+            document.querySelectorAll(BLACK_LIST_CLASSNAME)[0].appendChild(btnDom2)
+        }
+    }
+
+    class ListenHref {
+        href = location.href;
+        timeId = null;
+
+        constructor() {
+        }
+
+        setInterval(time = 100, callback) {
+            this.timeId = setInterval(() => {
+                if (location.href !== this.href) {
+                    console.log('------------------href改变了---------------------');
+                    if (callback) {
+                        callback();
+                    }
+                    this.href = location.href;
+                }
+            }, time)
+            return this.timeId;
+        }
+
+        clearInterval(timeId = this.timeId) {
+            this.clearInterval(timeId);
+        }
+    }
+
+    const blackList = new AddBlacklist();
+    const listenHref = new ListenHref();
+    listenHref.setInterval(100, () => {
+        blackList.init();
+    })
+})();
