@@ -160,8 +160,11 @@ var nIdx,i: Integer;
     nStr: string;
     nOK: Boolean;
 begin
-  if not FileExists(EditFile.Text) then Exit;
-  //check valid
+  if not FileExists(EditFile.Text) then
+  begin
+    ShowMessage('请选择黑名单 或 关注列表');
+    Exit;
+  end;
 
   LoadRemoteBlackList();
   //载入远程黑名单
@@ -247,7 +250,7 @@ begin
       i := FWlist.IndexOf(nStr);
       if i >= 0 then
       begin
-        FWList.Delete(nIdx); //移出白名单
+        FWList.Delete(i); //移出白名单
         nOK := True;
       end;
     end else
