@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="d1472ccc-72b6-4d11-8899-fc81d72e9082" name="ftp_205">
+        <fileTransfer rootFolder="/root/remote" accessType="SFTP" host="192.168.1.110" port="22" sshConfigId="87ef0c1d-e274-4c2c-b9b7-926dc99c2b4a" sshConfig="k8s_master">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
