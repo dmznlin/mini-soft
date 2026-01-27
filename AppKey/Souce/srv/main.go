@@ -85,12 +85,21 @@ func main() {
 			return
 		}
 
+		if gTokens.Tokens[idx].Max <= gTokens.Tokens[idx].Has {
+			c.JSON(200, gin.H{
+				"res": 1,
+				"msg": "Token授权已使用完毕!",
+			})
+
+			return
+		}
+
 		id := c.Query("id")
 		//扣减流水
 		if !VerifySerial(gTokens.Tokens[idx].Token, id) {
 			c.JSON(200, gin.H{
 				"res": 1,
-				"msg": "无效请求!",
+				"msg": "无效的Token流水号!",
 			})
 
 			return
@@ -109,7 +118,7 @@ func main() {
 		if err != nil {
 			c.JSON(200, gin.H{
 				"res": 1,
-				"msg": err.Error(),
+				"msg": "保存Token失败," + err.Error(),
 			})
 
 			return
@@ -215,7 +224,7 @@ func VerifySerial(token, id string) bool {
 		return true
 	}
 
-	target = target.Add(30 * time.Second) //下30秒
+	target = target.Add(-60 * time.Second) //前1分30秒
 	newID = token + "_" + target.Format("2006-01-02 15:04:05")
 	if MD5(newID) == id {
 		return true

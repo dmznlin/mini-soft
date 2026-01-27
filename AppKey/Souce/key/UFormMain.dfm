@@ -39,7 +39,7 @@ object fFormMain: TfFormMain
       Top = 2
       Width = 231
       Height = 151
-      ActivePage = TabSheet2
+      ActivePage = TabSheet1
       Align = alClient
       Style = tsFlatButtons
       TabOrder = 0
@@ -118,5 +118,20 @@ object fFormMain: TfFormMain
         end
       end
     end
+  end
+  object Http1: TIdHTTP
+    AllowCookies = True
+    ProxyParams.BasicAuthentication = False
+    ProxyParams.ProxyPort = 0
+    Request.CharSet = 'utf-8'
+    Request.ContentEncoding = 'utf-8'
+    Request.ContentLength = -1
+    Request.ContentType = 'application/json'
+    Request.Accept = 'text/html, */*'
+    Request.BasicAuthentication = False
+    Request.UserAgent = 'Mozilla/3.0 (compatible; Indy Library)'
+    HTTPOptions = [hoForceEncodeParams]
+    Left = 208
+    Top = 12
   end
 end
