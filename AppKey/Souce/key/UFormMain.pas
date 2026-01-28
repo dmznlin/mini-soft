@@ -97,11 +97,24 @@ var nStr: string;
     nObj: ISuperObject;
     nSS: TStringStream;
 begin
+  if not FileExists(gPath + EditFile.Text) then
+  begin
+    nStr := Format('请复制秘钥文件 %s 到当前目录', [EditFile.Text]);
+    ShowMessage(nStr);
+    Exit;
+  end;
+
   if not gRemoteVerify then //本地授权
   begin
     AddExpireDate(gPath + EditFile.Text, Date2Str(EditDate.Date), True);
     ShowMessage('已保存: ' + gPath + EditFile.Text);
     Exit;
+  end;
+
+  if not IsSystemExpire(gPath + EditFile.Text) then
+  begin
+    nStr := Format('秘钥文件 %s 已正确授权,是否继续?', [EditFile.Text]);
+    if not QueryDlg(nStr, '询问', Handle) then Exit;
   end;
 
   nObj := nil;
