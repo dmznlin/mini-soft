@@ -1,0 +1,6 @@
+docker run -d \
+  --name ytled \
+  --restart=always \
+  --privileged \
+  -p 8802:80 \
+docker.runsoft.online:5000/local/ytled -port /dev/ttyUSB0

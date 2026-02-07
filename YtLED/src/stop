@@ -1,0 +1,3 @@
+docker stop ytled
+docker rm ytled
+docker rmi docker.runsoft.online:5000/local/ytled:latest

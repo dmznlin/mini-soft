@@ -1,10 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/dmznlin/znlib-go/znlib/modbus"
 	"github.com/goburrow/serial"
-	modbus "github.com/thinkgos/gomodbus/v2"
+	"sync"
 	"time"
+)
+
+var (
+	// 全局上下文
+	gCtx, gCancel = context.WithCancel(context.Background())
 )
 
 func main() {
@@ -31,22 +38,112 @@ func main() {
 		}))
 
 	client := modbus.NewClient(pv)
-	err = client.Connect()
+	//modbus client
+	client.SetAutoReconnect(3)
+	client.LogMode(false)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	//执行线程业务
+
+	go func() {
+	outloop:
+		for {
+			select {
+			case <-gCtx.Done():
+				log("Call ReadAndSend Break.")
+				break outloop
+			default:
+				//do nothing
+			}
+
+			ReadAndSend(client)
+			//处理业务
+			time.Sleep(5 * time.Second)
+		}
+
+		wg.Done()
+		//业务退出
+	}()
+
+	WaitSystemExit()
+	gCancel() //通知业务退出
+	wg.Wait()
+}
+
+// ReadAndSend 2026-02-06 11:20:43
+/*
+ 参数: cli,modbus通道
+ 描述: 读取温度数据并发送至LED屏幕
+*/
+func ReadAndSend(cli modbus.Client) {
+	defer func() {
+		if r := recover(); r != nil {
+			err, ok := r.(error)
+			if ok {
+				log("ReadAndSend: " + err.Error())
+			}
+		}
+	}()
+
+	if cli.IsConnected() {
+		cli.Close()
+		//重新接入端口
+	}
+
+	err := cli.Connect()
 	if err != nil {
 		log("连接 %s 端口失败: %s", gConfig.Port, err.Error())
 		return
 	}
-	defer client.Close()
+	defer cli.Close()
 
+outloop:
 	for {
-		results, err := client.ReadCoils(gConfig.SlaveID, gConfig.Address, gConfig.Quantity)
-		if err != nil {
-			fmt.Println(err.Error())
-		} else {
-			fmt.Printf("ReadDiscreteInputs %#v\r\n", results)
+		select {
+		case <-gCtx.Done():
+			log("ReadAndSend Exists.")
+			break outloop
+		default:
+			time.Sleep(time.Second * 1)
 		}
-		time.Sleep(time.Second * 5)
-	}
 
-	WaitSystemExit()
+		buf := []byte{gConfig.Address, 0x03, 0x00, 0x00, 0x00, 0x02}
+		crc := modbus.CRC16(buf[:len(buf)])
+		buf = append(buf, byte(crc), byte(crc>>8)) //大端
+
+		buf, err := cli.SendRawFrame(buf)
+		if err != nil {
+			log(err.Error())
+			break
+		}
+
+		if len(buf) != 9 || buf[0] != gConfig.Address || buf[1] != 0x03 {
+			log("ReadAndSend: 无效的数据长度.")
+			continue
+		}
+
+		crc = modbus.CRC16(buf[:len(buf)-2]) //crc为大端,标准为小端
+		if crc == byte2Val([]byte{buf[7], buf[8]}) {
+			log("ReadAndSend: CRC校验错误.")
+			break
+		}
+
+		tmp := byte2Val([]byte{buf[5], buf[6]})
+		str := StrReplace(gConfig.Display, time.Now().Format("15:04:05"), "$T")
+		str = StrReplace(str, fmt.Sprintf("%.1f", float32(tmp)/10), "$W")
+		//构建显示内容
+
+		disp, err := EncodeToGB2312TwoBytes(string([]byte{0x40, gConfig.Card}) + str + string([]byte{0x0D}))
+		if err != nil {
+			log(err.Error())
+			continue
+		}
+
+		_, err = cli.SendRawFrame(disp, true)
+		if err != nil {
+			log(err.Error())
+			continue
+		}
+	}
 }

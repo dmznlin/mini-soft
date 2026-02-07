@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+	"unicode"
 )
 
 import (
@@ -33,9 +34,10 @@ type (
 		StopBits int    `json:"stopbits"` //停止位
 		Parity   string `json:"parity"`   //校验位
 		Card     byte   `json:"card"`     //屏卡地址
+		Display  string `json:"display"`  //屏显格式
 
 		SlaveID  byte   `json:"slaveid"`  //从站ID
-		Address  uint16 `json:"address"`  //数据地址
+		Address  byte   `json:"address"`  //数据地址
 		Quantity uint16 `json:"quantity"` //
 	}
 
@@ -71,14 +73,15 @@ var (
 	//配置文件
 	gConfig = Config{
 		Port:     "/dev/ttyUSB0",
-		Baud:     9600,
+		Baud:     4800,
 		DataBits: 8,
 		StopBits: 1,
 		Parity:   "N",
 		SlaveID:  1,
-		Address:  0,
+		Address:  1,
 		Quantity: 10,
 		Card:     1,
+		Display:  "时间$T温度 $W℃",
 	}
 )
 
@@ -278,6 +281,109 @@ func StrHex2Bin(sHex []byte, filter bool) (bin []byte, ok bool) {
 	return bin, true
 }
 
+// StrPosFrom 2022-05-30 13:44:04
+/*
+ 参数: str,字符串
+ 参数: sub,子字符串
+ 参数: from,开始索引
+ 描述: 检索sub在str中的位置,不区分大小写
+*/
+func StrPosFrom(str, sub []rune, from int) int {
+	lstr := len(str)
+	lsub := len(sub)
+	if lstr < 1 || lsub < 1 {
+		return -1
+	}
+
+	compare := func(a, b rune) bool {
+		return a == b || (unicode.IsLower(a) && unicode.ToUpper(a) == b) || (unicode.IsUpper(a) && unicode.ToLower(a) == b)
+		//忽略大小写
+	}
+
+	var match bool
+	for idx := from; idx < lstr; idx++ {
+		if !compare(str[idx], sub[0]) {
+			continue
+			//匹配首字母
+		}
+
+		match = true
+		for i := 1; i < lsub; i++ {
+			if idx+i >= lstr {
+				match = false
+				break
+				//已超出字符串长度
+			}
+
+			if !compare(str[idx+i], sub[i]) {
+				match = false
+				break
+				//子字符串未匹配
+			}
+		}
+
+		if match {
+			return idx
+		}
+	}
+
+	return -1
+}
+
+// StrReplace 2022-05-30 13:43:26
+/*
+ 参数: str,字符串
+ 参数: new,新字符串
+ 参数: old,现有字符串
+ 描述: 使用new替换str中的old字符串,不区分大小写
+*/
+func StrReplace(str string, new string, old ...string) string {
+	if old == nil || len(str) < 1 {
+		return str
+	}
+
+	var idx, pos, sublen int
+	var update = true //需更新strBuf
+	var strBuf = make([]rune, 0, 20)
+	var subBuf = make([]rune, 0, 10)
+
+	for _, tmp := range old {
+		subBuf = append(subBuf[0:0], []rune(tmp)...)
+		sublen = len(subBuf)
+		if sublen < 1 { //旧字符串为空
+			continue
+		}
+
+		if update {
+			update = false
+			strBuf = append(strBuf[0:0], []rune(str)...)
+		}
+
+		idx = 0
+		pos = StrPosFrom(strBuf, subBuf, idx)
+		for pos >= 0 {
+			update = true
+			if idx == 0 {
+				str = ""
+				//重新配置字符串
+			}
+
+			str = str + string(strBuf[idx:pos]) + new
+			idx = pos + sublen
+			pos = StrPosFrom(strBuf, subBuf, idx)
+		}
+
+		if update {
+			if idx < len(strBuf) {
+				str = str + string(strBuf[idx:])
+			}
+
+		}
+	}
+
+	return str
+}
+
 // EncodeToTwoBytes 2026-02-04 22:13:27
 /*
  参数: s,中英混合的原始字符串
@@ -330,7 +436,7 @@ func EncodeToGB2312TwoBytes(s string) ([]byte, error) {
 		switch len(gbBytes) {
 		case 1:
 			// ASCII字符：高位0x00 + 原始ASCII字节，保证2字节
-			result = append(result, 0x00, gbBytes[0])
+			result = append(result, gbBytes[0])
 		case 2:
 			// GB2312汉字：直接使用原生2字节编码，无需额外处理
 			result = append(result, gbBytes...)
@@ -366,6 +472,7 @@ func GetCRC(data []byte, len uint16) uint16 {
 			}
 		}
 	}
+
 	return CRCFull // 直接返回uint16，无需类型转换
 }
 
@@ -417,4 +524,21 @@ func BuildCardData(text string) ([]byte, error) {
 
 	data.CRC = GetCRC(buf[10:], uint16(len(buf)-13)) //前10个网络标记 + 末尾 3 个字节
 	return restruct.Pack(binary.LittleEndian, &data)
+}
+
+// byte2Val 2026-02-06 17:13:40
+/*
+ 参数: b,字节组
+ 描述: 双字节构建 温度/湿度 值
+*/
+func byte2Val(b []byte) uint16 {
+	var num uint16
+	buf := bytes.NewBuffer(b)
+	err := binary.Read(buf, binary.BigEndian, &num)
+	if err != nil {
+		log("byte2Val: %s", err.Error())
+		return 0
+	}
+
+	return num
 }
