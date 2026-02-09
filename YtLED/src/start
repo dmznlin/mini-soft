@@ -3,4 +3,5 @@ docker run -d \
   --restart=always \
   --privileged \
   -p 8802:80 \
-docker.runsoft.online:5000/local/ytled -port /dev/ttyUSB0
+  -v /var/mywork/ytled:/app/cfg/ \
+docker.runsoft.online:5000/local/ytled

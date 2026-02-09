@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/dmznlin/znlib-go/znlib/modbus"
-	"github.com/goburrow/serial"
 	"sync"
 	"time"
+
+	"github.com/dmznlin/znlib-go/znlib/modbus"
 )
 
 var (
@@ -27,20 +27,15 @@ func main() {
 		return
 	}
 
-	pv := modbus.NewRTUClientProvider(modbus.WithEnableLogger(),
-		modbus.WithSerialConfig(serial.Config{
-			Address:  gConfig.Port,
-			BaudRate: gConfig.Baud,
-			DataBits: gConfig.DataBits,
-			StopBits: gConfig.StopBits,
-			Parity:   gConfig.Parity,
-			Timeout:  modbus.SerialDefaultTimeout,
-		}))
-
-	client := modbus.NewClient(pv)
-	//modbus client
-	client.SetAutoReconnect(3)
-	client.LogMode(false)
+	var client *modbus.ModbusClient
+	client, err = modbus.NewClient(&modbus.ClientConfiguration{
+		URL:      "rtu://" + gConfig.Port,
+		Speed:    gConfig.Baud,
+		DataBits: gConfig.DataBits,
+		Parity:   configParity(),
+		StopBits: gConfig.StopBits,
+		Timeout:  300 * time.Millisecond,
+	})
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -71,12 +66,29 @@ func main() {
 	wg.Wait()
 }
 
+// configParity 2026-02-09 18:56:05
+/*
+ 描述: 获取配置 校验方式
+*/
+func configParity() uint {
+	switch gConfig.Parity {
+	case "none":
+		return modbus.PARITY_NONE
+	case "odd":
+		return modbus.PARITY_ODD
+	case "even":
+		return modbus.PARITY_EVEN
+	default:
+		return modbus.PARITY_NONE
+	}
+}
+
 // ReadAndSend 2026-02-06 11:20:43
 /*
  参数: cli,modbus通道
  描述: 读取温度数据并发送至LED屏幕
 */
-func ReadAndSend(cli modbus.Client) {
+func ReadAndSend(cli *modbus.ModbusClient) {
 	defer func() {
 		if r := recover(); r != nil {
 			err, ok := r.(error)
@@ -86,17 +98,21 @@ func ReadAndSend(cli modbus.Client) {
 		}
 	}()
 
-	if cli.IsConnected() {
-		cli.Close()
-		//重新接入端口
+	err := cli.Close()
+	if err != nil {
+		log("关闭 %s 端口失败: %s", gConfig.Port, err.Error())
+		return
 	}
 
-	err := cli.Connect()
+	err = cli.Open()
 	if err != nil {
 		log("连接 %s 端口失败: %s", gConfig.Port, err.Error())
 		return
 	}
+
 	defer cli.Close()
+	var tmp uint16
+	//温度值
 
 outloop:
 	for {
@@ -105,31 +121,15 @@ outloop:
 			log("ReadAndSend Exists.")
 			break outloop
 		default:
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Duration(gConfig.Refresh) * time.Second)
 		}
 
-		buf := []byte{gConfig.Address, 0x03, 0x00, 0x00, 0x00, 0x02}
-		crc := modbus.CRC16(buf[:len(buf)])
-		buf = append(buf, byte(crc), byte(crc>>8)) //大端
-
-		buf, err := cli.SendRawFrame(buf)
+		tmp, err = cli.ReadRegister(gConfig.Address, modbus.HOLDING_REGISTER)
 		if err != nil {
-			log(err.Error())
+			log("ReadRegister Error: %s", err.Error())
 			break
 		}
 
-		if len(buf) != 9 || buf[0] != gConfig.Address || buf[1] != 0x03 {
-			log("ReadAndSend: 无效的数据长度.")
-			continue
-		}
-
-		crc = modbus.CRC16(buf[:len(buf)-2]) //crc为大端,标准为小端
-		if crc == byte2Val([]byte{buf[7], buf[8]}) {
-			log("ReadAndSend: CRC校验错误.")
-			break
-		}
-
-		tmp := byte2Val([]byte{buf[5], buf[6]})
 		str := StrReplace(gConfig.Display, time.Now().Format("15:04:05"), "$T")
 		str = StrReplace(str, fmt.Sprintf("%.1f", float32(tmp)/10), "$W")
 		//构建显示内容
@@ -140,7 +140,7 @@ outloop:
 			continue
 		}
 
-		_, err = cli.SendRawFrame(disp, true)
+		err = cli.WriteRawData(disp)
 		if err != nil {
 			log(err.Error())
 			continue
