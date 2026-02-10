@@ -1,3 +1,5 @@
+# 若脚本不可执行,请转为 unix 格式
+
 docker run -d \
   --name ytled \
   --restart=always \

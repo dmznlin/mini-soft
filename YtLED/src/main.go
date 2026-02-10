@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -10,6 +11,9 @@ import (
 )
 
 var (
+	// 启动计时
+	gInitTimer = time.Now()
+
 	// 全局上下文
 	gCtx, gCancel = context.WithCancel(context.Background())
 )
@@ -34,7 +38,7 @@ func main() {
 		DataBits: gConfig.DataBits,
 		Parity:   configParity(),
 		StopBits: gConfig.StopBits,
-		Timeout:  300 * time.Millisecond,
+		Timeout:  1200 * time.Millisecond,
 	})
 
 	wg := sync.WaitGroup{}
@@ -42,6 +46,9 @@ func main() {
 	//执行线程业务
 
 	go func() {
+		var isRun bool = false
+		//run tag
+
 	outloop:
 		for {
 			select {
@@ -49,12 +56,16 @@ func main() {
 				log("Call ReadAndSend Break.")
 				break outloop
 			default:
-				//do nothing
+				if isRun {
+					time.Sleep(5 * time.Second)
+					//异常业务延迟
+				} else {
+					isRun = true
+				}
 			}
 
 			ReadAndSend(client)
 			//处理业务
-			time.Sleep(5 * time.Second)
 		}
 
 		wg.Done()
@@ -122,6 +133,27 @@ outloop:
 			break outloop
 		default:
 			time.Sleep(time.Duration(gConfig.Refresh) * time.Second)
+		}
+
+		if gConfig.Expire != cSystemNolimited &&
+			(gConfig.Expire == cSystemExpire || time.Since(gInitTimer).Hours() > 30*24) { //系统过期
+			if gConfig.Expire != cSystemExpire { //保存过期标记
+				gConfig.Expire = cSystemExpire
+				SaveConfig(gConfigFile)
+			}
+
+			disp, err := EncodeToGB2312TwoBytes(string([]byte{0x40, gConfig.Card}) + "  系统超时" + string([]byte{0x0D}))
+			if err != nil {
+				log(err.Error())
+				break
+			}
+
+			err = cli.WriteRawData(disp)
+			if err == nil {
+				time.Sleep(time.Second) //等待写入
+			}
+
+			os.Exit(0)
 		}
 
 		tmp, err = cli.ReadRegister(gConfig.Address, modbus.HOLDING_REGISTER)

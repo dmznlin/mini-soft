@@ -20,7 +20,9 @@ import (
 )
 
 const (
-	LayoutDateTime = "2006-01-02 15:04:05" //日期 + 时间
+	cSystemExpire    = 7                     //系统过期标记
+	cSystemNolimited = 5                     //系统不限制时间
+	LayoutDateTime   = "2006-01-02 15:04:05" //日期 + 时间
 )
 
 type (
@@ -37,6 +39,7 @@ type (
 		SlaveID  byte   `json:"slaveid"`  //从站ID
 		Address  uint16 `json:"address"`  //数据地址
 		Quantity uint16 `json:"quantity"` //
+		Expire   byte   `json:"expire"`   //系统过期
 	}
 )
 
@@ -57,6 +60,7 @@ var (
 		Card:     1,
 		Display:  "时间$T温度 $W℃",
 		Refresh:  1,
+		Expire:   0,
 	}
 )
 
