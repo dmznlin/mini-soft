@@ -38,7 +38,7 @@ func main() {
 		DataBits: gConfig.DataBits,
 		Parity:   configParity(),
 		StopBits: gConfig.StopBits,
-		Timeout:  1200 * time.Millisecond,
+		Timeout:  300 * time.Millisecond,
 	})
 
 	wg := sync.WaitGroup{}

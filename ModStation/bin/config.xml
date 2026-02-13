@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<znlib>
+    <logger>
+        <!-- 日志目录:$path表示exe路径 -->
+        <filePath>$path/logs</filePath>
+        <!-- 日志文件名称 -->
+        <filename>app_</filename>
+        <!-- 日志级别 trace,debug,info,warning,error,fatal,panic -->
+        <loglevel>info</loglevel>
+        <!-- 使用彩色终端 -->
+        <colorful>true</colorful>
+        <!-- 最长保存多少天 -->
+        <max_age>30</max_age>
+    </logger>
+
+    <!-- 雪花算法(id) -->
+    <snowflake enable="true">
+        <!-- 节点标识 -->
+        <workerID>1</workerID>
+        <!-- 数据中心ID -->
+        <dataCenterID>0</dataCenterID>
+    </snowflake>
+
+    <!-- 数据库管理器 -->
+    <dbmanager enable="false">
+        <!--加密秘钥(des) -->
+        <encryptKey/>
+        <!-- 默认数据库 -->
+        <defaultDB>mssql_main</defaultDB>
+        <!-- 数据库连接列表 -->
+        <conn>
+            <!-- ::::::::::::::::
+            type可选的数据库类型:
+            SqlServer,MySQL,DB2,Oracle,PostgreSQL,Sqlite
+
+            dsn支持的变量列表:
+              $user: 用户
+              $pwd:密码
+              $host:主机
+              $path: 路径
+            ::::::::::::::::   -->
+            <db name="mysql_main">
+                <!-- 驱动名称 -->
+                <driver>mysql</driver>
+                <!-- 数据库类型 -->
+                <type>MySQL</type>
+                <!-- 连接池配置 -->
+                <maxOpen>5</maxOpen>
+                <maxIdle>2</maxIdle>
+                <!-- 登录用户 -->
+                <user>root</user>
+                <!-- 用户密码(DES) -->
+                <password>75tWB8bgmn8=</password>
+                <!-- 主机地址 -->
+                <host>127.0.0.1</host>
+                <!-- 连接字符串 -->
+                <dsn>$user:$pwd@tcp($host:3306)/test</dsn>
+            </db>
+            <db name="mssql_main">
+                <!-- 驱动名称 -->
+                <driver>adodb</driver>
+                <!-- 数据库类型 -->
+                <type>SqlServer</type>
+                <!-- 连接池配置 -->
+                <maxOpen>5</maxOpen>
+                <maxIdle>2</maxIdle>
+                <!-- 登录用户 -->
+                <user>sa</user>
+                <!-- 用户密码(DES) -->
+                <password>sMGRVV9wABI=</password>
+                <!-- 主机地址 -->
+                <host>192.168.2.201</host>
+                <!-- 连接配置(base64) -->
+                <dsn>
+                    Provider=SQLOLEDB;Initial Catalog=HXWeb;
+                    user id=$user;password=$pwd;Data Source=$host
+                </dsn>
+            </db>
+        </conn>
+    </dbmanager>
+
+    <!-- redis服务 -->
+    <redis enable="false">
+        <!-- 是否集群 -->
+        <cluster>false</cluster>
+        <!-- 服务器列表,多服务器逗号分割 -->
+        <server>192.168.2.202:6379</server>
+        <!-- 登录密码 -->
+        <password/>
+        <!-- 最大连接数 -->
+        <poolSize/>
+        <!-- 默认数据库 -->
+        <defaultDB/>
+        <!-- 超时设置 -->
+        <timeout>
+            <!-- 连接建立超时时间,默认5秒 -->
+            <dial/>
+            <!-- 读超时,默认3秒,-1表示取消读超时 -->
+            <read/>
+            <!-- 写超时,默认等于读超时,-1表示取消写超时 -->
+            <write/>
+            <!-- 当所有连接都处在繁忙状态时,客户端等待可用连接的最大等待时长,默认为读超时+1秒 -->
+            <pool/>
+        </timeout>
+    </redis>
+
+    <!-- mqtt服务 -->
+    <mqtt enable="false">
+        <!-- 服务器(集群),多地址逗号分割 -->
+        <broker>mqtts://192.168.2.202:1883</broker>
+        <!-- 身份验证 -->
+        <auth>
+            <!-- value:前缀;auto:自动增加n位随机id -->
+            <clientID auto="0">kt001</clientID>
+            <!-- 用户名 -->
+            <user>user_mqtt</user>
+            <!-- 登录密码(des) -->
+            <password>8YAQLJ9iCRM=</password>
+        </auth>
+        <!-- 使用tls证书 -->
+        <tls use="true">
+            <ca>$path/cert/ca.crt</ca>
+            <crt>$path/cert/user_mqtt.crt</crt>
+            <key>$path/cert/user_mqtt.key</key>
+        </tls>
+        <!-- znlib.mqttutils辅助对象 -->
+        <utils>
+            <!-- 消息验证密钥(DES) -->
+            <encryptKey/>
+            <!-- 默认是否验证数据合法性 -->
+            <verifyMsg>false</verifyMsg>
+            <!-- 工作对象个数 -->
+            <workerNum>2</workerNum>
+            <!-- 消息延迟警告(秒) -->
+            <delayWarn>1</delayWarn>
+            <!--  压缩数据:长度超过min启用压缩 -->
+            <zipData min="200">true</zipData>
+        </utils>
+        <!-- 订阅主题:只读不写,$id自动替换为clientID -->
+        <subTopic>
+            <sub qos="2">/ktmanager/tunnel/down/$id</sub>
+        </subTopic>
+        <!-- 发布主题:只写不读,$id自动替换为clientID -->
+        <pubTopics>
+            <pub qos="0">/ktmanager/tunnel/up/$id</pub>
+        </pubTopics>
+    </mqtt>
+
+    <!-- 基于mqtt的ssh服务 -->
+    <mqttSSH enable="false">
+        <!-- 身份验证 -->
+        <auth>
+            <!-- 主机地址,一般为localhost -->
+            <host>192.168.2.202:22</host>
+            <!-- 用户名 -->
+            <user>root</user>
+            <!-- 登录密码(des) -->
+            <password>Ulp7LeYNajQ+dBEaZ8D5Pw==</password>
+        </auth>
+        <!-- 超时设置 -->
+        <timeout>
+            <!-- 连接超时(毫秒ms) -->
+            <conn>3200</conn>
+            <!-- 超时自动注销(秒s) -->
+            <exit>60</exit>
+        </timeout>
+        <mqtt>
+            <!-- mqtt.Cmd:传输ssh的指令代码 -->
+            <command>1</command>
+            <!-- mqtt.ssh通道:传输ssh的数据通道 -->
+            <channel>
+                <chan qos="0">/ktmanager/tunnel/ssh/$id</chan>
+            </channel>
+        </mqtt>
+    </mqttSSH>
+</znlib>
