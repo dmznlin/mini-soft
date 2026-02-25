@@ -4,7 +4,6 @@ mkdir -p /var/mywork/modbus
 docker run -d \
   --name modbus \
   --restart=always \
-  --privileged \
   -p 5502:5502 \
   -v /var/mywork/modbus:/app/cfg/ \
 docker.runsoft.online:5000/local/modstation

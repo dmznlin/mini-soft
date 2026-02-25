@@ -1,1 +1,0 @@
-docker build -t docker.runsoft.online:5000/local/modstation:latest -f Dockerfile .

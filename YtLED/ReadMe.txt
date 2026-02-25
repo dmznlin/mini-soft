@@ -1,5 +1,12 @@
-﻿宇通LED屏显示温度
+﻿YtLED：宇通LED屏显示温度
 
+目录说明:
+*.any: 辅助脚本
+*.bin: binary编译
+*.src: source源码
+*.doc: document文档
+*.res: resource资源
+*.tmp: temporary临时测试
 
    /*code is far away from bug with the animal protecting
     *  ┏┓　　　┏┓

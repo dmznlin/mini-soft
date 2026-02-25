@@ -1,5 +1,12 @@
-﻿ModbusStation：基于modbus协议的多数据源采集服务
+ModbusStation：基于modbus协议的多数据源采集服务
 
+目录说明:
+*.any: 辅助脚本
+*.bin: binary编译
+*.src: source源码
+*.doc: document文档
+*.res: resource资源
+*.tmp: temporary临时测试
 
    /*code is far away from bug with the animal protecting
     *  ┏┓　　　┏┓
