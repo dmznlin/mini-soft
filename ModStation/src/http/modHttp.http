@@ -1,0 +1,8 @@
+### 读取数据
+GET http://localhost:8080/modbus?act=1&id=0&type=2&addr=2&len=2&end=1
+
+### 写寄存器:地址4,数据1234
+GET http://localhost:8080/modbus?act=2&id=1&type=2&addr=4&len=1&end=1&data=BNI%3D
+
+### 写线圈:地址6,数据true
+GET http://localhost:8080/modbus?act=2&id=1&type=1&addr=6&len=1&end=1&data=AQ%3D%3D

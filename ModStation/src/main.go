@@ -49,7 +49,6 @@ func main() {
 
 	znlib.Info("服务开启> " + Devices.Local.Service)
 	znlib.WaitSystemExit(func() error {
-		server.Stop()
-		return nil
+		return server.Stop()
 	})
 }

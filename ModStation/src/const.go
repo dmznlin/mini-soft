@@ -6,6 +6,7 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/dmznlin/znlib-go/znlib/modbus"
@@ -22,8 +23,8 @@ const (
 	TcpTls
 	UDP
 	UserMem
-	UserTcp
 	UserHttp
+	UserHttps
 )
 
 // LinkComment 通讯类型描述
@@ -38,27 +39,29 @@ var LinkComment = []struct {
 	{TcpTls, "tcp+tls://"},
 	{UDP, "udp://"},
 	{UserMem, "mem://"},
-	{UserTcp, "user+tcp://"},
-	{UserHttp, "user+http://"},
+	{UserHttp, "http://"},
+	{UserHttps, "https://"},
 }
 
 // LinkConfig 连接参数
 type LinkConfig struct {
-	Name          string        `json:"name"`     //链路名称
-	Url           string        `json:"url"`      //站点地址
-	Type          LinkType      `json:"-"`        //连接类型
-	BaudRate      uint          `json:"baudRate"` //波特率
-	DataBits      uint          `json:"dataBits"` //数据位
-	Parity        uint          `json:"parity"`   //校验位
-	StopBits      uint          `json:"stopBits"` //启停为
-	TLSClientCert string        `json:"certfile"`
-	TLSClientKey  string        `json:"keyfile"` //客户端 X509KeyPair
-	TLSRootCA     string        `json:"cafile"`  //根证书文件
-	Timeout       time.Duration `json:"timeout"` //读超时
+	Name          string        `json:"name"`      //链路名称
+	Url           string        `json:"url"`       //站点地址
+	Type          LinkType      `json:"-"`         //连接类型
+	BaudRate      uint          `json:"baudRate"`  //波特率
+	DataBits      uint          `json:"dataBits"`  //数据位
+	Parity        uint          `json:"parity"`    //校验位
+	StopBits      uint          `json:"stopBits"`  //启停为
+	TLSClientCert string        `json:"certFile"`  //客户端 公钥
+	TLSClientKey  string        `json:"keyFile"`   //客户端 私钥
+	TLSRootCA     string        `json:"caFile"`    //根证书文件
+	ServerName    string        `json:"serverDNS"` //服务端域名
+	Timeout       time.Duration `json:"timeout"`   //读超时
 
-	LastErr string               `json:"-"` //最后异常
-	LastLog time.Time            `json:"-"` //最后记录时间
-	Client  *modbus.ModbusClient `json:"-"` //modbus客户端
+	LastErr    string               `json:"-"` //最后异常
+	LastLog    time.Time            `json:"-"` //最后记录时间
+	Client     *modbus.ModbusClient `json:"-"` //modbus 客户端
+	HttpClient *http.Client         `json:"-"` //http 客户端
 }
 
 // DataType 数据类型

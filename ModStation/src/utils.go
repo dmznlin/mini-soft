@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -31,7 +32,7 @@ func LoadSlavers(cfg string) error {
 
 	var lt LinkType
 	for _, link := range Devices.Links {
-		if link.Type == TcpTls {
+		if link.Type == TcpTls || link.Type == UserHttps {
 			if !znlib.FileExists(link.TLSClientCert, false) {
 				return fmt.Errorf("通道 %s.certfile 配置错误: 文件丢失", link.Name)
 			}
@@ -153,7 +154,7 @@ func SlaverModal() {
 			DataComm: "uint16",
 			Quantity: 10,
 		}, {
-			Addr:     10,
+			Addr:     0,
 			DataComm: "bool",
 			Quantity: 10,
 		}},
@@ -348,5 +349,49 @@ func PrepareLink(slaver *Slaver) (err error) {
 		}
 	}
 
+	if slaver.Link.Type == UserHttp && slaver.Link.HttpClient == nil { //http
+		slaver.Link.HttpClient = &http.Client{
+			Timeout: slaver.Link.Timeout * time.Millisecond, //超时处理
+		}
+	}
+
+	if slaver.Link.Type == UserHttps && slaver.Link.HttpClient == nil { //http + tls
+		slaver.Link.HttpClient, err = NewTlsClient(slaver.Link)
+		return err
+	}
+
 	return nil
+}
+
+// NewTlsClient 2026-02-26 22:25:35
+/*
+ 参数: link,通讯链路
+ 描述: 生成双向认证 http client
+*/
+func NewTlsClient(link *LinkConfig) (*http.Client, error) {
+	// 1.加载用于验证客户端证书的CA根证书
+	cert, err := tls.LoadX509KeyPair(link.TLSClientCert, link.TLSClientKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load client tls key pair: %v\n", err)
+	}
+
+	cp, err := modbus.LoadCertPool(link.TLSRootCA)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load client tls key pair: %v\n", err)
+	}
+
+	cfg := &tls.Config{
+		RootCAs:            cp,
+		InsecureSkipVerify: len(link.ServerName) < 1, //无域名时跳过 dns 验证
+		ServerName:         link.ServerName,          //服务端 dns
+		Certificates:       []tls.Certificate{cert},
+		ClientAuth:         tls.NoClientCert,
+	}
+
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: cfg,
+		},
+		Timeout: link.Timeout * time.Millisecond, //超时处理
+	}, nil
 }
