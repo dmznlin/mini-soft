@@ -12,7 +12,7 @@ WORKDIR /build
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=arm64 \
+    GOARCH=amd64 \
     GOPROXY=https://goproxy.cn,direct
 # 设置交叉编译环境变量，指定目标架构 linux/amd64
 
@@ -27,11 +27,11 @@ RUN --mount=type=cache,target=/data/gopath \
 #下载依赖并缓存
 
 COPY . ./
-RUN go build.sh -ldflags="-s -w" -o srv
+RUN go build -ldflags="-s -w" -o srv
 # 交叉编译
 
-# FROM docker.runsoft.online:5000/docker.io/alpine:latest
-FROM --platform=linux/arm64 docker.runsoft.online:5000/docker.io/alpine:arm-latest
+FROM docker.runsoft.online:5000/docker.io/alpine:latest
+# FROM --platform=linux/arm64 docker.runsoft.online:5000/docker.io/alpine:arm-latest
 
 WORKDIR /app
 # 工作目录
@@ -46,7 +46,7 @@ RUN apk add --no-cache ca-certificates tzdata && \
     apk del tzdata
 # 安装必要的系统依赖（如时区、证书等，根据实际需求调整）
 
-EXPOSE 80
+EXPOSE 5502
 # 使端口80可供此容器外的环境使用
 
 VOLUME ["/app/cfg/"]

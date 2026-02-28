@@ -14,7 +14,7 @@ var _ = znlib.InitLib(nil, nil)
 
 func main() {
 	var err error
-	var cfg = znlib.AppPath + "slavers.json"
+	var cfg = znlib.AppPath + "cfg" + znlib.PathSeparator + "slavers.json"
 
 	if znlib.FileExists(cfg, false) {
 		err = LoadSlavers(cfg) //加载配置

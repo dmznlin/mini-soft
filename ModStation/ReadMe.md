@@ -1,3 +1,14 @@
+**ModbusStation**
+
+modbus数据站：基于modbus协议的多数据源采集服务，主站通过一个链路，读写丰富的 标准/非标 modbus 设备。
+
+特性如下：<br>
+1、以 modbus slaver on tcp 提供服务，支持多个主站同时读写。<br>
+2、协议丰富：RTU、RTUOverTCP、RTUOverUDP、TCP、TcpTls、UDP、UserMem、UserHttp、UserHttps。<br>
+3、UserMem：为多个主站提供共享数据的虚拟从站。<br>
+4、UserHttp/UserHttps：将不支持 modbus 协议的设备，转为标准 modbus 协议。<br>
+5、支持 在 x864/arm 设备上直接部署，或构建 docker镜像、使用集群部署。
+
 **一、支持协议**
 
 | 协议         | 格式                       | 描述             |
