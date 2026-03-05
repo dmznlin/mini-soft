@@ -1,0 +1,1 @@
+docker build -t docker.runsoft.online:5000/local/mqttunnel:latest -f Dockerfile ../src
