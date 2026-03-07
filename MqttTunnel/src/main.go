@@ -80,11 +80,13 @@ func main() {
 		return
 	}
 
-	//启动 tcp
-	err = TcpUtils.start()
-	if err != nil {
-		znlib.Error(err.Error())
-		return
+	//客户端启动 tcp-server
+	if !Tunnel.isSrv {
+		err = TcpUtils.start()
+		if err != nil {
+			znlib.Error(err.Error())
+			return
+		}
 	}
 
 	if Tunnel.isSrv {

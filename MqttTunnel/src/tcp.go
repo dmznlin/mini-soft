@@ -23,25 +23,22 @@ type tcpUtils struct {
 	conn   net.Conn
 	connOK bool
 
-	doInit sync.Once
 	wg     sync.WaitGroup
 	waiter *znlib.Waiter[bool]
 }
 
-var TcpUtils = tcpUtils{}
+var TcpUtils = tcpUtils{
+	srvOK:  false,
+	connOK: false,
+	wg:     sync.WaitGroup{},
+	waiter: znlib.NewWaiter[bool](nil),
+}
 
 // start 2026-03-02 18:29:24
 /*
  描述: 启动服务
 */
 func (tu *tcpUtils) start() (err error) {
-	tu.doInit.Do(func() {
-		tu.srvOK = false
-		tu.connOK = false
-		tu.wg = sync.WaitGroup{}
-		tu.waiter = znlib.NewWaiter[bool](nil)
-	})
-
 	if Tunnel.isSrv { //服务器
 		if len(Tunnel.srvHost) < 1 {
 			return nil
@@ -102,20 +99,29 @@ func (tu *tcpUtils) Stop() (err error) {
 	return nil
 }
 
+// closeConn 2026-03-05 15:28:01
+/*
+ 描述: 关闭数据链路
+*/
+func (tu *tcpUtils) closeConn() {
+	if tu.connOK {
+		tu.connOK = false
+		tu.conn.Close()
+	}
+}
+
 // srvConn 2026-03-02 18:28:53
 /*
  描述: 客户端提供接入服务
 */
 func (tu *tcpUtils) srvConn() {
+	caller := "tcpUtils.srvConn"
+	defer znlib.DeferHandle(false, caller)
+
 	znlib.Info(fmt.Sprintf("client tcp service on: 127.0.0.1:%d", Tunnel.Client.Port))
 	//show status
 
 	defer func() {
-		err := recover()
-		if err != nil {
-			znlib.ErrorCaller(err, "tcpUtils.srvConn")
-		}
-
 		if tu.connOK {
 			tu.connOK = false
 			tu.conn.Close()
@@ -152,6 +158,9 @@ func (tu *tcpUtils) srvConn() {
 			continue
 		}
 
+		tu.connOK = true
+		//set flag to close
+
 		var cmd MqttCmd
 		buf, err := cmd.CmdConnHost(Tunnel.srvHost)
 		if err != nil {
@@ -165,13 +174,11 @@ func (tu *tcpUtils) srvConn() {
 		tu.waiter.Reset()
 		val, ok := tu.waiter.WaitFor(5 * time.Second)
 		if !ok || !*val { //超时或连接异常
+			znlib.Warn("tcpUtils.srvConn: wait CmdConnResponse timeout")
 			continue
 		}
 
-		tu.connOK = true
 		fmt.Println("tcp new connection: ", tu.conn.RemoteAddr())
-		//show status
-
 		tu.doConn()
 		//处理数据
 	}
@@ -182,12 +189,23 @@ func (tu *tcpUtils) srvConn() {
  描述: 服务器连接主机
 */
 func (tu *tcpUtils) cliConn() {
+	defer znlib.DeferHandle(false, "tcpUtils.cliConn")
+	znlib.Info(fmt.Sprintf("server connected host: %s", Tunnel.srvHost))
+	//show status
+
 	tu.waiter.Reset()
-	tu.waiter.WaitFor(10 * time.Second)
+	val, ok := tu.waiter.WaitFor(10 * time.Second)
 	//等待客户端订阅数据通道
 
-	znlib.Info(fmt.Sprintf("server connect host: %s", Tunnel.srvHost))
-	//show status
+	if !ok || !*val { //超时或连接异常
+		if tu.connOK {
+			tu.connOK = false
+			tu.conn.Close()
+		}
+
+		znlib.Warn("tcpUtils.cliConn: wait CmdBeginTrans timeout")
+		return
+	}
 
 	defer tu.wg.Done()
 	tu.wg.Add(1)
@@ -200,14 +218,18 @@ func (tu *tcpUtils) cliConn() {
 */
 func (tu *tcpUtils) doConn() {
 	defer func() {
-		err := recover()
-		if err != nil {
-			znlib.ErrorCaller(err, "tcpUtils.doConn")
-		}
-
 		if tu.connOK {
 			tu.connOK = false
 			tu.conn.Close()
+
+			var cmd MqttCmd
+			buf, err := cmd.CmdConnBreak()
+			if err != nil {
+				znlib.ErrorCaller(err, "tcpUtils.doConn")
+			}
+
+			MqttUtils.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+			//发起连接请求
 		}
 	}()
 
@@ -227,19 +249,20 @@ outLoop:
 		}
 
 		if n > 0 { //发送数据
-			tp := Tunnel.Broker.TopicData.Topic
-			if Tunnel.isSrv {
-				tp = tp + cTunnelDown
-			} else {
-				tp = tp + cTunnelUp
+			if !Tunnel.isSrv && buf[0] == cTagUpdateHost[0] && n > cTagLen { //客户端动态设置服务器和主机参数
+				if string(buf[:cTagLen]) == cTagUpdateHost { //前缀匹配
+					Tunnel.srvHost = string(buf[cTagLen:n])
+					znlib.Info(fmt.Sprintf("tcpUtils.doConn: new host(%s)", Tunnel.srvHost))
+					continue
+				}
 			}
 
-			MqttUtils.Publish(tp, Tunnel.Broker.TopicData.Qos, buf[:n])
+			MqttUtils.Publish(Tunnel.topicSnd, Tunnel.Broker.TopicData.Qos, buf[:n])
 			//send data
 		}
 
 		if err != nil && ConnInvalid(err) {
-			znlib.Warn(fmt.Sprintf("host disconnect: %s", Tunnel.srvHost))
+			znlib.Warn(fmt.Sprintf("host disconnect: %s", tu.conn.RemoteAddr()))
 			break outLoop
 		}
 	}

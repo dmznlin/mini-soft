@@ -1,7 +1,15 @@
 // Package main
 /******************************************************************************
   作者: dmzn@163.com 2026-02-27 14:30:26
-  描述:
+  描述: 使用 mqtt 通道,传输命令和数据
+
+数据流向:
+1.客户端c: XShell -> tcp-server -> mqtt-client
+2.服务器s: mqtt-client -> tcp-client -> host/service
+
+客户端发起连接主机: CmdConnHost
+1.c -> s: 服务器名, 主机/服务地址(如: 127.0.0.1:80)
+2.s -> c: 返回连接结果,正常 或 异常描述
 ******************************************************************************/
 package main
 
@@ -34,6 +42,7 @@ var MqttUtils = &mqttUtils{
 const (
 	CmdConnHost   = iota + 5 //客户端: 向服务器发起连接请求
 	CmdConnRep               //服务器: 连接结果反馈
+	CmdConnBreak             //双向: tcp连接断开
 	CmdBeginTrans            //客户端: 通知服务端开始传输
 )
 
@@ -148,6 +157,23 @@ func (mc *MqttCmd) CmdBeginTrans() ([]byte, error) {
 	return mc.Marshal()
 }
 
+// CmdConnBreak 2026-03-05 15:04:46
+/*
+ 描述: tcp.conn断开时,通知对方断开服务
+*/
+func (mc *MqttCmd) CmdConnBreak() ([]byte, error) {
+	mc.Cmd = CmdConnBreak
+	mc.Sender = Tunnel.Broker.ClientID
+
+	if Tunnel.isSrv {
+		mc.SrvName = Tunnel.Server.Name
+	} else {
+		mc.SrvName = Tunnel.srvName
+	}
+
+	return mc.Marshal()
+}
+
 // ------------------------------------------------------------------------------
 
 // ApplyOptions 2026-02-27 20:06:36
@@ -200,7 +226,11 @@ func (mc *mqttUtils) ApplyOptions() error {
 	mc.subTopics[Tunnel.Broker.TopicCmd.Topic] = Tunnel.Broker.TopicCmd.Qos
 	//订阅命令通道
 	if Tunnel.isSrv {
-		mc.subTopics[Tunnel.Broker.TopicData.Topic+cTunnelUp] = Tunnel.Broker.TopicData.Qos
+		Tunnel.topicSnd = Tunnel.Broker.TopicData.Topic + cTunnelDown
+		Tunnel.topicRcv = Tunnel.Broker.TopicData.Topic + cTunnelUp
+		//向客户端发送数据通道
+
+		mc.subTopics[Tunnel.topicRcv] = Tunnel.Broker.TopicData.Qos
 		//订阅数据通道
 	}
 
@@ -375,90 +405,115 @@ func (mc *mqttUtils) OnMessage(cli mt.Client, msg mt.Message) {
 	defer znlib.DeferHandle(false, caller)
 	//捕捉异常
 
-	if msg.Topic() == Tunnel.Broker.TopicCmd.Topic { //命令传输通道
-		var cmd MqttCmd
-		err := cmd.Unmarshal(msg.Payload())
-		if err != nil {
-			znlib.ErrorCaller(err, caller+".Unmarshal")
+	tp := msg.Topic()
+	if tp == Tunnel.topicRcv { //数据传输通道
+		TcpUtils.writeData(msg.Payload()) //mqtt to tcp
+		return
+	}
+
+	if tp != Tunnel.Broker.TopicCmd.Topic { //命令传输通道
+		return
+	}
+
+	var cmd MqttCmd
+	err := cmd.Unmarshal(msg.Payload())
+	if err != nil {
+		znlib.ErrorCaller(err, caller+".Unmarshal")
+		return
+	}
+
+	if cmd.Sender == Tunnel.Broker.ClientID { //忽略自己发出的指令
+		return
+	}
+
+	// ----------------------------------------------------------------------------
+	if Tunnel.isSrv { //服务器
+		if cmd.SrvName != Tunnel.Server.Name { //接收方不是自己
 			return
 		}
 
-		if cmd.Sender == Tunnel.Broker.ClientID { //忽略自己发出的指令
-			return
-		}
+		switch cmd.Cmd {
+		case CmdBeginTrans:
+			val := true
+			TcpUtils.waiter.Wakeup(&val)
+			//唤醒 tcp.cliConn 开始传输数据
+		case CmdConnBreak:
+			TcpUtils.closeConn()
+			//关闭 tpc.conn 数据链路
+			znlib.Warn("client disconnected tcp tunnel")
+		case CmdConnHost: //连接指定主机
+			Tunnel.srvHost = cmd.Data
+			//待连接主机地址
 
-		if Tunnel.isSrv { //服务器
-			if cmd.SrvName != Tunnel.Server.Name { //接收方不是自己
+			err = TcpUtils.start()
+			if err == nil {
+				cmd.Data = ""
+			} else {
+				cmd.Data = err.Error()
+			}
+
+			buf, err := cmd.CmdConnResponse()
+			if err != nil {
+				znlib.ErrorCaller(err, caller+".CmdConnResponse")
 				return
 			}
 
-			if cmd.Cmd == CmdConnHost { //连接指定主机
-				Tunnel.srvHost = cmd.Data
-				//待连接主机地址
-
-				err = TcpUtils.start()
-				if err == nil {
-					cmd.Data = ""
-				} else {
-					cmd.Data = err.Error()
-				}
-
-				buf, err := cmd.CmdConnResponse()
-				if err != nil {
-					znlib.ErrorCaller(err, caller+".CmdConnResponse")
-					return
-				}
-
-				mc.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
-				//应答
-			}
-
-			if cmd.Cmd == CmdBeginTrans {
-				TcpUtils.waiter.Wakeup(nil)
-				//唤醒数据通道
-			}
-		} else {
-			if cmd.Cmd == CmdConnRep {
-				if cmd.SrvName != Tunnel.srvName { //与请求的服务器名称不匹配
-					return
-				}
-
-				suc := cmd.Data == ""
-				if !suc { //连接远程主机异常
-					znlib.ErrorCaller(err, caller+".CmdConnRep")
-					TcpUtils.waiter.Wakeup(&suc) //唤醒 tcp.srvConn 继续
-					return
-				}
-
-				_, ok := mc.subTopics[cmd.Topic]
-				if !ok {
-					delete(mc.subTopics, Tunnel.Broker.TopicCmd.Topic)
-					mc.unsubscribe(mc.client)
-					//退订旧数据通道
-
-					mc.subTopics = make(map[string]MqttQos)
-					mc.subTopics[Tunnel.Broker.TopicCmd.Topic] = Tunnel.Broker.TopicCmd.Qos //命令通道
-					mc.subTopics[cmd.Topic+cTunnelDown] = Tunnel.Broker.TopicData.Qos       //数据通道
-
-					mc.subscribeMultiple(mc.client)
-					Tunnel.Broker.TopicData.Topic = cmd.Topic
-					//订阅数据通道
-
-					cmd = MqttCmd{}
-					buf, err := cmd.CmdBeginTrans() //开始传输
-					if err != nil {
-						znlib.ErrorCaller(err, caller+"OnMessage")
-						return
-					}
-
-					mc.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
-					//应答
-					znlib.Info(fmt.Sprintf("connected server(%s) on tunnel(%s)", Tunnel.srvName, cmd.Sender))
-				}
-			}
+			mc.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+			//应答连接结果
 		}
-	} else {
-		TcpUtils.writeData(msg.Payload())
-		//数据传输通道
+
+		return
+	}
+
+	// ----------------------------------------------------------------------------
+	if cmd.SrvName != Tunnel.srvName { //与请求的服务器名称不匹配
+		return
+	}
+
+	switch cmd.Cmd {
+	case CmdConnBreak:
+		TcpUtils.closeConn()
+		//关闭 tpc.conn 数据链路
+		znlib.Warn("server disconnected tcp tunnel")
+	case CmdConnRep:
+		suc := cmd.Data == ""
+		if !suc { //连接远程主机异常
+			znlib.ErrorCaller(cmd.Data, caller+".CmdConnRep")
+			TcpUtils.waiter.Wakeup(&suc) //唤醒 tcp.srvConn 继续
+			return
+		}
+
+		_, ok := mc.subTopics[cmd.Topic+cTunnelDown]
+		if !ok {
+			delete(mc.subTopics, Tunnel.Broker.TopicCmd.Topic)
+			//删除命令通道,余下旧的数据通道
+			mc.unsubscribe(mc.client)
+			//退订旧数据通道
+
+			Tunnel.topicSnd = cmd.Topic + cTunnelUp
+			Tunnel.topicRcv = cmd.Topic + cTunnelDown
+			//同步服务器数据通道
+
+			mc.subTopics = make(map[string]MqttQos)
+			mc.subTopics[Tunnel.Broker.TopicCmd.Topic] = Tunnel.Broker.TopicCmd.Qos //命令通道
+			mc.subTopics[Tunnel.topicRcv] = Tunnel.Broker.TopicData.Qos             //数据通道
+
+			mc.subscribeMultiple(mc.client)
+			//订阅数据通道
+			znlib.Info(fmt.Sprintf("connected server(%s) on tunnel(%s)", Tunnel.srvName, cmd.Sender))
+		}
+
+		cmd = MqttCmd{}
+		buf, err := cmd.CmdBeginTrans() //开始传输
+		if err != nil {
+			znlib.ErrorCaller(err, caller+"OnMessage")
+			return
+		}
+
+		mc.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+		//通知服务器开始传输
+
+		TcpUtils.waiter.Wakeup(&suc)
+		//唤醒 tcp.srvConn 开始传输
 	}
 }

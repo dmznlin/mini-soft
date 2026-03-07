@@ -5,7 +5,6 @@ go 1.25.6
 require (
 	github.com/dmznlin/znlib-go v0.0.6-0.20260304032203-6e7c390d5399
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/klauspost/compress v1.18.4
 )
 
 require (

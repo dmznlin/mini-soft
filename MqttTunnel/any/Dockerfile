@@ -14,7 +14,7 @@ ENV CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=amd64 \
     GOPROXY=https://goproxy.cn,direct
-# 设置交叉编译环境变量，指定目标架构 linux/amd64
+# 设置交叉编译环境变量，指定目标架构 linux/arm64
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 #镜像加速

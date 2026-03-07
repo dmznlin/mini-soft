@@ -9,12 +9,12 @@ MqttTunnel：基于mqtt协议的内网穿透服务。通过公网免费的 mqtt 
 5、支持 x86-64/arm 直接部署，或 docker/集群 部署。<br>
 
 **一、原理**<br>
-以 XShell 连接内网主机`host-12`为例:<br>
+以 XShell 连接内网主机`host-a`为例:<br>
 **内网**: xshell &ensp;→&ensp; tunnel-client(端口: 22)<br>
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;↓<br>
 **公网**:&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; mqtt broker<br>
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;↓<br>
-**内网**: host-12(端口: 22) &ensp;←&ensp; tunnel-server
+**内网**: host-a(端口: 22) &ensp;←&ensp; tunnel-server
 
 **二、参数**<br>
 服务器: `tunnel.exe -role srv` <br>
@@ -27,5 +27,7 @@ MqttTunnel：基于mqtt协议的内网穿透服务。通过公网免费的 mqtt 
 2、按需要修改配置参数。<br>
 3、启动服务器和客户端，xshell正常连接 客户端。
 
-**四、协议**<br>
-1、客户端启动：发送 `CmdFindserver`
+**三、安全**<br>
+1、使用 `tunnel.exe -pass` 生成秘钥，填写在 `broker.encrypt` 处。客户端、服务器秘钥相同才能通讯。<br>
+2、修改 `broker.tpCmd.topic` 命令通道名称，避免与其它使用默认配置的用户共用。<br>
+3、修改 `server.name` 为特殊内容，客户端需要准确的服务器名称才能连接。<br>

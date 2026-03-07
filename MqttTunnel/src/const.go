@@ -6,6 +6,9 @@
 package main
 
 const (
+	cTagUpdateHost = "^+%-123454321=>"   //更新主机配置数据标识
+	cTagLen        = len(cTagUpdateHost) //标识长度
+
 	cTunnelUp   = "/up" //客户端上行数据通道
 	cTunnelDown = "/dn" //服务器下行数据通道
 )
@@ -73,9 +76,11 @@ type (
 	}
 
 	ConfigTunnel struct {
-		isSrv   bool   //是否服务器
-		srvName string //服务器名称
-		srvHost string //服务名称
+		isSrv    bool   //是否服务器
+		srvName  string //服务名称
+		srvHost  string //主机名称
+		topicSnd string //发送数据通道
+		topicRcv string //接收数据通道
 
 		Server ConfigServer `json:"server"` //server
 		Client ConfigClient `json:"client"` //client

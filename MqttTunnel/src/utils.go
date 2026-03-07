@@ -124,6 +124,7 @@ func SaveTunnel(cfg string) error {
 */
 func TunnelModal() {
 	idAuto := makeID(7)
+	//auto make id
 
 	Tunnel = ConfigTunnel{
 		Broker: ConfigBroker{
