@@ -32,9 +32,11 @@ type (
 		DataBits uint   `json:"databits"` //数据位
 		StopBits uint   `json:"stopbits"` //停止位
 		Parity   string `json:"parity"`   //校验位
-		Card     byte   `json:"card"`     //屏卡地址
-		Display  string `json:"display"`  //屏显格式
-		Refresh  byte   `json:"refresh"`  //刷新频率,单位秒
+
+		Card     byte   `json:"card"`    //屏卡地址
+		CardAddr uint16 `json:"cdAddr"`  //数据地址
+		Display  string `json:"display"` //屏显格式
+		Refresh  byte   `json:"refresh"` //刷新频率,单位秒
 
 		SlaveID  byte   `json:"slaveid"`  //从站ID
 		Address  uint16 `json:"address"`  //数据地址
@@ -57,7 +59,8 @@ var (
 		SlaveID:  1,
 		Address:  1,
 		Quantity: 10,
-		Card:     1,
+		Card:     5,
+		CardAddr: 1,
 		Display:  "时间$T温度 $W℃",
 		Refresh:  1,
 		Expire:   0,

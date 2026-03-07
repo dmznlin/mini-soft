@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -135,47 +133,20 @@ outloop:
 			time.Sleep(time.Duration(gConfig.Refresh) * time.Second)
 		}
 
-		if gConfig.Expire != cSystemNolimited &&
-			(gConfig.Expire == cSystemExpire || time.Since(gInitTimer).Hours() > 30*24) { //系统过期
-			if gConfig.Expire != cSystemExpire { //保存过期标记
-				gConfig.Expire = cSystemExpire
-				SaveConfig(gConfigFile)
-			}
-
-			disp, err := EncodeToGB2312TwoBytes(string([]byte{0x40, gConfig.Card}) + "  系统超时" + string([]byte{0x0D}))
-			if err != nil {
-				log(err.Error())
-				break
-			}
-
-			err = cli.WriteRawData(disp)
-			if err == nil {
-				time.Sleep(time.Second) //等待写入
-			}
-
-			os.Exit(0)
-		}
-
+		cli.SetUnitId(gConfig.SlaveID)
+		cli.SetEncoding(modbus.BIG_ENDIAN, modbus.HIGH_WORD_FIRST)
 		tmp, err = cli.ReadRegister(gConfig.Address, modbus.HOLDING_REGISTER)
 		if err != nil {
 			log("ReadRegister Error: %s", err.Error())
 			break
 		}
 
-		str := StrReplace(gConfig.Display, time.Now().Format("15:04:05"), "$T")
-		str = StrReplace(str, fmt.Sprintf("%.1f", float32(tmp)/10), "$W")
-		//构建显示内容
-
-		disp, err := EncodeToGB2312TwoBytes(string([]byte{0x40, gConfig.Card}) + str + string([]byte{0x0D}))
+		cli.SetUnitId(gConfig.Card)
+		cli.SetEncoding(modbus.LITTLE_ENDIAN, modbus.HIGH_WORD_FIRST)
+		err = cli.WriteRegister(gConfig.CardAddr, tmp)
 		if err != nil {
-			log(err.Error())
-			continue
-		}
-
-		err = cli.WriteRawData(disp)
-		if err != nil {
-			log(err.Error())
-			continue
+			log("WriteRegister Error: %s", err.Error())
+			break
 		}
 	}
 }
