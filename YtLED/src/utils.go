@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 	"unicode"
+
+	"github.com/dmznlin/znlib-go/znlib/modbus"
 )
 
 import (
@@ -33,14 +35,15 @@ type (
 		StopBits uint   `json:"stopbits"` //停止位
 		Parity   string `json:"parity"`   //校验位
 
-		Card     byte   `json:"card"`    //屏卡地址
-		CardAddr uint16 `json:"cdAddr"`  //数据地址
-		Display  string `json:"display"` //屏显格式
-		Refresh  byte   `json:"refresh"` //刷新频率,单位秒
+		Card       byte   `json:"card"`     //屏卡地址
+		CardAddr   uint16 `json:"cdAddr"`   //数据地址
+		CardEndian uint   `json:"cdEndian"` //大小端
+		Refresh    byte   `json:"refresh"`  //刷新频率,单位秒
 
-		SlaveID  byte   `json:"slaveid"`  //从站ID
+		SlaveID  byte   `json:"slave"`    //从站 id
 		Address  uint16 `json:"address"`  //数据地址
-		Quantity uint16 `json:"quantity"` //
+		Endian   uint   `json:"endian"`   //大小端
+		Quantity uint16 `json:"quantity"` //数据个数
 		Expire   byte   `json:"expire"`   //系统过期
 	}
 )
@@ -51,19 +54,20 @@ var (
 	gConfigFile = gPath + "/cfg/config.json"
 	//配置文件
 	gConfig = Config{
-		Port:     "/dev/ttyUSB0",
-		Baud:     4800,
-		DataBits: 8,
-		StopBits: 1,
-		Parity:   "none",
-		SlaveID:  1,
-		Address:  1,
-		Quantity: 10,
-		Card:     5,
-		CardAddr: 1,
-		Display:  "时间$T温度 $W℃",
-		Refresh:  1,
-		Expire:   0,
+		Port:       "/dev/ttyUSB0",
+		Baud:       4800,
+		DataBits:   8,
+		StopBits:   1,
+		Parity:     "none",
+		Card:       5,
+		CardAddr:   1,
+		CardEndian: uint(modbus.LITTLE_ENDIAN),
+		Refresh:    1,
+		SlaveID:    1,
+		Address:    1,
+		Endian:     uint(modbus.LITTLE_ENDIAN),
+		Quantity:   10,
+		Expire:     0,
 	}
 )
 

@@ -1,11 +1,7 @@
 # syntax = docker.runsoft.online:5000/docker.io/dockerfile:1.19.0
 # BuildKit 为实验特性，开头都必须加上指令
 
-ARG arch=amd64
-# 架构: amd64,arm64
-ARG resp=docker.runsoft.online:5000
-# 私有仓库地址
-FROM $resp/docker.io/golang:1.25.6-alpine AS builder
+FROM docker.runsoft.online:5000/docker.io/golang:1.25.6-alpine AS builder
 #使用私有镜像仓库
 
 LABEL stage=gobuilder
@@ -16,9 +12,9 @@ WORKDIR /build
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=$arch \
+    GOARCH=arm64 \
     GOPROXY=https://goproxy.cn,direct
-# 设置交叉编译环境变量
+# 设置交叉编译环境变量，指定目标架构 linux/amd64
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 #镜像加速
@@ -34,8 +30,8 @@ COPY . ./
 RUN go build -ldflags="-s -w" -o srv
 # 交叉编译
 
-# FROM $resp/docker.io/alpine:latest
-FROM --platform=linux/arm64 $resp/docker.io/alpine:arm-latest
+# FROM docker.runsoft.online:5000/docker.io/alpine:latest
+FROM --platform=linux/arm64 docker.runsoft.online:5000/docker.io/alpine:arm-latest
 
 WORKDIR /app
 # 工作目录
@@ -49,7 +45,7 @@ RUN apk add --no-cache ca-certificates tzdata && \
     apk del tzdata
 # 安装必要的系统依赖（如时区、证书等，根据实际需求调整）
 
-EXPOSE 80
+EXPOSE 5502
 # 使端口80可供此容器外的环境使用
 
 VOLUME ["/app/cfg/"]

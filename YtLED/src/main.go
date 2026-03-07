@@ -134,7 +134,7 @@ outloop:
 		}
 
 		cli.SetUnitId(gConfig.SlaveID)
-		cli.SetEncoding(modbus.BIG_ENDIAN, modbus.HIGH_WORD_FIRST)
+		cli.SetEncoding(modbus.Endianness(gConfig.Endian), modbus.HIGH_WORD_FIRST)
 		tmp, err = cli.ReadRegister(gConfig.Address, modbus.HOLDING_REGISTER)
 		if err != nil {
 			log("ReadRegister Error: %s", err.Error())
@@ -142,7 +142,7 @@ outloop:
 		}
 
 		cli.SetUnitId(gConfig.Card)
-		cli.SetEncoding(modbus.LITTLE_ENDIAN, modbus.HIGH_WORD_FIRST)
+		cli.SetEncoding(modbus.Endianness(gConfig.CardEndian), modbus.HIGH_WORD_FIRST)
 		err = cli.WriteRegister(gConfig.CardAddr, tmp)
 		if err != nil {
 			log("WriteRegister Error: %s", err.Error())
