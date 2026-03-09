@@ -8,7 +8,9 @@ import (
 )
 
 // 引入标准库
-var _ = znlib.InitLib(nil, nil)
+var _ = znlib.InitLib(func() {
+	znlib.Application.ConfigFile = znlib.FixPathVar("$path/cfg/lib.json")
+}, nil)
 
 func main() {
 	var (
@@ -25,7 +27,7 @@ func main() {
 	flag.Parse()
 
 	if pass != "" {
-		buf, err := znlib.NewEncrypter(znlib.EncryptDES_ECB,
+		buf, err := znlib.NewEncrypter(znlib.EncryptDesEcb,
 			[]byte(znlib.DefaultEncryptKey)).Encrypt([]byte(pass), true)
 		if err == nil {
 			fmt.Println(string(buf))
@@ -38,7 +40,7 @@ func main() {
 
 	//  ---------------------------------------------------------------------------
 	var err error
-	var cfg = znlib.AppPath + "cfg" + znlib.PathSeparator + "tunnel.json"
+	var cfg = znlib.FixPathVar("$path/cfg/tunnel.json")
 
 	if znlib.FileExists(cfg, false) {
 		err = LoadTunnel(cfg) //加载配置

@@ -66,7 +66,7 @@ func LoadTunnel(cfg string) error {
 	}
 
 	if Tunnel.Broker.Password != "" { // broker 密码
-		buf, err := znlib.NewEncrypter(znlib.EncryptDES_ECB,
+		buf, err := znlib.NewEncrypter(znlib.EncryptDesEcb,
 			[]byte(znlib.DefaultEncryptKey)).Decrypt([]byte(Tunnel.Broker.Password), true)
 		if err != nil {
 			return fmt.Errorf("broker.pwd 配置错误: 加密无效")
@@ -75,7 +75,7 @@ func LoadTunnel(cfg string) error {
 	}
 
 	if Tunnel.Broker.EncryptKey != "" { // 数据加密 key
-		buf, err := znlib.NewEncrypter(znlib.EncryptDES_ECB,
+		buf, err := znlib.NewEncrypter(znlib.EncryptDesEcb,
 			[]byte(znlib.DefaultEncryptKey)).Decrypt([]byte(Tunnel.Broker.EncryptKey), true)
 		if err != nil {
 			return fmt.Errorf("broker.encrypt 配置错误: 加密无效")

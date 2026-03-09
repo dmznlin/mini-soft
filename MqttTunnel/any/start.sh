@@ -2,8 +2,8 @@
 mkdir -p /var/mywork/mqttunnel
 
 docker run -d \
-  --name modbus \
+  --name mqttunnel \
   --restart=always \
-  -p 5502:5502 \
-  -v /var/mywork/modbus:/app/cfg/ \
+  -p 8022:22 \
+  -v /var/mywork/mqttunnel:/app/cfg/ \
 docker.runsoft.online:5000/local/mqttunnel
