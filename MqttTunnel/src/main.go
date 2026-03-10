@@ -10,6 +10,8 @@ import (
 // 引入标准库
 var _ = znlib.InitLib(func() {
 	znlib.Application.ConfigFile = znlib.FixPathVar("$path/cfg/lib.json")
+	znlib.GlobalConfig.Logger.FilePath = "$path/cfg/log/"
+	znlib.GlobalConfig.Logger.Colorful = true
 }, nil)
 
 func main() {
@@ -43,10 +45,10 @@ func main() {
 	var cfg = znlib.FixPathVar("$path/cfg/tunnel.json")
 
 	if znlib.FileExists(cfg, false) {
-		err = LoadTunnel(cfg) //加载配置
+		err = znlib.LoadConfig(cfg, &Tunnel) //加载配置
 	} else {
-		TunnelModal()         //添加模板数据
-		err = SaveTunnel(cfg) //生成配置
+		TunnelModal()                        //添加模板数据
+		err = znlib.SaveConfig(cfg, &Tunnel) //生成配置
 	}
 
 	if err != nil {
@@ -69,14 +71,14 @@ func main() {
 	}
 
 	//应用设置
-	err = MqttUtils.ApplyOptions()
+	err = ApplyOptions()
 	if err != nil {
 		znlib.Error(err.Error())
 		return
 	}
 
 	//启动 mqtt
-	err = MqttUtils.Start()
+	err = mu.Start(nil)
 	if err != nil {
 		znlib.Error(err.Error())
 		return
@@ -100,7 +102,7 @@ func main() {
 	znlib.WaitSystemExit(func() error {
 		return TcpUtils.Stop()
 	}, func() error {
-		MqttUtils.Stop()
+		mu.Stop()
 		return nil
 	})
 }

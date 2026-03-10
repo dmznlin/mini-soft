@@ -15,28 +15,20 @@ package main
 
 import (
 	"crypto/md5"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/dmznlin/znlib-go/znlib"
+	"github.com/dmznlin/znlib-go/znlib/mqtt"
 	mt "github.com/eclipse/paho.mqtt.golang"
 )
 
-type mqttUtils struct {
-	client    mt.Client
-	Options   *mt.ClientOptions
-	subTopics map[string]MqttQos
-	pubTopics map[string]MqttQos
-}
-
-// MqttUtils mqtt tunnel
-var MqttUtils = &mqttUtils{
+// mu mqtt utils
+var mu = &mqtt.Utils{
+	Client:    nil,
 	Options:   mt.NewClientOptions(),
-	subTopics: make(map[string]MqttQos),
-	pubTopics: make(map[string]MqttQos),
+	SubTopics: make(map[string]mqtt.Qos),
+	PubTopics: make(map[string]mqtt.Qos),
 }
 
 const (
@@ -180,217 +172,57 @@ func (mc *MqttCmd) CmdConnBreak() ([]byte, error) {
 /*
  描述: 使用配置信息
 */
-func (mc *mqttUtils) ApplyOptions() error {
-	if Tunnel.Broker.Tls.Used {
-		rootCA, err := os.ReadFile(Tunnel.Broker.Tls.CA)
+func ApplyOptions() error {
+	if len(Tunnel.Client.Hosts) < 1 {
+		return fmt.Errorf("client.hosts 配置错误: 服务为空")
+	}
+
+	if Tunnel.Broker.EncryptKey != "" { // 数据加密 key
+		buf, err := znlib.NewEncrypter(znlib.EncryptDesEcb,
+			[]byte(znlib.DefaultEncryptKey)).Decrypt([]byte(Tunnel.Broker.EncryptKey), true)
 		if err != nil {
-			return fmt.Errorf("broker.Tls.ca 配置错误: %w", err)
+			return fmt.Errorf("broker.encrypt 配置错误: 加密无效")
 		}
-
-		cp := x509.NewCertPool()
-		if !cp.AppendCertsFromPEM(rootCA) {
-			return fmt.Errorf("broker.Tls.ca 配置错误: 无法加载")
-		}
-
-		cert, err := tls.LoadX509KeyPair(Tunnel.Broker.Tls.Cert, Tunnel.Broker.Tls.Key)
-		if err != nil {
-			return fmt.Errorf("broker.Tls.ca 配置错误: %w", err)
-		}
-
-		mc.Options.SetTLSConfig(&tls.Config{
-			RootCAs:            cp,
-			ClientAuth:         tls.NoClientCert,
-			ClientCAs:          nil,
-			InsecureSkipVerify: true,
-			Certificates:       []tls.Certificate{cert},
-		})
+		Tunnel.Broker.EncryptKey = string(buf)
 	}
 
-	mc.Options.SetClientID(Tunnel.Broker.ClientID)
-	//更新 client id
-
-	if Tunnel.Broker.User != "" {
-		mc.Options.SetUsername(Tunnel.Broker.User)
-		//user-name
+	cfg := znlib.MqttConfig{
+		Enable:   true,
+		Broker:   Tunnel.Broker.URL,
+		ClientID: Tunnel.Broker.ClientID,
+		IDAuto:   Tunnel.Broker.IDAuto,
+		User:     Tunnel.Broker.User,
+		Password: Tunnel.Broker.Password,
+		Tls:      Tunnel.Broker.Tls,
+		TopicSub: nil,
+		TopicPub: nil,
 	}
 
-	if Tunnel.Broker.Password != "" {
-		mc.Options.SetPassword(Tunnel.Broker.Password)
-		//user-password
+	err := mu.ApplyConfig(&cfg)
+	if err != nil {
+		return err
 	}
 
-	for _, v := range Tunnel.Broker.URL { //多服务器支持
-		mc.Options.AddBroker(v)
-	}
+	Tunnel.Broker.ClientID = cfg.ClientID
+	//同步客户端标识
 
-	mc.subTopics[Tunnel.Broker.TopicCmd.Topic] = Tunnel.Broker.TopicCmd.Qos
+	Tunnel.Broker.TopicData.Topic = znlib.StrReplace(Tunnel.Broker.TopicData.Topic,
+		Tunnel.Broker.ClientID, "$id")
+	//更新数据通道标识
+
+	mu.SubTopics[Tunnel.Broker.TopicCmd.Topic] = Tunnel.Broker.TopicCmd.Qos
 	//订阅命令通道
 	if Tunnel.isSrv {
 		Tunnel.topicSnd = Tunnel.Broker.TopicData.Topic + cTunnelDown
 		Tunnel.topicRcv = Tunnel.Broker.TopicData.Topic + cTunnelUp
 		//向客户端发送数据通道
 
-		mc.subTopics[Tunnel.topicRcv] = Tunnel.Broker.TopicData.Qos
+		mu.SubTopics[Tunnel.topicRcv] = Tunnel.Broker.TopicData.Qos
 		//订阅数据通道
 	}
 
-	// ----------------------------------------------------------------------------
-	mc.Options.SetOnConnectHandler(func(client mt.Client) {
-		var host string
-		for _, v := range mc.Options.Servers {
-			if host == "" {
-				host = v.String()
-			} else {
-				host = host + "," + v.String()
-			}
-		}
-
-		znlib.Info("mqtt.connected: " + host)
-		_ = mc.subscribeMultiple(client)
-		//连接成功后,重新订阅主题
-	})
-
-	mc.Options.SetConnectionLostHandler(func(client mt.Client, err error) {
-		znlib.ErrorCaller(err, "mqtt.lostconnect")
-		//log
-	})
-
-	mc.Options.SetReconnectingHandler(func(client mt.Client, options *mt.ClientOptions) {
-		znlib.Info("mqtt.reconnect_broker.")
-		//log
-	})
-
-	mc.Options.SetDefaultPublishHandler(mc.OnMessage)
+	mu.Options.SetDefaultPublishHandler(OnMessage)
 	//消息处理句柄
-	return nil
-}
-
-// Start 2026-02-27 14:33:47
-/*
- 参数: msgHandler,
- 对象: MqttUtils
- 描述:
-*/
-func (mc *mqttUtils) Start() error {
-	if mc.client != nil {
-		return nil
-	}
-
-	mc.client = mt.NewClient(mc.Options)
-	//创建链路
-	token := mc.client.Connect()
-	//连接 broker
-
-	if token.Wait() && token.Error() != nil {
-		znlib.ErrorCaller(token.Error(), "mqtt.connect_broker")
-	}
-
-	return token.Error()
-}
-
-// Stop 2024-01-14 15:23:20
-/*
- 描述: 停止mqtt服务
-*/
-func (mc *mqttUtils) Stop() {
-	if mc.client == nil {
-		return
-	}
-
-	mc.unsubscribe(mc.client)
-	//退订主题
-	mc.client.Disconnect(500)
-	//断开链路
-	mc.client = nil
-}
-
-// Publish 2026-02-27 14:43:07
-/*
- 参数: topic,主题
- 参数: qos,送达级别
- 参数: msg,消息
- 描述: 向topic发布msg消息
-*/
-func (mc *mqttUtils) Publish(topic string, qos MqttQos, msg []byte) {
-	pub := func() {
-		token := mc.client.Publish(topic, qos, false, msg)
-		if token.Wait() && token.Error() != nil {
-			znlib.ErrorCaller(token.Error(), "mqtt.publish")
-		}
-	}
-
-	if topic == "" { //
-		var q MqttQos
-		useCfg := qos == MqttQosNone
-		//使用配置 qos
-
-		for topic, q = range mc.pubTopics {
-			if useCfg {
-				qos = q
-			}
-
-			pub()
-		}
-	} else {
-		if qos == MqttQosNone {
-			q, ok := mc.pubTopics[topic]
-			if ok {
-				qos = q
-			} else {
-				qos = MqttQos0
-			}
-		}
-
-		pub()
-		//自定义主题
-	}
-}
-
-// subscribeMultiple 2026-02-27 14:40:55
-/*
- 参数: client,链路
- 描述: 订阅主题列表
-*/
-func (mc *mqttUtils) subscribeMultiple(client mt.Client) error {
-	if len(mc.subTopics) < 1 {
-		return nil
-	}
-
-	token := client.SubscribeMultiple(mc.subTopics, nil)
-	if token.Wait() && token.Error() == nil {
-		znlib.Info(fmt.Sprintf("mqtt.subscribe: %+v", mc.subTopics))
-	} else {
-		znlib.ErrorCaller(token.Error(), "mqtt.subscribe")
-	}
-
-	return token.Error()
-}
-
-// unsubscribe 2026-03-03 11:30:37
-/*
- 参数: client,链路
- 描述: 退订所有主题
-*/
-func (mc *mqttUtils) unsubscribe(client mt.Client) error {
-	idx := len(mc.subTopics)
-	if idx > 0 && client.IsConnected() { //退订所有主题
-		topics := make([]string, idx)
-		idx = 0
-		for k := range mc.subTopics {
-			topics[idx] = k
-			idx++
-		}
-
-		token := client.Unsubscribe(topics...)
-		token.Wait()
-		if token.Error() != nil {
-			znlib.ErrorCaller(token.Error(), "mqtt.unsubscribe")
-			return token.Error()
-		}
-
-		znlib.Info(fmt.Sprintf("mqtt.unsubscribe: %v", topics))
-	}
-
 	return nil
 }
 
@@ -400,7 +232,7 @@ func (mc *mqttUtils) unsubscribe(client mt.Client) error {
  参数: msg,数据
  描述: 收到来自 cli 的消息
 */
-func (mc *mqttUtils) OnMessage(cli mt.Client, msg mt.Message) {
+func OnMessage(cli mt.Client, msg mt.Message) {
 	caller := "mqttutils.OnMessge"
 	defer znlib.DeferHandle(false, caller)
 	//捕捉异常
@@ -458,8 +290,10 @@ func (mc *mqttUtils) OnMessage(cli mt.Client, msg mt.Message) {
 				return
 			}
 
-			mc.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+			mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
 			//应答连接结果
+		default:
+			//do nothing
 		}
 
 		return
@@ -483,22 +317,22 @@ func (mc *mqttUtils) OnMessage(cli mt.Client, msg mt.Message) {
 			return
 		}
 
-		_, ok := mc.subTopics[cmd.Topic+cTunnelDown]
+		_, ok := mu.SubTopics[cmd.Topic+cTunnelDown]
 		if !ok {
-			delete(mc.subTopics, Tunnel.Broker.TopicCmd.Topic)
+			delete(mu.SubTopics, Tunnel.Broker.TopicCmd.Topic)
 			//删除命令通道,余下旧的数据通道
-			mc.unsubscribe(mc.client)
+			_ = mu.Unsubscribe(mu.Client)
 			//退订旧数据通道
 
 			Tunnel.topicSnd = cmd.Topic + cTunnelUp
 			Tunnel.topicRcv = cmd.Topic + cTunnelDown
 			//同步服务器数据通道
 
-			mc.subTopics = make(map[string]MqttQos)
-			mc.subTopics[Tunnel.Broker.TopicCmd.Topic] = Tunnel.Broker.TopicCmd.Qos //命令通道
-			mc.subTopics[Tunnel.topicRcv] = Tunnel.Broker.TopicData.Qos             //数据通道
+			mu.SubTopics = make(map[string]mqtt.Qos)
+			mu.SubTopics[Tunnel.Broker.TopicCmd.Topic] = Tunnel.Broker.TopicCmd.Qos //命令通道
+			mu.SubTopics[Tunnel.topicRcv] = Tunnel.Broker.TopicData.Qos             //数据通道
 
-			mc.subscribeMultiple(mc.client)
+			_ = mu.SubscribeMultiple(mu.Client)
 			//订阅数据通道
 			znlib.Info(fmt.Sprintf("connected server(%s) on tunnel(%s)", Tunnel.srvName, cmd.Sender))
 		}
@@ -510,10 +344,12 @@ func (mc *mqttUtils) OnMessage(cli mt.Client, msg mt.Message) {
 			return
 		}
 
-		mc.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+		mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
 		//通知服务器开始传输
 
 		TcpUtils.waiter.Wakeup(&suc)
 		//唤醒 tcp.srvConn 开始传输
+	default:
+		//do nothing
 	}
 }

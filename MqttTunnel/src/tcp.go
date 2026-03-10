@@ -168,7 +168,7 @@ func (tu *tcpUtils) srvConn() {
 			continue
 		}
 
-		MqttUtils.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+		mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
 		//发起连接请求
 
 		tu.waiter.Reset()
@@ -228,7 +228,7 @@ func (tu *tcpUtils) doConn() {
 				znlib.ErrorCaller(err, "tcpUtils.doConn")
 			}
 
-			MqttUtils.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+			mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
 			//发起连接请求
 		}
 	}()
@@ -257,7 +257,7 @@ outLoop:
 				}
 			}
 
-			MqttUtils.Publish(Tunnel.topicSnd, Tunnel.Broker.TopicData.Qos, buf[:n])
+			mu.Publish(Tunnel.topicSnd, Tunnel.Broker.TopicData.Qos, buf[:n])
 			//send data
 		}
 
