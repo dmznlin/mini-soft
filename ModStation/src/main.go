@@ -10,7 +10,11 @@ import (
 )
 
 // 引入标准库
-var _ = znlib.InitLib(nil, nil)
+var _ = znlib.InitLib(func() {
+	znlib.Application.ConfigFile = znlib.FixPathVar("$path/cfg/lib.json")
+	znlib.GlobalConfig.Logger.FilePath = "$path/cfg/log/"
+	znlib.GlobalConfig.Logger.Colorful = true
+}, nil)
 
 func main() {
 	var err error

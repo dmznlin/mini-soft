@@ -106,7 +106,7 @@ func (s stationHandler) HandleCoils(req *modbus.CoilsRequest) (res []bool, err e
 	if slaver.Link.Type == UserHttp || slaver.Link.Type == UserHttps { //读写 http
 		if req.IsWrite { //写入数据
 			buf := comm.Bool2Bytes(req.Args)
-			dt, err := znlib.NewEncrypter(znlib.EncryptBase64_STD, nil).EncodeBase64(buf)
+			dt, err := znlib.NewEncrypter(znlib.EncryptBase64Std, nil).EncodeBase64(buf)
 			if err != nil {
 				DealErrorLog(slaver.Link, err)
 				return nil, err
@@ -158,7 +158,7 @@ func (s stationHandler) HandleCoils(req *modbus.CoilsRequest) (res []bool, err e
 				return nil, err
 			}
 
-			dt, err := znlib.NewEncrypter(znlib.EncryptBase64_STD, nil).DecodeBase64(bd)
+			dt, err := znlib.NewEncrypter(znlib.EncryptBase64Std, nil).DecodeBase64(bd)
 			if err != nil {
 				DealErrorLog(slaver.Link, err)
 				return nil, err
@@ -232,7 +232,7 @@ func (s stationHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReque
 	if slaver.Link.Type == UserHttp || slaver.Link.Type == UserHttps { //读写 http
 		if req.IsWrite { //写入数据
 			buf := comm.Uint2Bytes(req.Args, slaver.Endianess == modbus.BIG_ENDIAN)
-			dt, err := znlib.NewEncrypter(znlib.EncryptBase64_STD, nil).EncodeBase64(buf)
+			dt, err := znlib.NewEncrypter(znlib.EncryptBase64Std, nil).EncodeBase64(buf)
 			if err != nil {
 				DealErrorLog(slaver.Link, err)
 				return nil, err
@@ -284,7 +284,7 @@ func (s stationHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReque
 				return nil, err
 			}
 
-			dt, err := znlib.NewEncrypter(znlib.EncryptBase64_STD, nil).DecodeBase64(bd)
+			dt, err := znlib.NewEncrypter(znlib.EncryptBase64Std, nil).DecodeBase64(bd)
 			if err != nil {
 				DealErrorLog(slaver.Link, err)
 				return nil, err

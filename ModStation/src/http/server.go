@@ -35,7 +35,7 @@ func main() {
 		if req.Action == 1 { //读数据
 			if req.Type == 1 { //读取线圈
 				dt := comm.Bool2Bytes(Bool[req.Addr : req.Addr+uint16(req.Len)])
-				buf, err := znlib.NewEncrypter(znlib.EncryptBase64_STD, nil).EncodeBase64(dt)
+				buf, err := znlib.NewEncrypter(znlib.EncryptBase64Std, nil).EncodeBase64(dt)
 				if err != nil {
 					ctx.String(http.StatusBadRequest, "invalid modbus data")
 					return
@@ -45,7 +45,7 @@ func main() {
 				return
 			} else { //读取寄存器
 				dt := comm.Uint2Bytes(Uint[req.Addr:req.Addr+uint16(req.Len)], req.Endianess == 1)
-				buf, err := znlib.NewEncrypter(znlib.EncryptBase64_STD, nil).EncodeBase64(dt)
+				buf, err := znlib.NewEncrypter(znlib.EncryptBase64Std, nil).EncodeBase64(dt)
 				if err != nil {
 					ctx.String(http.StatusBadRequest, "invalid modbus data")
 					return
@@ -64,7 +64,7 @@ func main() {
 			}
 
 			if req.Type == 1 { //写线圈
-				buf, err := znlib.NewEncrypter(znlib.EncryptBase64_STD, nil).DecodeBase64([]byte(req.Data))
+				buf, err := znlib.NewEncrypter(znlib.EncryptBase64Std, nil).DecodeBase64([]byte(req.Data))
 				if err != nil {
 					ctx.String(http.StatusBadRequest, "invalid modbus data: "+err.Error())
 					return
@@ -75,7 +75,7 @@ func main() {
 					Bool[req.Addr+uint16(idx)] = val
 				}
 			} else { //写寄存器
-				buf, err := znlib.NewEncrypter(znlib.EncryptBase64_STD, nil).DecodeBase64([]byte(req.Data))
+				buf, err := znlib.NewEncrypter(znlib.EncryptBase64Std, nil).DecodeBase64([]byte(req.Data))
 				if err != nil {
 					ctx.String(http.StatusBadRequest, "invalid modbus data: "+err.Error())
 					return
