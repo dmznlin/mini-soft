@@ -1,0 +1,40 @@
+{
+  "enable": true,
+  "memo": {
+    "_v0": "开漏模式: 0x00",
+    "_v1": "上拉模式: gpio.PULLUP 0x01",
+    "_v2": "下拉模式: gpio.PULLDOWN 0x02",
+    "_v3": "低电平: gpio.LOW 0x00",
+    "_v4": "高电平: gpio.HIGH 0x01"
+  },
+  "pins": {
+    "net": {
+      "pin": 27,
+      "mode": 0,
+      "init": 2,
+      "on": 1,
+      "off": 0
+    },
+    "ready": {
+      "pin": 26,
+      "mode": 0,
+      "init": 2,
+      "on": 1,
+      "off": 0
+    },
+    "gps": {
+      "pin": 24,
+      "mode": 0,
+      "init": 2,
+      "on": 1,
+      "off": 0
+    },
+    "uart1": {
+      "pin": 25,
+      "mode": 1,
+      "init": 1,
+      "on": 1,
+      "off": 0
+    }
+  }
+}

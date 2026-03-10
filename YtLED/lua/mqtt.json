@@ -1,0 +1,39 @@
+{
+  "enable": true,
+  "host": "123.56.150.11",
+  "port": 8083,
+  "client_id": "$id$",
+  "user_name": "user_etc",
+  "password": "user_etc",
+  "keep_alive": 240,
+  "re_conn": 5000,
+  "subs": {
+    "own": {
+      "topic": "etc/sub/$id$",
+      "qos": 0
+    },
+    "srv": {
+      "topic": "etc/srv",
+      "qos": 0
+    }
+  },
+  "pubs": {
+    "own": {
+      "topic": "etc/pub/$id$",
+      "qos": 0,
+      "def": true
+    }
+  },
+  "online": {
+    "topic": "etc/pub/$id$",
+    "msg": "{\"cmd\": 1, \"id\": \"$id$\"}",
+    "qos": 1,
+    "retain": 1
+  },
+  "offline": {
+    "topic": "etc/pub/$id$",
+    "msg": "{\"cmd\": 2, \"id\": \"$id$\"}",
+    "qos": 1,
+    "retain": 1
+  }
+}

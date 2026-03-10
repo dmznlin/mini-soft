@@ -1,0 +1,20 @@
+{
+  "log": {
+    "keep": 1800,
+    "start": 20
+  },
+  "ota": {
+    "enable": false,
+    "update": 86400000
+  },
+  "ntp": {
+    "enable": false,
+    "fresh": 86400000,
+    "retry": 3600000
+  },
+  "low_power": {
+    "enable": false,
+    "start": "22:00:00",
+    "exit": "07:00:00"
+  }
+}
