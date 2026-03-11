@@ -1,0 +1,19 @@
+{
+  "senser": {
+    "unit": 1,
+    "addr": 1,
+    "msb": 1
+  },
+  "link": {
+    "data_bits": 8,
+    "parity_bits": 0,
+    "stop_bits": 1,
+    "baud_rate": 4800,
+    "uart_id": 1
+  },
+  "led": {
+    "unit": 1,
+    "addr": 3,
+    "msb": 0
+  }
+}

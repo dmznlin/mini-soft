@@ -197,7 +197,7 @@ end
 
 ---将val转为指定长度的16进制字符串
 ---@param val number 数值
----@param len number|nil 有效长度(4,8)
+---@param len number|nil 结果长度(4,8)
 ---@param le boolean|nil 小端处理
 ---@return string
 function utils.val_to_hex(val, len, le)
@@ -225,11 +225,35 @@ function utils.val_to_hex(val, len, le)
   return table.concat(pairs, " ")
 end
 
+---无符号整数num转字节数组
+---@param num number 无符号整数
+---@param bits number 位数
+---@param lsb boolean 小端处理
+---@return table 转换后的数组
+function utils.val_to_bytes(num, bits, lsb)
+  local bytes = bits / 8
+  local arr = {}
+  for i = 1, bytes do
+    arr[i] = num % 256
+    num = math.floor(num / 256)
+  end
+
+  if not lsb then -- 反转字节数组得到大端
+    local reversed = {}
+    for i = 1, bytes do
+      reversed[i] = arr[bytes - i + 1]
+    end
+    return reversed
+  end
+
+  return arr
+end
+
 ---使用字节值构建一个数值
 ---@param le boolean 小端处理
 ---@param bytes table 字节值
 ---@return number
-function utils.val_from_byte(le, bytes)
+function utils.val_from_bytes(le, bytes)
   local num_bytes = #bytes
   if not utils.val_in_set(num_bytes, { 2, 4 }) then
     return 0
@@ -261,6 +285,31 @@ function utils.val_from_byte(le, bytes)
     end
   end
 
+  return result
+end
+
+---转换num的大小端
+---@param num number 无符号整数
+---@param bits number 位数
+---@return integer 转换后的数据
+function utils.swap_end(num, bits)
+  -- 校验输入合法性
+  assert(bits == 16 or bits == 32 or bits == 64, "仅支持16/32/64位整数")
+  assert(num >= 0, "仅支持无符号整数(非负数)")
+
+  local bytes = bits / 8      -- 计算字节数
+  local maxVal = 2 ^ bits - 1 -- 对应位数的最大值
+  assert(num <= maxVal, string.format("数值超过%d位无符号整数范围", bits))
+
+  local result = 0
+  for i = 1, bytes do
+    -- 提取当前字节（低字节到高字节）
+    local byte = num % 256
+    -- 将字节放到反转后的位置
+    result = result + byte * (256 ^ (bytes - i))
+    -- 右移8位，处理下一个字节
+    num = math.floor(num / 256)
+  end
   return result
 end
 
