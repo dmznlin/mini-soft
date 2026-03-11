@@ -4,6 +4,6 @@ mkdir -p /var/mywork/mqttunnel
 docker run -d \
   --name mqttunnel \
   --restart=always \
-  -p 8022:22 \
+  --network=host \
   -v /var/mywork/mqttunnel:/app/cfg/ \
-docker.runsoft.online:5000/local/mqttunnel
+docker.runsoft.online:5000/local/mqttunnel:arm

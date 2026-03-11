@@ -12,9 +12,9 @@ WORKDIR /build
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=amd64 \
+    GOARCH=arm64 \
     GOPROXY=https://goproxy.cn,direct
-# 设置交叉编译环境变量，指定目标架构 linux/arm64
+# 设置交叉编译环境变量，指定目标架构 linux/arm64/amd64
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 #镜像加速
@@ -30,8 +30,8 @@ COPY . ./
 RUN go build -ldflags="-s -w" -o srv
 # 交叉编译
 
-FROM docker.runsoft.online:5000/docker.io/alpine:latest
-# FROM --platform=linux/arm64 docker.runsoft.online:5000/docker.io/alpine:arm-latest
+# FROM docker.runsoft.online:5000/docker.io/alpine:latest
+FROM --platform=linux/arm64 docker.runsoft.online:5000/docker.io/alpine:arm-latest
 
 WORKDIR /app
 # 工作目录

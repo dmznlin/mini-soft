@@ -250,8 +250,8 @@ outLoop:
 
 		if n > 0 { //发送数据
 			if !Tunnel.isSrv && buf[0] == cTagUpdateHost[0] && n > cTagLen { //客户端动态设置服务器和主机参数
-				if string(buf[:cTagLen]) == cTagUpdateHost { //前缀匹配
-					Tunnel.srvHost = string(buf[cTagLen:n])
+				if string(buf[:cTagLen]) == cTagUpdateHost && buf[n-1] == cTagEnd { //前、后缀匹配
+					Tunnel.srvHost = string(buf[cTagLen : n-1])
 					znlib.Info(fmt.Sprintf("tcpUtils.doConn: new host(%s)", Tunnel.srvHost))
 					continue
 				}

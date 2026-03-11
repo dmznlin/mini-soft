@@ -10,6 +10,7 @@ import "github.com/dmznlin/znlib-go/znlib"
 const (
 	cTagUpdateHost = "^+%-123454321=>"   //更新主机配置数据标识
 	cTagLen        = len(cTagUpdateHost) //标识长度
+	cTagEnd        = '#'                 //更新主机配置结束符
 
 	cTunnelUp   = "/up" //客户端上行数据通道
 	cTunnelDown = "/dn" //服务器下行数据通道

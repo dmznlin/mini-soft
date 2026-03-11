@@ -1,0 +1,10 @@
+{
+  "logger": {
+    "filePath": "$path/cfg/log/",
+    "fileName": "app_",
+    "logLevel": "info",
+    "maxAge": 7,
+    "colorful": true,
+    "colorEnhance": true
+  }
+}
