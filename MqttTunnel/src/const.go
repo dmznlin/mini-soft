@@ -8,7 +8,7 @@ package main
 import "github.com/dmznlin/znlib-go/znlib"
 
 const (
-	cTagUpdateHost = "^+%-123454321=>"   //更新主机配置数据标识
+	cTagUpdateHost = "%#$+123abc=>"      //更新主机配置数据标识
 	cTagLen        = len(cTagUpdateHost) //标识长度
 	cTagEnd        = '#'                 //更新主机配置结束符
 

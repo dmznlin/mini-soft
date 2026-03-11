@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -46,7 +48,7 @@ func (tu *tcpUtils) start() (err error) {
 
 		if tu.connOK {
 			tu.connOK = false
-			tu.conn.Close()
+			_ = tu.conn.Close()
 
 			tu.wg.Wait()
 			//等待上一个连接结束
@@ -87,12 +89,12 @@ func (tu *tcpUtils) Stop() (err error) {
 
 	if tu.connOK {
 		tu.connOK = false
-		tu.conn.Close()
+		_ = tu.conn.Close()
 	}
 
 	if tu.srvOK {
 		tu.srvOK = false
-		tu.srv.Close()
+		_ = tu.srv.Close()
 	}
 
 	tu.wg.Wait()
@@ -106,7 +108,7 @@ func (tu *tcpUtils) Stop() (err error) {
 func (tu *tcpUtils) closeConn() {
 	if tu.connOK {
 		tu.connOK = false
-		tu.conn.Close()
+		_ = tu.conn.Close()
 	}
 }
 
@@ -124,12 +126,12 @@ func (tu *tcpUtils) srvConn() {
 	defer func() {
 		if tu.connOK {
 			tu.connOK = false
-			tu.conn.Close()
+			_ = tu.conn.Close()
 		}
 
 		if tu.srvOK {
 			tu.srvOK = false
-			tu.srv.Close()
+			_ = tu.srv.Close()
 		}
 
 		tu.wg.Done()
@@ -149,7 +151,7 @@ func (tu *tcpUtils) srvConn() {
 
 		if tu.connOK {
 			tu.connOK = false
-			tu.conn.Close()
+			_ = tu.conn.Close()
 		}
 
 		var err error
@@ -175,7 +177,7 @@ func (tu *tcpUtils) srvConn() {
 		val, ok := tu.waiter.WaitFor(5 * time.Second)
 		if !ok || !*val { //超时或连接异常
 			znlib.Warn("tcpUtils.srvConn: wait CmdConnResponse timeout")
-			continue
+			//continue
 		}
 
 		fmt.Println("tcp new connection: ", tu.conn.RemoteAddr())
@@ -200,7 +202,7 @@ func (tu *tcpUtils) cliConn() {
 	if !ok || !*val { //超时或连接异常
 		if tu.connOK {
 			tu.connOK = false
-			tu.conn.Close()
+			_ = tu.conn.Close()
 		}
 
 		znlib.Warn("tcpUtils.cliConn: wait CmdBeginTrans timeout")
@@ -220,7 +222,7 @@ func (tu *tcpUtils) doConn() {
 	defer func() {
 		if tu.connOK {
 			tu.connOK = false
-			tu.conn.Close()
+			_ = tu.conn.Close()
 
 			var cmd MqttCmd
 			buf, err := cmd.CmdConnBreak()
@@ -234,11 +236,12 @@ func (tu *tcpUtils) doConn() {
 	}()
 
 	buf := make([]byte, 4096)
+	var start, num int
 	var err error
-	var n int
+
 outLoop:
 	for {
-		n, err = tu.conn.Read(buf)
+		num, err = tu.conn.Read(buf)
 		//read data
 
 		select {
@@ -248,17 +251,45 @@ outLoop:
 			//do nothing
 		}
 
-		if n > 0 { //发送数据
-			if !Tunnel.isSrv && buf[0] == cTagUpdateHost[0] && n > cTagLen { //客户端动态设置服务器和主机参数
-				if string(buf[:cTagLen]) == cTagUpdateHost && buf[n-1] == cTagEnd { //前、后缀匹配
-					Tunnel.srvHost = string(buf[cTagLen : n-1])
-					znlib.Info(fmt.Sprintf("tcpUtils.doConn: new host(%s)", Tunnel.srvHost))
-					continue
-				}
+		chHost := func() { //数据格式: 前缀 + 两位主机名长度 + 主机名 + 后缀
+			sl, err := strconv.Atoi(string([]byte{buf[cTagLen], buf[cTagLen+1]}))
+			if err != nil || sl < 1 || cTagLen+sl+2 >= num { //无效长度
+				znlib.Warn("tcpUtils.doConn: host length invalid")
+				return
 			}
 
-			mu.Publish(Tunnel.topicSnd, Tunnel.Broker.TopicData.Qos, buf[:n])
-			//send data
+			if buf[cTagLen+sl+2] != cTagEnd { //后缀不匹配
+				znlib.Warn("tcpUtils.doConn: host end-tag invalid")
+				return
+			}
+
+			start = cTagLen + sl + 3
+			//其余数据开始位置
+			Tunnel.srvHost = string(buf[cTagLen+2 : start-1])
+
+			//主机@服务器
+			srv := strings.Split(Tunnel.srvHost, "@")
+			if len(srv) == 2 {
+				Tunnel.srvHost = srv[0]
+				Tunnel.srvName = srv[1]
+			}
+			znlib.Info(fmt.Sprintf("tcpUtils.doConn: new host(%s@%s)", Tunnel.srvHost, Tunnel.srvName))
+		}
+
+		if num > 0 { //发送数据
+			start = 0
+			//数据起始地址
+
+			if !Tunnel.isSrv && num >= cTagLen+4 && //主机长度2,主机1,后缀1
+					buf[0] == cTagUpdateHost[0] && string(buf[:cTagLen]) == cTagUpdateHost { //前缀匹配
+				chHost()
+				//change host
+			}
+
+			if start < num {
+				mu.Publish(Tunnel.topicSnd, Tunnel.Broker.TopicData.Qos, buf[start:num])
+				//send data
+			}
 		}
 
 		if err != nil && ConnInvalid(err) {
