@@ -21,10 +21,30 @@ if rtos.bsp() == "EC618" and pm and pm.PWK_MODE then
   pm.power(pm.PWK_MODE, false)
 end
 
+--单元标识
+local tag = "main"
+
+--默认不联网
+log.info(tag, "开始飞行模式")
+mobile.flymode(0, true)
+
 sys.taskInit(function ()
   --看门狗：3秒一喂，9秒超时
-  wdt.init(9000)
-  sys.timerLoopStart(wdt.feed, 3000)
+  --wdt.init(9000)
+  --sys.timerLoopStart(wdt.feed, 3000)
+
+  local dg = 28
+  local air_wtd = require('air153C_wtd')
+
+  air_wtd.init(dg)
+  air_wtd.feed_dog(dg) --启动喂一次
+  sys.wait(3000)
+
+  log.info(tag, "开始喂狗")
+  while true do
+    air_wtd.feed_dog(dg) --28为看门狗控制引脚
+    sys.wait(150 * 1000)
+  end
 end)
 
 ---------------------------------------------------------------------------------
@@ -45,8 +65,8 @@ _G.led = require("znlib_led")
 --log.info("过期时间", utils.time_to_str(expire), encrypt)
 
 sys.taskInit(function ()
-  --开始联网
-  znlib.conn_net()
+  sys.waitUntil(Status_Net_Ready)
+  _G.mt = require("sys_mqtt")
 end)
 
 sys.taskInit(function ()
@@ -60,13 +80,29 @@ sys.taskInit(function ()
 end)
 
 sys.taskInit(function ()
-  sys.waitUntil(Status_Net_Ready)
-  _G.mt = require("sys_mqtt")
+  --主业务
+  require("sys_yt"):start()
 end)
 
 sys.taskInit(function ()
-  --led
-  require("sys_yt"):start()
+  --开始联网
+  local btn = nil
+  local evt = gpio.setup(30, nil, gpio.PULLUP, gpio.FALLING)
+
+  --等待按键
+  for inc = 1, 10, 1 do --10秒内判定
+    sys.wait(1000)
+    if evt() == 0 then
+      btn = {}
+      break
+    end
+  end
+
+  --有按键,开启网络
+  if btn ~= nil then
+    mobile.flymode(0, false)
+    znlib.conn_net()
+  end
 end)
 
 --代码结束
