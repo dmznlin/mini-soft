@@ -1,5 +1,5 @@
 {
-  "enable": true,
+  "enable": false,
   "host": "broker.hivemq.com",
   "port": 1883,
   "client_id": "$id$",
@@ -24,12 +24,12 @@
     "topic": "yt202603/pub/$id$",
     "msg": "{\"cmd\": 10, \"id\": \"$id$\"}",
     "qos": 1,
-    "retain": 1
+    "retain": 0
   },
   "offline": {
     "topic": "yt202603/pub/$id$",
     "msg": "{\"cmd\": 20, \"id\": \"$id$\"}",
     "qos": 1,
-    "retain": 1
+    "retain": 0
   }
 }
