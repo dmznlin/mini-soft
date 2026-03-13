@@ -49,10 +49,14 @@ type (
 
 	ConfigTunnel struct {
 		isSrv    bool   //是否服务器
+		sender   string //发送方标识
 		srvName  string //服务名称
 		srvHost  string //主机名称
 		topicSnd string //发送数据通道
 		topicRcv string //接收数据通道
+
+		lastStamp map[byte]int64
+		//反DDOS机制:指令的最后时间戳
 
 		Server ConfigServer `json:"server"` //server
 		Client ConfigClient `json:"client"` //client

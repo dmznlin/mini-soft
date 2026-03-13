@@ -164,14 +164,9 @@ func (tu *tcpUtils) srvConn() {
 		//set flag to close
 
 		var cmd MqttCmd
-		buf, err := cmd.CmdConnHost(Tunnel.srvHost)
-		if err != nil {
-			znlib.ErrorCaller(err, "tcpUtils.srvConn")
+		if err = cmd.CmdConnHost(Tunnel.srvHost, caller); err != nil {
 			continue
 		}
-
-		mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
-		//发起连接请求
 
 		tu.waiter.Reset()
 		val, ok := tu.waiter.WaitFor(5 * time.Second)
@@ -225,13 +220,8 @@ func (tu *tcpUtils) doConn() {
 			_ = tu.conn.Close()
 
 			var cmd MqttCmd
-			buf, err := cmd.CmdConnBreak()
-			if err != nil {
-				znlib.ErrorCaller(err, "tcpUtils.doConn")
-			}
-
-			mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
-			//发起连接请求
+			_ = cmd.CmdConnBreak("tcpUtils.doConn")
+			//通知对方断开连接
 		}
 	}()
 
@@ -252,8 +242,8 @@ outLoop:
 		}
 
 		chHost := func() { //数据格式: 前缀 + 两位主机名长度 + 主机名 + 后缀
-			sl, err := strconv.Atoi(string([]byte{buf[cTagLen], buf[cTagLen+1]}))
-			if err != nil || sl < 1 || cTagLen+sl+2 >= num { //无效长度
+			sl, er := strconv.Atoi(string([]byte{buf[cTagLen], buf[cTagLen+1]}))
+			if er != nil || sl < 1 || cTagLen+sl+2 >= num { //无效长度
 				znlib.Warn("tcpUtils.doConn: host length invalid")
 				return
 			}
@@ -281,7 +271,7 @@ outLoop:
 			//数据起始地址
 
 			if !Tunnel.isSrv && num >= cTagLen+4 && //主机长度2,主机1,后缀1
-					buf[0] == cTagUpdateHost[0] && string(buf[:cTagLen]) == cTagUpdateHost { //前缀匹配
+				buf[0] == cTagUpdateHost[0] && string(buf[:cTagLen]) == cTagUpdateHost { //前缀匹配
 				chHost()
 				//change host
 			}

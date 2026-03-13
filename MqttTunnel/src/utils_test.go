@@ -3,13 +3,15 @@ package main
 import (
 	"fmt"
 	"testing"
+	"time"
+
+	"github.com/dmznlin/znlib-go/znlib"
 )
 
 func TestMqttCmd(t *testing.T) {
 	cmd := &MqttCmd{
 		Cmd:    5,
 		Sender: "srv",
-		Param:  "cli",
 		Data:   "srv",
 		Verify: "",
 	}
@@ -31,23 +33,17 @@ func TestMqttCmd(t *testing.T) {
 	}
 }
 
-func TestMqttCmd_CmdServerInfo(t *testing.T) {
-	var cmd = &MqttCmd{}
-	buf, err := cmd.CmdFindServer("srv")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(string(buf))
+func TestDurationTime(t *testing.T) {
+	now := time.Now()
+	t.Log(znlib.DateTime2Str(now, znlib.LayoutDateTimeMilli))
 
-	buf, err = cmd.CmdServerInfo()
-	if err != nil {
-		t.Fatal(err)
+	if now.UnixNano() != int64(TimeToDuration(now)) {
+		t.Fatal()
 	}
-	fmt.Println(string(buf))
 
-	buf, err = cmd.CmdConnHost("local")
-	if err != nil {
-		t.Fatal(err)
+	ch := DurationToTime(time.Duration(now.UnixNano()))
+	t.Log(znlib.DateTime2Str(ch, znlib.LayoutDateTimeMilli))
+	if ch.Sub(now) != 0 {
+		t.Fatal()
 	}
-	fmt.Println(string(buf))
 }

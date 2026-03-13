@@ -17,6 +17,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/dmznlin/znlib-go/znlib"
 	"github.com/dmznlin/znlib-go/znlib/mqtt"
@@ -32,20 +33,23 @@ var mu = &mqtt.Utils{
 }
 
 const (
-	CmdConnHost   = iota + 5 //客户端: 向服务器发起连接请求
-	CmdConnRep               //服务器: 连接结果反馈
-	CmdConnBreak             //双向: tcp连接断开
-	CmdBeginTrans            //客户端: 通知服务端开始传输
+	CmdConnHost    = iota + 5 //客户端: 向服务器发起连接请求
+	CmdConnRep                //服务器: 连接结果反馈
+	CmdConnBreak              //双向: tcp连接断开
+	CmdBeginTrans             //客户端: 通知服务端开始传输
+	CmdHintMessage            //双向:发送提示消息
 )
 
 type (
 	MqttCmd struct {
-		Cmd     byte   `json:"c"`          //命令字
-		Sender  string `json:"s"`          //发送方
-		SrvName string `json:"n"`          //服务器
-		Topic   string `json:"t,omitzero"` //主题
-		Data    string `json:"d,omitzero"` //数据
-		Verify  string `json:"v,omitzero"` //验证
+		Cmd     byte   `json:"c"` //命令字
+		Sender  string `json:"s"` //发送方
+		Stamp   int64  `json:"p"` //流水号
+		SrvName string `json:"n"` //服务器
+
+		Topic  string `json:"t,omitzero"` //主题
+		Data   string `json:"d,omitzero"` //数据
+		Verify string `json:"v,omitzero"` //验证
 	}
 )
 
@@ -102,12 +106,13 @@ func (mc *MqttCmd) Unmarshal(data []byte) error {
  参数: host,主机名
  描述: 客户端发起连接请求
 */
-func (mc *MqttCmd) CmdConnHost(host string) ([]byte, error) {
+func (mc *MqttCmd) CmdConnHost(host, caller string) error {
 	mc.Cmd = CmdConnHost
-	mc.Sender = Tunnel.Broker.ClientID
+	mc.Sender = Tunnel.sender
+	mc.Stamp = time.Now().UnixNano()
 	mc.SrvName = Tunnel.srvName
-	mc.Data = ""
 
+	mc.Data = ""
 	for _, h := range Tunnel.Client.Hosts {
 		if h.Name == host {
 			mc.Data = h.Host
@@ -116,46 +121,74 @@ func (mc *MqttCmd) CmdConnHost(host string) ([]byte, error) {
 	}
 
 	if mc.Data == "" {
-		return nil, fmt.Errorf("host [%s] not found", host)
+		err := fmt.Errorf("host [%s] not found", host)
+		znlib.ErrorCaller(err, caller+".CmdConnHost")
+		return err
 	}
 
-	return mc.Marshal()
+	buf, err := mc.Marshal()
+	if err != nil {
+		znlib.ErrorCaller(err, caller+".CmdConnHost")
+		return err
+	}
+
+	mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+	return nil
 }
 
 // CmdConnResponse 2026-03-04 11:50:43
 /*
  描述: 服务器反馈连接结果
 */
-func (mc *MqttCmd) CmdConnResponse() ([]byte, error) {
+func (mc *MqttCmd) CmdConnResponse(caller string) error {
 	mc.Cmd = CmdConnRep
-	mc.Sender = Tunnel.Broker.ClientID
+	mc.Sender = Tunnel.sender
+	mc.Stamp = time.Now().UnixNano()
+
 	mc.SrvName = Tunnel.Server.Name
 	mc.Topic = Tunnel.Broker.TopicData.Topic
 
 	//mc.Data = ""
 	//若连接异常,由外部填写内容
-	return mc.Marshal()
+
+	buf, err := mc.Marshal()
+	if err != nil {
+		znlib.ErrorCaller(err, caller+".CmdConnResponse")
+		return err
+	}
+
+	mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+	return nil
 }
 
 // CmdBeginTrans 2026-03-04 16:14:50
 /*
  描述: 客户端发起传输请求
 */
-func (mc *MqttCmd) CmdBeginTrans() ([]byte, error) {
+func (mc *MqttCmd) CmdBeginTrans(caller string) error {
 	mc.Cmd = CmdBeginTrans
-	mc.Sender = Tunnel.Broker.ClientID
+	mc.Sender = Tunnel.sender
+	mc.Stamp = time.Now().UnixNano()
 	mc.SrvName = Tunnel.srvName
 
-	return mc.Marshal()
+	buf, err := mc.Marshal()
+	if err != nil {
+		znlib.ErrorCaller(err, caller+".CmdBeginTrans")
+		return err
+	}
+
+	mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+	return nil
 }
 
 // CmdConnBreak 2026-03-05 15:04:46
 /*
- 描述: tcp.conn断开时,通知对方断开服务
+ 描述: tcp.conn 断开时,通知对方断开服务
 */
-func (mc *MqttCmd) CmdConnBreak() ([]byte, error) {
+func (mc *MqttCmd) CmdConnBreak(caller string) error {
 	mc.Cmd = CmdConnBreak
-	mc.Sender = Tunnel.Broker.ClientID
+	mc.Sender = Tunnel.sender
+	mc.Stamp = time.Now().UnixNano()
 
 	if Tunnel.isSrv {
 		mc.SrvName = Tunnel.Server.Name
@@ -163,7 +196,40 @@ func (mc *MqttCmd) CmdConnBreak() ([]byte, error) {
 		mc.SrvName = Tunnel.srvName
 	}
 
-	return mc.Marshal()
+	buf, err := mc.Marshal()
+	if err != nil {
+		znlib.ErrorCaller(err, caller+".CmdConnBreak")
+		return err
+	}
+
+	mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+	return nil
+}
+
+// CmdHintMsg 2026-03-05 15:04:46
+/*
+ 描述: 向对方发送提示消息
+*/
+func (mc *MqttCmd) CmdHintMsg(msg, caller string) error {
+	mc.Cmd = CmdHintMessage
+	mc.Sender = Tunnel.sender
+	mc.Stamp = time.Now().UnixNano()
+	mc.Data = msg
+
+	if Tunnel.isSrv {
+		mc.SrvName = Tunnel.Server.Name
+	} else {
+		mc.SrvName = Tunnel.srvName
+	}
+
+	buf, err := mc.Marshal()
+	if err != nil {
+		znlib.ErrorCaller(err, caller+".CmdHintMsg")
+		return err
+	}
+
+	mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
+	return nil
 }
 
 // ------------------------------------------------------------------------------
@@ -233,7 +299,7 @@ func ApplyOptions() error {
  描述: 收到来自 cli 的消息
 */
 func OnMessage(cli mt.Client, msg mt.Message) {
-	caller := "mqttutils.OnMessge"
+	caller := "mqtt.OnMessge"
 	defer znlib.DeferHandle(false, caller)
 	//捕捉异常
 
@@ -254,16 +320,64 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 		return
 	}
 
-	if cmd.Sender == Tunnel.Broker.ClientID { //忽略自己发出的指令
+	// -----------------------------------------------------------------------------
+	if cmd.Sender == Tunnel.sender { //忽略自己发出的指令
+		return
+	}
+
+	if Tunnel.isSrv {
+		if cmd.SrvName != Tunnel.Server.Name { //接收方不是自己
+			return
+		}
+	} else {
+		if cmd.SrvName != Tunnel.srvName { //与请求的服务器名称不匹配
+			return
+		}
+	}
+
+	stamp, ok := Tunnel.lastStamp[cmd.Cmd]
+	if ok && stamp == cmd.Stamp { //反DDOS: 该时间戳已处理
+		return
+	}
+
+	Tunnel.lastStamp[cmd.Cmd] = cmd.Stamp
+	//记录时间戳
+	tm := DurationToTime(time.Duration(cmd.Stamp))
+	//转为本地时间
+
+	bt := time.Since(tm)
+	//计算时间差
+	if bt < 0 {
+		bt = -bt
+	}
+
+	if bt > 5*time.Second { //时间戳5秒内失效
+		var hintMsg string
+		if Tunnel.isSrv {
+			hintMsg = "time isn't sync: server(%s) client(%s)"
+		} else {
+			hintMsg = "time isn't sync: client(%s) server(%s)"
+		}
+
+		hintMsg = fmt.Sprintf(hintMsg,
+			time.Now().Format(znlib.LayoutTime), znlib.DateTime2Str(tm, znlib.LayoutTime))
+		//format message
+
+		if Tunnel.isSrv {
+			_ = cmd.CmdHintMsg(hintMsg, caller)
+		}
+
+		znlib.Warn(hintMsg)
+		return
+	}
+
+	if cmd.Cmd == CmdHintMessage { //双向提示信息
+		znlib.Warn(cmd.Data)
 		return
 	}
 
 	// ----------------------------------------------------------------------------
 	if Tunnel.isSrv { //服务器
-		if cmd.SrvName != Tunnel.Server.Name { //接收方不是自己
-			return
-		}
-
 		switch cmd.Cmd {
 		case CmdBeginTrans:
 			val := true
@@ -284,14 +398,8 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 				cmd.Data = err.Error()
 			}
 
-			buf, err := cmd.CmdConnResponse()
-			if err != nil {
-				znlib.ErrorCaller(err, caller+".CmdConnResponse")
-				return
-			}
-
-			mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
-			//应答连接结果
+			_ = cmd.CmdConnResponse(caller)
+			//回复客户端连接结果
 		default:
 			//do nothing
 		}
@@ -300,10 +408,6 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 	}
 
 	// ----------------------------------------------------------------------------
-	if cmd.SrvName != Tunnel.srvName { //与请求的服务器名称不匹配
-		return
-	}
-
 	switch cmd.Cmd {
 	case CmdConnBreak:
 		TcpUtils.closeConn()
@@ -338,14 +442,10 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 		}
 
 		cmd = MqttCmd{}
-		buf, err := cmd.CmdBeginTrans() //开始传输
+		err = cmd.CmdBeginTrans(caller) //通知服务器开始传输
 		if err != nil {
-			znlib.ErrorCaller(err, caller+"OnMessage")
 			return
 		}
-
-		mu.Publish(Tunnel.Broker.TopicCmd.Topic, Tunnel.Broker.TopicCmd.Qos, buf)
-		//通知服务器开始传输
 
 		TcpUtils.waiter.Wakeup(&suc)
 		//唤醒 tcp.srvConn 开始传输

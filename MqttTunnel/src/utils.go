@@ -1,8 +1,22 @@
 package main
 
 import (
+	"time"
+
 	"github.com/dmznlin/znlib-go/znlib"
 )
+
+func DurationToTime(duration time.Duration) time.Time {
+	epochTime := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	// Unix 纪元基准时间（UTC 1970-01-01 00:00:00）
+	return epochTime.Add(duration).Local()
+}
+
+func TimeToDuration(t1 time.Time) time.Duration {
+	epochTime := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	// Unix 纪元基准时间（UTC 1970-01-01 00:00:00）
+	return t1.In(time.UTC).Sub(epochTime)
+}
 
 // TunnelModal 2026-02-11 16:24:26
 /*
