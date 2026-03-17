@@ -18,7 +18,9 @@
         "unregister",
         "crypto",
         "modbus",
-        "exmodbus"
+        "exmodbus",
+        "senser",
+        "addr"
     ],
     "Lua.diagnostics.globals": [
         "log",
@@ -39,6 +41,7 @@
         "zbuff",
         "uart_id",
         "mqtt",
-        "spi"
+        "spi",
+        "crypto"
     ]
 }

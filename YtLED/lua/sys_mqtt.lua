@@ -43,6 +43,15 @@ sys.taskInit(function ()
     return
   end
 
+  --日志上行计时
+  znlib.remote_log_set(os.time())
+
+  --注册日志上行
+  Event:register_callback(EventType_MQTT_LOG, function (event)
+    local dt = { cmd = 0, log = event }
+    Mqtt_send(json.encode(dt))
+  end)
+
   while true do
     ::continue:: --跳转坐标
     local ret, topic, data, id = sys.waitUntil(Status_Mqtt_SubData)
