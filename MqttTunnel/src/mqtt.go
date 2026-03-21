@@ -42,10 +42,10 @@ const (
 
 type (
 	MqttCmd struct {
-		Cmd     byte   `json:"c"` //命令字
-		Sender  string `json:"s"` //发送方
-		Stamp   int64  `json:"p"` //流水号
-		SrvName string `json:"n"` //服务器
+		Cmd      byte   `json:"c"` //命令字
+		Stamp    int64  `json:"p"` //流水号
+		Sender   string `json:"s"` //发送方
+		Receiver string `json:"r"` //接收方
 
 		Topic  string `json:"t,omitzero"` //主题
 		Data   string `json:"d,omitzero"` //数据
@@ -101,18 +101,31 @@ func (mc *MqttCmd) Unmarshal(data []byte) error {
 	return nil
 }
 
+// CmdInit 2026-03-20 19:45:33
+/*
+ 描述: 填充基础信息
+*/
+func (mc *MqttCmd) CmdInit(cmd byte) {
+	mc.Cmd = cmd
+	mc.Stamp = time.Now().Unix()
+	mc.Sender = Tunnel.Broker.ClientID
+
+	if cmd == CmdConnHost { //不知道对方标识前填写名称
+		mc.Receiver = Tunnel.srvName
+	} else {
+		mc.Receiver = Tunnel.receiver
+	}
+}
+
 // CmdConnHost 2026-03-01 10:36:53
 /*
  参数: host,主机名
  描述: 客户端发起连接请求
 */
 func (mc *MqttCmd) CmdConnHost(host, caller string) error {
-	mc.Cmd = CmdConnHost
-	mc.Sender = Tunnel.sender
-	mc.Stamp = time.Now().UnixNano()
-	mc.SrvName = Tunnel.srvName
-
+	mc.CmdInit(CmdConnHost)
 	mc.Data = ""
+
 	for _, h := range Tunnel.Client.Hosts {
 		if h.Name == host {
 			mc.Data = h.Host
@@ -141,13 +154,8 @@ func (mc *MqttCmd) CmdConnHost(host, caller string) error {
  描述: 服务器反馈连接结果
 */
 func (mc *MqttCmd) CmdConnResponse(caller string) error {
-	mc.Cmd = CmdConnRep
-	mc.Sender = Tunnel.sender
-	mc.Stamp = time.Now().UnixNano()
-
-	mc.SrvName = Tunnel.Server.Name
+	mc.CmdInit(CmdConnRep)
 	mc.Topic = Tunnel.Broker.TopicData.Topic
-
 	//mc.Data = ""
 	//若连接异常,由外部填写内容
 
@@ -166,12 +174,9 @@ func (mc *MqttCmd) CmdConnResponse(caller string) error {
  描述: 客户端发起传输请求
 */
 func (mc *MqttCmd) CmdBeginTrans(caller string) error {
-	mc.Cmd = CmdBeginTrans
-	mc.Sender = Tunnel.sender
-	mc.Stamp = time.Now().UnixNano()
-	mc.SrvName = Tunnel.srvName
-
+	mc.CmdInit(CmdBeginTrans)
 	buf, err := mc.Marshal()
+
 	if err != nil {
 		znlib.ErrorCaller(err, caller+".CmdBeginTrans")
 		return err
@@ -186,16 +191,7 @@ func (mc *MqttCmd) CmdBeginTrans(caller string) error {
  描述: tcp.conn 断开时,通知对方断开服务
 */
 func (mc *MqttCmd) CmdConnBreak(caller string) error {
-	mc.Cmd = CmdConnBreak
-	mc.Sender = Tunnel.sender
-	mc.Stamp = time.Now().UnixNano()
-
-	if Tunnel.isSrv {
-		mc.SrvName = Tunnel.Server.Name
-	} else {
-		mc.SrvName = Tunnel.srvName
-	}
-
+	mc.CmdInit(CmdConnBreak)
 	buf, err := mc.Marshal()
 	if err != nil {
 		znlib.ErrorCaller(err, caller+".CmdConnBreak")
@@ -210,17 +206,10 @@ func (mc *MqttCmd) CmdConnBreak(caller string) error {
 /*
  描述: 向对方发送提示消息
 */
-func (mc *MqttCmd) CmdHintMsg(msg, caller string) error {
-	mc.Cmd = CmdHintMessage
-	mc.Sender = Tunnel.sender
-	mc.Stamp = time.Now().UnixNano()
+func (mc *MqttCmd) CmdHintMsg(receiver, msg, caller string) error {
+	mc.CmdInit(CmdHintMessage)
+	mc.Receiver = receiver
 	mc.Data = msg
-
-	if Tunnel.isSrv {
-		mc.SrvName = Tunnel.Server.Name
-	} else {
-		mc.SrvName = Tunnel.srvName
-	}
 
 	buf, err := mc.Marshal()
 	if err != nil {
@@ -321,18 +310,14 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 	}
 
 	// -----------------------------------------------------------------------------
-	if cmd.Sender == Tunnel.sender { //忽略自己发出的指令
+	if cmd.Sender == Tunnel.Broker.ClientID { //忽略自己发出的指令
 		return
 	}
 
-	if Tunnel.isSrv {
-		if cmd.SrvName != Tunnel.Server.Name { //接收方不是自己
-			return
-		}
-	} else {
-		if cmd.SrvName != Tunnel.srvName { //与请求的服务器名称不匹配
-			return
-		}
+	if (cmd.Receiver != Tunnel.Broker.ClientID) && //接收方不是自己
+		!(Tunnel.isSrv && cmd.Cmd == CmdConnHost && //除了服务器连接指令外
+			cmd.Receiver == Tunnel.Server.Name) { //连接时的服务器名称
+		return
 	}
 
 	stamp, ok := Tunnel.lastStamp[cmd.Cmd]
@@ -342,16 +327,14 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 
 	Tunnel.lastStamp[cmd.Cmd] = cmd.Stamp
 	//记录时间戳
-	tm := DurationToTime(time.Duration(cmd.Stamp))
-	//转为本地时间
 
-	bt := time.Since(tm)
+	bt := time.Duration(time.Now().Unix() - cmd.Stamp)
 	//计算时间差
 	if bt < 0 {
 		bt = -bt
 	}
 
-	if bt > 5*time.Second { //时间戳5秒内失效
+	if bt > 5 { //时间戳5秒内失效
 		var hintMsg string
 		if Tunnel.isSrv {
 			hintMsg = "time isn't sync: server(%s) client(%s)"
@@ -360,11 +343,12 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 		}
 
 		hintMsg = fmt.Sprintf(hintMsg,
-			time.Now().Format(znlib.LayoutTime), znlib.DateTime2Str(tm, znlib.LayoutTime))
+			time.Now().Format(znlib.LayoutTime), znlib.DateTime2Str(DurationToTime(
+				time.Duration(cmd.Stamp)*time.Second), znlib.LayoutTime))
 		//format message
 
 		if Tunnel.isSrv {
-			_ = cmd.CmdHintMsg(hintMsg, caller)
+			_ = cmd.CmdHintMsg(cmd.Sender, hintMsg, caller)
 		}
 
 		znlib.Warn(hintMsg)
@@ -388,6 +372,8 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 			//关闭 tpc.conn 数据链路
 			znlib.Warn("client disconnected tcp tunnel")
 		case CmdConnHost: //连接指定主机
+			Tunnel.receiver = cmd.Sender
+			//更新接收方
 			Tunnel.srvHost = cmd.Data
 			//待连接主机地址
 
@@ -414,7 +400,10 @@ func OnMessage(cli mt.Client, msg mt.Message) {
 		//关闭 tpc.conn 数据链路
 		znlib.Warn("server disconnected tcp tunnel")
 	case CmdConnRep:
+		Tunnel.receiver = cmd.Sender
+		//更新接收方
 		suc := cmd.Data == ""
+
 		if !suc { //连接远程主机异常
 			znlib.ErrorCaller(cmd.Data, caller+".CmdConnRep")
 			TcpUtils.waiter.Wakeup(&suc) //唤醒 tcp.srvConn 继续

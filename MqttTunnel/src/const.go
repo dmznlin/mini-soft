@@ -49,7 +49,7 @@ type (
 
 	ConfigTunnel struct {
 		isSrv    bool   //是否服务器
-		sender   string //发送方标识
+		receiver string //接收方标识
 		srvName  string //服务名称
 		srvHost  string //主机名称
 		topicSnd string //发送数据通道

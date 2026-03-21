@@ -61,10 +61,7 @@ func main() {
 	//指令最后的时间戳
 
 	Tunnel.isSrv = role != "cli"
-	if Tunnel.isSrv {
-		Tunnel.sender = Tunnel.Server.Name
-		// server 标识
-	} else {
+	if !Tunnel.isSrv {
 		if srv == "" { //默认服务端
 			srv = Tunnel.Server.Name
 		}
@@ -75,7 +72,6 @@ func main() {
 
 		Tunnel.srvName = srv
 		Tunnel.srvHost = host
-		Tunnel.sender = Tunnel.Client.Name
 	}
 
 	//应用设置
