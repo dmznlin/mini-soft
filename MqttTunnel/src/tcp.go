@@ -173,6 +173,9 @@ func (tu *tcpUtils) srvConn() {
 		if !ok || !*val { //超时或连接异常
 			znlib.Warn("tcpUtils.srvConn: wait CmdConnResponse timeout")
 			//continue
+
+			tu.conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+			//延迟接收 chang-host 指令
 		}
 
 		fmt.Println("tcp new connection: ", tu.conn.RemoteAddr())
@@ -320,6 +323,10 @@ func ConnInvalid(err error) bool {
 	// 4. 网络错误中，永久性错误（非临时错误）代表连接不可用
 	var netErr net.Error
 	if errors.As(err, &netErr) {
+		if netErr.Timeout() { //默认不启用超时,超时是延迟 chang-host
+			return true
+		}
+
 		// Temporary() 返回 false 表示是永久性错误，连接无法恢复
 		return !netErr.Temporary()
 	}
