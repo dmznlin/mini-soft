@@ -7,6 +7,12 @@
   "password": "",
   "keep_alive": 240,
   "re_conn": 5000,
+  "utils": {
+    "name": "srv-5232555",
+    "desc": "tunnel server",
+    "topic": "mqttunnel/$id$",
+    "encrypt": "4RAnkX6MwNWSt8zgYTfbqz50ERpnwPk/"
+  },
   "subs": {
     "cmd": {
       "topic": "mqttunnel/cmd",
@@ -28,23 +34,5 @@
       "qos": 0,
       "def": false
     }
-  },
-  "online": {
-    "topic": "mqttunnel/$id$",
-    "msg": "{\"cmd\": 1, \"id\": \"$id$\"}",
-    "qos": 1,
-    "retain": 0
-  },
-  "offline": {
-    "topic": "mqttunnel/$id$",
-    "msg": "{\"cmd\": 2, \"id\": \"$id$\"}",
-    "qos": 1,
-    "retain": 0
-  },
-  "server": {
-    "name": "srv-5232555",
-    "desc": "tunnel server",
-    "topic": "mqttunnel/$id$",
-    "encrypt": "4RAnkX6MwNWSt8zgYTfbqz50ERpnwPk/"
   }
 }

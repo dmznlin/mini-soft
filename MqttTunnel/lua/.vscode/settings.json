@@ -20,7 +20,8 @@
         "modbus",
         "exmodbus",
         "senser",
-        "addr"
+        "addr",
+        "recv"
     ],
     "Lua.diagnostics.globals": [
         "log",
