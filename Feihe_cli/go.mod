@@ -3,7 +3,6 @@ module Feihe_cli
 go 1.21.1
 
 require (
-	github.com/Lofanmi/pinyin-golang v0.0.0-20211114132645-1db892057f20
 	github.com/bytedance/sonic v1.10.2
 	github.com/dmznlin/znlib-go v0.0.3-0.20240105014718-8bdfd550b887
 	github.com/go-ini/ini v1.66.4
@@ -12,7 +11,7 @@ require (
 	github.com/opentdp/go-helper v0.5.4
 	go.nanomsg.org/mangos v2.0.0+incompatible
 	go.nanomsg.org/mangos/v3 v3.4.2
-	google.golang.org/protobuf v1.32.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
