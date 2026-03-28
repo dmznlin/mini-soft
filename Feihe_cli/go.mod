@@ -3,7 +3,6 @@ module Feihe_cli
 go 1.21.1
 
 require (
-	github.com/Lofanmi/pinyin-golang v0.0.0-20211114132645-1db892057f20
 	github.com/bytedance/sonic v1.10.2
 	github.com/dmznlin/znlib-go v0.0.3-0.20240105014718-8bdfd550b887
 	github.com/go-ini/ini v1.66.4
@@ -45,8 +44,8 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	golang.org/x/arch v0.6.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/tools v0.16.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	nanomsg.org/go/mangos/v2 v2.0.8 // indirect
