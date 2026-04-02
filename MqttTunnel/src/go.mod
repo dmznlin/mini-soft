@@ -3,7 +3,7 @@ module mqttunnel
 go 1.25.6
 
 require (
-	github.com/dmznlin/znlib-go v0.0.10
+	github.com/dmznlin/znlib-go v0.0.11
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 )
 

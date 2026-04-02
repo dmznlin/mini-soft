@@ -41,7 +41,7 @@ func main() {
 		return
 	}
 
-	//  ---------------------------------------------------------------------------
+	// ----------------------------------------------------------------------------
 	var err error
 	var cfg = znlib.FixPathVar("$path/cfg/tunnel.json")
 
@@ -53,6 +53,11 @@ func main() {
 	}
 
 	if err != nil {
+		znlib.Error(err.Error())
+		return
+	}
+
+	if err = verifyConfig(); err != nil {
 		znlib.Error(err.Error())
 		return
 	}
@@ -74,19 +79,9 @@ func main() {
 		Tunnel.srvHost = host
 	}
 
-	//应用设置
-	err = ApplyOptions()
-	if err != nil {
-		znlib.Error(err.Error())
-		return
-	}
-
+	// ----------------------------------------------------------------------------
 	//启动 mqtt
-	err = mu.Start(nil)
-	if err != nil {
-		znlib.Error(err.Error())
-		return
-	}
+	switchBroker(true)
 
 	//客户端启动 tcp-server
 	if !Tunnel.isSrv {
@@ -105,8 +100,5 @@ func main() {
 
 	znlib.WaitSystemExit(func() error {
 		return TcpUtils.Stop()
-	}, func() error {
-		mu.Stop()
-		return nil
 	})
 }

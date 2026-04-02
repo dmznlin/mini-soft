@@ -1,8 +1,8 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dmznlin/znlib-go v0.0.10 h1:9AVyTMozZ8QMsSBz6KYK1d198hVKbm0aY8mvOA04Dag=
-github.com/dmznlin/znlib-go v0.0.10/go.mod h1:Rs0BMvtH+SJS5Od73yBFKluXHRCWiQeEgn3p0dNyiuU=
+github.com/dmznlin/znlib-go v0.0.11 h1:RGoBxhvkcUepD8tx+vP9XKZw0ruPCxBnc2JaTdXSfzE=
+github.com/dmznlin/znlib-go v0.0.11/go.mod h1:Rs0BMvtH+SJS5Od73yBFKluXHRCWiQeEgn3p0dNyiuU=
 github.com/eclipse/paho.mqtt.golang v1.5.1 h1:/VSOv3oDLlpqR2Epjn1Q7b2bSTplJIeV2ISgCl2W7nE=
 github.com/eclipse/paho.mqtt.golang v1.5.1/go.mod h1:1/yJCneuyOoCOzKSsOTUc0AJfpsItBGWvYpBLimhArU=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 h1:Ghm4eQYC0nEPnSJdVkTrXpu9KtoVCSo1hg7mtI7G9KU=

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/dmznlin/znlib-go/znlib"
+	"github.com/dmznlin/znlib-go/znlib/mqtt"
 )
 
 type tcpUtils struct {
@@ -163,6 +164,16 @@ func (tu *tcpUtils) srvConn() {
 		tu.connOK = true
 		//set flag to close
 
+		if Tunnel.Broker.reSwitch {
+			znlib.Info("正在查找服务器,请稍后")
+			continue
+		}
+
+		err = startTunnel(Tunnel.srvName, true) //定位服务器
+		if err != nil {
+			continue
+		}
+
 		var cmd MqttCmd
 		if err = cmd.CmdConnHost(Tunnel.srvHost, caller); err != nil {
 			continue
@@ -174,7 +185,7 @@ func (tu *tcpUtils) srvConn() {
 			znlib.Warn("tcpUtils.srvConn: wait CmdConnResponse timeout")
 			//continue
 
-			tu.conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+			_ = tu.conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 			//延迟接收 chang-host 指令
 		}
 
@@ -280,7 +291,7 @@ outLoop:
 			}
 
 			if start < num {
-				mu.Publish(Tunnel.topicSnd, Tunnel.Broker.TopicData.Qos, buf[start:num])
+				_ = mqtt.Client.Publish(Tunnel.Broker.topicSnd, Tunnel.Broker.TopicData.Qos, buf[start:num])
 				//send data
 			}
 		}
