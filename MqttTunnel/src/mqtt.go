@@ -357,7 +357,13 @@ func switchBroker(init bool) {
  参数: param,ping参数
  描述: 启动通道服务
 */
-func startTunnel(srvName string, conn bool, param ...string) error {
+func startTunnel(srvName string, conn bool, param ...string) (res error) {
+	defer znlib.DeferHandle(false, "mqtt.startTunnel", func(err error) {
+		if err != nil {
+			res = err
+		}
+	}) //捕获异常
+
 	timeout := 10 * time.Second //ping 等待超时
 	waiteResult := znlib.NewWaiter[string](nil)
 
@@ -604,7 +610,7 @@ func OnMessage(_ mt.Client, msg mt.Message) {
 		if !ok {
 			delete(mqtt.Client.SubTopics, Tunnel.Broker.TopicCmd.Topic)
 			//删除命令通道,余下旧的数据通道
-			_ = mqtt.Client.Unsubscribe(nil)
+			_ = mqtt.Client.Unsubscribe()
 			//退订旧数据通道
 
 			Tunnel.Broker.topicSnd = cmd.Param + cTunnelUp
@@ -615,7 +621,7 @@ func OnMessage(_ mt.Client, msg mt.Message) {
 			mqtt.Client.SubTopics[Tunnel.Broker.TopicCmd.Topic] = Tunnel.Broker.TopicCmd.Qos //命令通道
 			mqtt.Client.SubTopics[Tunnel.Broker.topicRcv] = Tunnel.Broker.TopicData.Qos      //数据通道
 
-			_ = mqtt.Client.SubscribeMultiple(nil)
+			_ = mqtt.Client.SubscribeMultiple()
 			//订阅数据通道
 			znlib.Info(fmt.Sprintf("connected server(%s) on tunnel(%s)", Tunnel.srvName, cmd.Sender))
 		}

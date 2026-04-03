@@ -3,7 +3,7 @@ module mqttunnel
 go 1.25.6
 
 require (
-	github.com/dmznlin/znlib-go v0.0.11
+	github.com/dmznlin/znlib-go v0.0.13
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 )
 
@@ -19,7 +19,7 @@ require (
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	golang.org/x/net v0.51.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 )
